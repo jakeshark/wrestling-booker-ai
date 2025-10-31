@@ -115,6 +115,17 @@ const HistoryIcon = () => (
   </svg>
 );
 
+const RelationshipsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+    <path d="M4.5 6.375a.75.75 0 0 1 .75-.75h13.5a.75.75 0 0 1 .75.75v11.25a.75.75 0 0 1-.75.75H5.25a.75.75 0 0 1-.75-.75V6.375Z" />
+    <path fillRule="evenodd" d="M5.057 2.376A.75.75 0 0 1 5.25 2.25H18.75a.75.75 0 0 1 .193.021l3.75 1.5a.75.75 0 0 1 .307.601v13.064a.75.75 0 0 1-.307.601l-3.75 1.5A.75.75 0 0 1 18.75 20h-13.5a.75.75 0 0 1-.193-.021l-3.75-1.5a.75.75 0 0 1-.307-.601V4.5a.75.75 0 0 1 .307-.601l3.75-1.5ZM6 3.75l-3 1.2v12.75l3 1.2h12l3-1.2V4.95l-3-1.2H6Z" clipRule="evenodd" />
+    <path d="M12 8.25a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Z" />
+    <path d="M12 15a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V15.75a.75.75 0 0 1 .75-.75Z" />
+    <path d="M8.25 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
+    <path d="M13.5 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
+  </svg>
+);
+
 
 // Main Application
 function App() {
@@ -126,7 +137,7 @@ function App() {
   // REMOVED: appId state (no longer needed)
 
   // --- Game State ---
-  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, BUSY
+  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, RELATIONSHIPS_SCREEN, BUSY
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
   const [activeSave, setActiveSave] = useState(null); // This will hold the loaded save_game doc
@@ -157,7 +168,7 @@ function App() {
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
-  const [viewingWrestler, setViewingWrestler] = useState(null); // (NEW) For Career History
+  const [viewingWrestler, setViewingWrestler] = useState(null); // (NEW) For Career History & Relationships
 
   // --- Design Doc Schemas ---
   // (These are the collections we need to copy for a new game)
@@ -1213,6 +1224,12 @@ function App() {
     setGameState('CAREER_HISTORY_SCREEN');
   };
 
+  // --- (NEW) Phase 3: Relationships Logic ---
+  const handleViewRelationships = (wrestler) => {
+    setViewingWrestler(wrestler);
+    setGameState('RELATIONSHIPS_SCREEN');
+  };
+
 
   // --- UI Render Functions ---
 
@@ -1661,118 +1678,23 @@ function App() {
                 </div>
               </div>
               
-              {/* --- (NEW) Career History Button --- */}
-              <button
-                onClick={() => handleViewCareerHistory(wrestler)}
-                className="mt-3 w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
-              >
-                <HistoryIcon />
-                View History
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-
-  // --- (NEW) Show Results Screen ---
-  const renderShowResultsScreen = () => {
-    return (
-      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
-        {/* --- Header --- */}
-        <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
-              <p className="text-indigo-300">
-                {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Overall Rating</p>
-              <p className="text-4xl font-bold text-yellow-400 flex items-center">
-                <StarIcon className="w-8 h-8 mr-1" />
-                {showRating}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* --- AI Recap --- */}
-        <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
-          <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
-          {showRecap ? (
-            <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
-              {showRecap}
-            </p>
-          ) : (
-            <div className="flex items-center justify-center p-8">
-              <LoadingIcon />
-              <span className="ml-3 text-lg">Generating AI recap...</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="mt-6 text-center">
-          <button 
-            onClick={handleNextDay}
-            className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-          >
-            Continue (Next Day)
-          </button>
-        </div>
-      </div>
-    );
-  };
-  
-  // --- (NEW) Phase 3: Storyline Screen ---
-  const renderStorylineScreen = () => {
-    const storylines = gameData.save_storylines || [];
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        {/* --- Header --- */}
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <FireIcon />
-            Storyline Manager
-          </h1>
-          <div className="flex space-x-2">
-            <button 
-              onClick={() => handleOpenCreateStorylineModal()}
-              className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
-            >
-              <PlusIcon />
-              Create Storyline
-            </button>
-            <button 
-              onClick={() => setGameState('IN_GAME')}
-              className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-
-        {/* --- Storyline List --- */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {storylines.length === 0 && (
-            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines. Go create one!</p>
-          )}
-          {storylines.filter(s => s.status === 'Active').map(storyline => (
-            <div key={storyline.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{storyline.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">
-                Heat: <span className="font-semibold text-red-400">{storyline.heat}</span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {storyline.participants.map(p => (
-                  <span key={p.id} className="bg-gray-700 text-sm px-3 py-1 rounded-full">
-                    {p.name}
-                  </span>
-                ))}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {/* --- (UPDATED) Career History Button --- */}
+                <button
+                  onClick={() => handleViewCareerHistory(wrestler)}
+                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
+                >
+                  <HistoryIcon />
+                  History
+                </button>
+                {/* --- (NEW) Relationships Button --- */}
+                <button
+                  onClick={() => handleViewRelationships(wrestler)}
+                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
+                >
+                  <RelationshipsIcon />
+                  Relations
+                </button>
               </div>
             </div>
           ))}
@@ -1855,6 +1777,107 @@ function App() {
                             </td>
                             <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
                               {event.notes}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- (NEW) Phase 3: Relationships Screen ---
+  const renderRelationshipsScreen = () => {
+    if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
+
+    // Find all relationships for the selected wrestler
+    const relationships = (gameData.save_relationships || [])
+      .filter(rel => rel.personA_Id === viewingWrestler.id || rel.personB_Id === viewingWrestler.id);
+
+    // Helper to get the other person's name
+    const getOtherPersonName = (rel) => {
+      const otherId = rel.personA_Id === viewingWrestler.id ? rel.personB_Id : rel.personA_Id;
+      const otherPerson = gameData.save_wrestlers.find(w => w.id === otherId);
+      return otherPerson ? otherPerson.name : 'Unknown Person';
+    };
+
+    const getStatusColor = (status) => {
+      if (status.includes('Friend') || status.includes('Like')) return 'text-green-400';
+      if (status.includes('Dislike') || status.includes('Hate')) return 'text-red-400';
+      return 'text-gray-300';
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+        {/* --- Header --- */}
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <RelationshipsIcon />
+            Relationships: {viewingWrestler.name}
+          </h1>
+          <button 
+            onClick={() => {
+              setGameState('ROSTER_SCREEN');
+              setViewingWrestler(null);
+            }}
+            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+          >
+            Back to Roster
+          </button>
+        </div>
+
+        {/* --- Relationship List --- */}
+        <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="flex flex-col">
+            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div className="shadow overflow-hidden border-b border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Person
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {relationships.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                            No relationships found for this wrestler.
+                          </td>
+                        </tr>
+                      ) : (
+                        relationships.map(rel => (
+                          <tr key={rel.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                              {getOtherPersonName(rel)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {rel.relationshipType}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`font-semibold ${getStatusColor(rel.status)}`}>
+                                {rel.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                              {rel.notes}
                             </td>
                           </tr>
                         ))
@@ -2144,6 +2167,8 @@ function App() {
             return renderStorylineScreen();
           case 'CAREER_HISTORY_SCREEN': // (NEW)
             return renderCareerHistoryScreen(); // (NEW)
+          case 'RELATIONSHIPS_SCREEN': // (NEW)
+            return renderRelationshipsScreen(); // (NEW)
           default:
             return <p>An unexpected error occurred. Please refresh.</p>;
         }
@@ -2157,6 +2182,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
