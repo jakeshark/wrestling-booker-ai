@@ -21,18 +21,6 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 
-// --- (NEW) FIREBASE CONFIG ---
-// This will be populated by Vercel's Environment Variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_API_KEY,
-  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_APP_ID
-};
-// -----------------------------
-
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -61,7 +49,7 @@ const CloseIcon = () => (
 
 const AssistantIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
-    <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.861 2.861l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.861 2.861l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.861-2.861l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.385 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM13.5 18a.75.75 0 0 1 .721.544l.27 1.256a2.25 2.25 0 0 0 1.715 1.715l1.256.27a.75.75 0 0 1 0 1.442l-1.256.27a2.25 2.25 0 0 0-1.715 1.715l-.27 1.256a.75.75 0 0 1-1.442 0l-.27-1.256a2.25 2.25 0 0 0-1.715-1.715l-1.256-.27a.75.75 0 0 1 0-1.442l1.256-.27a2.25 2.25 0 0 0 1.715-1.715l.27-1.256a.75.75 0 0 1 .721-.544Z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.861 2.861l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.861 2.861l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.861-2.861l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.385 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM13.5 18a.75.75 0 0 1 .721.544l.27 1.256a2.25 2.25 0 0 0 1.715 1.715l1.256.27a.75.75 0 0 1 0 1.442l-1.256.27a2.25 2.25 0 0 0-1.715 1.715l-.27 1.256a.75.75 0 0 1-1.442 0l-.27-1.256a2.25 2.25 0 0 0-1.715-1.715l-1.256-.27a.75.75 0 0 1 0-1.442l1.256.27a2.25 2.25 0 0 0 1.715-1.715l.27-1.256a.75.75 0 0 1 .721-.544Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -110,7 +98,7 @@ const FireIcon = () => (
 
 const HistoryIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
-    <path fillRule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75V3a.75.75 0 0 1-1.5 0V2.25A.75.75 0 0 1 12 1.5ZM5.636 4.136a.75.75 0 0 1 1.06 0l.66.66a.75.75 0 0 1-1.06 1.06l-.66-.66a.75.75 0 0 1 0-1.06Zm12.728 0a.75.75 0 0 1 0 1.06l-.66.66a.75.75 0 0 1-1.06-1.06l.66-.66a.75.75 0 0 1 1.06 0ZM1.5 12a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H2.25A.75.75 0 0 1 1.5 12ZM21 12a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H21.75A.75.75 0 0 1 21 12ZM5.636 18.364a.75.75 0 0 1 0-1.06l.66-.66a.75.75 0 1 1 1.06 1.06l-.66.66a.75.75 0 0 1-1.06 0Zm12.728 0a.75.75 0 0 1-1.06 0l-.66-.66a.75.75 0 1 1-1.06 1.06l.66.66a.75.75 0 0 1 0-1.06ZM12 21a.75.75 0 0 1-.75.75v.75a.75.75 0 0 1 1.5 0v-.75A.75.75 0 0 1 12 21ZM10.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm1.5-3.75a.75.75 0 0 0-1.5 0V12a.75.75 0 0 0 1.5 0V8.25Z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V3a9 9 0 0 0-9 9 .75.75 0 0 1-1.5 0 10.5 10.5 0 0 1 10.5-10.5ZM10.5 10.038a5.25 5.25 0 1 0 4.93 4.93.75.75 0 0 1 1.437.426A6.75 6.75 0 1 1 9.006 8.35a.75.75 0 0 1 1.493 1.688Z" clipRule="evenodd" />
     <path d="M7.163 15.962c.311.23.638.448.977.652A.75.75 0 0 1 7.8 17.8a9 9 0 1 1 8.4 0 .75.75 0 0 1-1.34.614c.339-.204.666-.423.977-.652a.75.75 0 1 1 .9 1.399A10.499 10.499 0 0 1 12 20.25a10.5 10.5 0 1 1 0-21 10.5 10.5 0 0 1 4.937 1.189.75.75 0 1 1-.9 1.4A9 9 0 0 0 12 3.75a9 9 0 0 0-4.837 1.513.75.75 0 0 1-.9-1.4A10.5 10.5 0 0 1 12 1.5a10.5 10.5 0 0 1 10.5 10.5 10.5 10.5 0 0 1-1.189 4.937.75.75 0 1 1-1.4-.9Z" />
   </svg>
 );
@@ -127,6 +115,21 @@ const RelationshipsIcon = () => (
 );
 
 
+// --- Firebase Config ---
+// This config is now loaded from Vercel's Environment Variables
+// via import.meta.env
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID
+};
+
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+
 // Main Application
 function App() {
   // --- Firebase & Auth State ---
@@ -134,7 +137,6 @@ function App() {
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  // REMOVED: appId state (no longer needed)
 
   // --- Game State ---
   const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, RELATIONSHIPS_SCREEN, BUSY
@@ -163,12 +165,12 @@ function App() {
   const [showRecap, setShowRecap] = useState(""); // For AI show recap
   const [showRating, setShowRating] = useState(0); // For show rating
 
-  // --- (NEW) Storyline State ---
+  // --- Storyline State ---
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
-  const [viewingWrestler, setViewingWrestler] = useState(null); // (NEW) For Career History & Relationships
+  const [viewingWrestler, setViewingWrestler] = useState(null); // For Career History & Relationships
 
   // --- Design Doc Schemas ---
   // (These are the collections we need to copy for a new game)
@@ -212,18 +214,14 @@ function App() {
 
   // 1. Initialize Firebase
   useEffect(() => {
-    // REMOVED: Set App ID from global var (no longer needed)
-
     try {
-      // REMOVED: Logic to parse __firebase_config
-      
       if (!firebaseConfig.apiKey) {
         setLoadingMessage("Firebase config is missing. Please add it to your Vercel Environment Variables.");
         console.error("Firebase config is missing.");
         return;
       }
 
-      const app = initializeApp(firebaseConfig); // Use the config object directly
+      const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
       const dbInstance = getFirestore(app);
       
@@ -234,20 +232,16 @@ function App() {
       // 2. Set up Auth Listener
       onAuthStateChanged(authInstance, async (user) => {
         if (user) {
-          // User is signed in
           setUserId(user.uid);
           setIsAuthReady(true);
         } else {
-          // User is signed out, attempt to sign in
           try {
-            // REMOVED: __initial_auth_token logic
-            // We only need Anonymous sign-in for our standalone project
+            // We are not using __initial_auth_token in Vercel, so just sign in anonymously
             await signInAnonymously(authInstance);
           } catch (error) {
-            console.error("Error signing in:", error);
-            // MODIFIED: Provide a more specific error message for the user
-            if (error.code === 'auth/internal-error') {
-              setLoadingMessage("Authentication Error: Anonymous Sign-In may be disabled in your Firebase project. Please check your Firebase Console settings.");
+            console.error("Error signing in anonymously:", error);
+            if (error.code === 'auth/internal-error' || error.code === 'auth/operation-not-allowed') {
+              setLoadingMessage("Authentication Error: Anonymous Sign-In is disabled in your Firebase project. Please enable it in the Firebase Console.");
             } else {
               setLoadingMessage("Authentication failed. Please refresh.");
             }
@@ -263,29 +257,30 @@ function App() {
 
   // 3. Seed Default Dataset & Fetch Main Menu Data
   useEffect(() => {
-    if (!isAuthReady || !db) return;
+    if (!isAuthReady || !db || !userId) return;
 
     const seedAndFetch = async () => {
       setLoadingMessage('Checking for game data...');
-      await seedDefaultDataset();
+      // We pass 'db' and 'userId' to these functions now
+      await seedDefaultDataset(db, userId);
       
       setLoadingMessage('Fetching datasets...');
-      await fetchDatasets();
+      await fetchDatasets(db, userId);
       
       setLoadingMessage('Fetching your save games...');
-      await fetchPlayerSaves();
+      await fetchPlayerSaves(db, userId);
       
       setGameState('MAIN_MENU');
     };
 
     seedAndFetch();
-  }, [isAuthReady, db]); // RERUN if auth is ready (REMOVED appId)
+  }, [isAuthReady, db, userId]); // Rerun if auth is ready
 
   // --- Phase 1, Task 3: Default Dataset Seeder ---
-  const seedDefaultDataset = async () => {
+  const seedDefaultDataset = async (db, userId) => {
+    // Use the passed-in db instance
     const datasetId = 'default-fiction';
-    // UPDATED: Simplified Firestore path (public data)
-    const datasetRef = doc(db, 'datasets', datasetId);
+    const datasetRef = doc(db, `public/datasets`, datasetId);
     
     try {
       const docSnap = await getDoc(datasetRef);
@@ -305,8 +300,7 @@ function App() {
       });
 
       // 2. Create Company (dataset_companies)
-      // UPDATED: Simplified Firestore path (public data)
-      const companyRef = doc(collection(db, 'dataset_companies'));
+      const companyRef = doc(collection(db, `public/dataset_companies`));
       const companyId = companyRef.id;
       batch.set(companyRef, {
         datasetId: datasetId,
@@ -334,25 +328,21 @@ function App() {
 
       const wrestlerRefs = {};
       for (const wrestler of wrestlers) {
-        // UPDATED: Simplified Firestore path (public data)
-        const wrestlerRef = doc(collection(db, 'dataset_wrestlers'));
+        const wrestlerRef = doc(collection(db, `public/dataset_wrestlers`));
         wrestlerRefs[wrestler.name] = wrestlerRef.id;
         batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
       }
 
       // 4. Create Titles (dataset_titles)
-      // UPDATED: Simplified Firestore path (public data)
-      batch.set(doc(collection(db, 'dataset_titles')), {
+      batch.set(doc(collection(db, `public/dataset_titles`)), {
         datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
       });
-      // UPDATED: Simplified Firestore path (public data)
-      batch.set(doc(collection(db, 'dataset_titles')), {
+      batch.set(doc(collection(db, `public/dataset_titles`)), {
         datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
       });
 
       // 5. Create TV Show (dataset_tv_shows)
-      // UPDATED: Simplified Firestore path (public data)
-      batch.set(doc(collection(db, 'dataset_tv_shows')), {
+      batch.set(doc(collection(db, `public/dataset_tv_shows`)), {
         datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
       });
 
@@ -365,25 +355,17 @@ function App() {
         if (i === 7) { tier = "Major_Event"; name = "Summer Scorcher"; }
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
         
-        // MODIFIED: Set first show to Jan 7th
-        const showDate = (i === 0) 
-          ? new Date(2025, i, 7, 18, 0, 0) 
-          : new Date(2025, i, 28, 18, 0, 0); // Keep others at 28th for now
-
-        // UPDATED: Simplified Firestore path (public data)
-        batch.set(doc(collection(db, 'dataset_events')), {
+        batch.set(doc(collection(db, `public/dataset_events`)), {
           datasetId: datasetId, 
           companyId: companyId, 
           month: i + 1, 
           eventName: name, 
           eventTier: tier,
-          // We'll use this date logic when creating the save_shows
         });
       }
 
       // 7. Create Relationships (dataset_relationships)
-      // UPDATED: Simplified Firestore path (public data)
-      batch.set(doc(collection(db, 'dataset_relationships')), {
+      batch.set(doc(collection(db, `public/dataset_relationships`)), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
         personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
@@ -391,8 +373,7 @@ function App() {
         status: 'Strongly Dislike',
         notes: "Real-life rivalry from their training days."
       });
-      // UPDATED: Simplified Firestore path (public data)
-      batch.set(doc(collection(db, 'dataset_relationships')), {
+      batch.set(doc(collection(db, `public/dataset_relationships`)), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
         personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
@@ -411,10 +392,9 @@ function App() {
   };
 
   // --- Data Fetching Callbacks ---
-  const fetchDatasets = async () => {
+  const fetchDatasets = async (db, userId) => {
     try {
-      // UPDATED: Simplified Firestore path
-      const q = query(collection(db, 'datasets'));
+      const q = query(collection(db, `public/datasets`));
       const querySnapshot = await getDocs(q);
       const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setDatasets(datasetsData);
@@ -423,10 +403,9 @@ function App() {
     }
   };
 
-  const fetchPlayerSaves = async () => {
+  const fetchPlayerSaves = async (db, userId) => {
     if (!userId) return;
     try {
-      // UPDATED: Simplified Firestore path
       const q = query(collection(db, `users/${userId}/player_saves`));
       const querySnapshot = await getDocs(q);
       const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -439,7 +418,7 @@ function App() {
   // --- Phase 1, Task 4: "New Game" & "Load Game" Logic ---
 
   const handleNewGame = async (datasetId) => {
-    if (!userId || !db) return; // REMOVED: appId
+    if (!userId || !db) return;
 
     setGameState('BUSY');
     setLoadingMessage('Starting your new game... This may take a moment.');
@@ -451,10 +430,9 @@ function App() {
         datasetId: datasetId,
         saveName: `New Game (${new Date().toLocaleDateString()})`,
         lastPlayed: Timestamp.now(),
-        currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')), // MODIFIED: Start on Show Day
+        currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')), // Start on Show Day
         playerCompanyId: null // We'll set this after we copy the company
       };
-      // UPDATED: Simplified Firestore path
       const newSaveRef = await addDoc(collection(db, `users/${userId}/player_saves`), newSaveData);
       const newSaveId = newSaveRef.id;
 
@@ -467,8 +445,7 @@ function App() {
         if (!saveCollectionName) continue;
 
         // Get all documents from the dataset subcollection
-        // UPDATED: Simplified Firestore path
-        const q = query(collection(db, `${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const q = query(collection(db, `public/${datasetCollectionName}`), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
@@ -482,17 +459,14 @@ function App() {
             // Use robust Date constructor: new Date(year, monthIndex, day, hours, minutes, seconds)
             // docData.month is 1-12, so we subtract 1 for the 0-11 monthIndex
             
-            // MODIFIED: Set first show to Jan 7th, others to 28th
             const showDate = (docData.month === 1) 
               ? new Date(2025, docData.month - 1, 7, 18, 0, 0)
               : new Date(2025, docData.month - 1, 28, 18, 0, 0);
               
             newDocData.date = Timestamp.fromDate(showDate);
-            // delete newDocData.month; // Keep month for reference?
           }
           
           // Create a new doc in the corresponding save subcollection
-          // UPDATED: Simplified Firestore path
           const newDocRef = doc(collection(db, `users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
           batch.set(newDocRef, newDocData);
 
@@ -520,14 +494,13 @@ function App() {
   };
 
   const handleLoadGame = async (saveId) => {
-    if (!userId || !db) return; // REMOVED: appId
+    if (!userId || !db) return;
 
     setGameState('BUSY');
     setLoadingMessage('Loading your save game...');
 
     try {
       // 1. Get the save game doc
-      // UPDATED: Simplified Firestore path
       const saveRef = doc(db, `users/${userId}/player_saves`, saveId);
       const saveSnap = await getDoc(saveRef);
 
@@ -543,7 +516,6 @@ function App() {
       let unreadCount = 0;
       
       for (const collectionName of SAVE_COLLECTION_NAMES) { // Use the new (and now correct) array
-        // UPDATED: Simplified Firestore path
         const q = query(collection(db, `users/${userId}/player_saves/${saveId}/${collectionName}`));
         const querySnapshot = await getDocs(q);
         
@@ -586,7 +558,6 @@ function App() {
       const newTimestamp = Timestamp.fromDate(nextDate);
       
       // 3. Update the save game doc in Firestore
-      // UPDATED: Simplified Firestore path
       const saveRef = doc(db, `users/${userId}/player_saves`, activeSave.id);
       await setDoc(saveRef, { 
         currentDate: newTimestamp,
@@ -609,7 +580,7 @@ function App() {
     setGameData({});
     setGameState('MAIN_MENU');
     // We already fetched saves, but we can re-fetch to show updated "lastPlayed"
-    fetchPlayerSaves();
+    fetchPlayerSaves(db, userId);
   };
 
   // --- Phase 2: AI & Simulation Engine ---
@@ -667,12 +638,7 @@ function App() {
     `;
 
     try {
-      // NOTE: This API call relies on the `VITE_API_KEY` being set in Vercel,
-      // but it will be proxied by the Canvas environment for now.
-      // For a *local* build, you would need to get your own Gemini API key.
-      // For Vercel, this will be handled by the environment.
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
       const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
@@ -705,7 +671,6 @@ function App() {
           isRead: false
         };
         
-        // UPDATED: Simplified Firestore path
         const messagesRef = collection(db, `users/${userId}/player_saves/${saveId}/save_messages`);
         const newDocRef = await addDoc(messagesRef, messageData);
         
@@ -746,8 +711,7 @@ function App() {
     const userQuery = assistantQuery;
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
       const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
@@ -797,7 +761,6 @@ function App() {
     // Then, update Firestore in the background
     try {
       const batch = writeBatch(db);
-      // UPDATED: Simplified Firestore path
       const messagesRef = collection(db, `users/${userId}/player_saves/${activeSave.id}/save_messages`);
       
       gameData.save_messages.forEach(msg => {
@@ -862,7 +825,6 @@ function App() {
       const showRating = Math.floor(Math.random() * 30 + 70); // Random rating 70-100
       
       // Update the `save_shows` doc in Firestore
-      // UPDATED: Simplified Firestore path
       const showRef = doc(db, `users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
       
       // We will add the recap to this object after the AI call
@@ -884,6 +846,9 @@ function App() {
 
       // --- (NEW) Phase 3, Task 2: Log Career Events ---
       await logCareerEvents(currentSegments, showRating);
+
+      // --- (NEW) Phase 3, Task 4: Run Post-Show Simulation ---
+      await runShowSimulation(currentSegments);
 
       // --- (NEW) Phase 2, Task 5: AI Recap ---
       setShowRating(showRating); // Store rating for results screen
@@ -965,8 +930,7 @@ function App() {
     // 3. Call the Gemini API
     let recapText = "No AI recap could be generated for this show."; // Default
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
       const payload = {
         contents: [{ parts: [{ text: userQuery }] }],
@@ -998,6 +962,114 @@ function App() {
     }
         
     return recapText;
+  };
+
+
+  // --- (NEW) Phase 3, Task 4: Post-Show Simulation Engine v2 ---
+  const runShowSimulation = async (segments) => {
+    console.log("Sim Engine v2: Running post-show simulation...");
+    if (!segments || !gameData.save_wrestlers || !gameData.save_relationships) return;
+
+    const batch = writeBatch(db);
+    // Use a map for efficient wrestler data updates
+    const wrestlerUpdates = new Map();
+    const allWrestlers = gameData.save_wrestlers;
+    const allRelationships = gameData.save_relationships;
+
+    // Helper to get wrestler data (and check updates map)
+    const getWrestler = (id) => {
+      if (wrestlerUpdates.has(id)) {
+        return wrestlerUpdates.get(id);
+      }
+      return allWrestlers.find(w => w.id === id);
+    };
+
+    // Helper to get relationship
+    const getRelationship = (id1, id2) => {
+      return allRelationships.find(rel => 
+        (rel.personA_Id === id1 && rel.personB_Id === id2) ||
+        (rel.personA_Id === id2 && rel.personB_Id === id1)
+      );
+    };
+
+    try {
+      for (const segment of segments) {
+        if (!segment || segment.type !== 'Match') continue; // Only process matches for now
+
+        const participantIds = segment.participants.map(p => p.id);
+
+        for (const participant of segment.participants) {
+          const wrestler = getWrestler(participant.id);
+          if (!wrestler) continue;
+
+          let moraleChange = 0;
+          
+          // Get the wrestler's most up-to-date morale from the updates map if it exists
+          const baseMorale = wrestlerUpdates.has(participant.id)
+            ? wrestlerUpdates.get(participant.id).morale
+            : wrestler.morale;
+
+          // 1. Storyline Logic
+          if (segment.storylineId) {
+            if (segment.winnerId === participant.id) {
+              moraleChange += 10; // Storyline win
+            } else if (segment.winnerId) { // They were in the match but didn't win
+              moraleChange -= 5; // Storyline loss
+            }
+          }
+
+          // 2. Relationship Logic
+          const opponentIds = participantIds.filter(id => id !== participant.id);
+          for (const oppId of opponentIds) {
+            const relationship = getRelationship(participant.id, oppId);
+            if (relationship) {
+              if (relationship.status.includes('Friend')) {
+                moraleChange += 3;
+              } else if (relationship.status.includes('Dislike') || relationship.status.includes('Hate')) {
+                moraleChange -= 3;
+              }
+            }
+          }
+
+          // Apply changes if any
+          if (moraleChange !== 0) {
+            const finalMorale = Math.max(0, Math.min(100, baseMorale + moraleChange));
+
+            // Store update
+            wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
+            
+            console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale}`);
+          }
+        }
+      }
+
+      // Commit all DB updates
+      if (wrestlerUpdates.size > 0) {
+        wrestlerUpdates.forEach((wrestler, id) => {
+          const docRef = doc(db, `users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
+          batch.update(docRef, { morale: wrestler.morale });
+        });
+        await batch.commit();
+
+        // Update local state
+        setGameData(prevData => ({
+          ...prevData,
+          save_wrestlers: prevData.save_wrestlers.map(w => {
+            if (wrestlerUpdates.has(w.id)) {
+              return wrestlerUpdates.get(w.id);
+            }
+            return w;
+          })
+        }));
+        console.log("Sim Engine v2: Morale updates saved and local state updated.");
+      } else {
+        console.log("Sim Engine v2: No morale changes to apply.");
+      }
+
+    } catch (error) {
+      console.error("Error during post-show simulation: ", error);
+      // Don't crash the game
+    }
   };
 
 
@@ -1057,7 +1129,6 @@ function App() {
           };
           
           // Create a new doc in the save_career_events subcollection
-          // UPDATED: Simplified Firestore path
           const newEventRef = doc(collection(db, `users/${userId}/player_saves/${activeSave.id}/save_career_events`));
           batch.set(newEventRef, careerEventData);
 
@@ -1179,9 +1250,8 @@ function App() {
   
   const handleCreateStoryline = async () => {
     if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-      // Use a simple console error instead of alert
+      // Use a modal or better feedback, for now, console.log
       console.error("Storyline must have a name and at least 2 participants.");
-      // In a real app, you'd set an error state here
       return;
     }
     
@@ -1197,7 +1267,6 @@ function App() {
         beats: [] // For future use (Module 8)
       };
       
-      // UPDATED: Simplified Firestore path
       const docRef = await addDoc(collection(db, `users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
       
       const newStoryline = { id: docRef.id, ...newStorylineData };
@@ -1217,6 +1286,7 @@ function App() {
       setGameState('STORYLINE_SCREEN');
     }
   };
+
 
   // --- (NEW) Phase 3: Career History Logic ---
   const handleViewCareerHistory = (wrestler) => {
@@ -1703,19 +1773,126 @@ function App() {
     );
   };
 
+
+  // --- (NEW) Show Results Screen ---
+  const renderShowResultsScreen = () => {
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+        {/* --- Header --- */}
+        <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
+              <p className="text-indigo-300">
+                {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Overall Rating</p>
+              <p className="text-4xl font-bold text-yellow-400 flex items-center">
+                <StarIcon className="w-8 h-8 mr-1" />
+                {showRating}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* --- AI Recap --- */}
+        <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
+          <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
+          {showRecap ? (
+            <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+              {showRecap}
+            </p>
+          ) : (
+            <div className="flex items-center justify-center p-8">
+              <LoadingIcon />
+              <span className="ml-3 text-lg">Generating AI recap...</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-6 text-center">
+          <button 
+            onClick={handleNextDay}
+            className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
+          >
+            Continue (Next Day)
+          </button>
+        </div>
+      </div>
+    );
+  };
+  
+  // --- (NEW) Phase 3: Storyline Screen ---
+  const renderStorylineScreen = () => {
+    const storylines = gameData.save_storylines || [];
+
+    return (
+      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
+        {/* --- Header --- */}
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <FireIcon />
+            Storyline Manager
+          </h1>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => handleOpenCreateStorylineModal()}
+              className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
+            >
+              <PlusIcon />
+              Create Storyline
+            </button>
+            <button 
+              onClick={() => setGameState('IN_GAME')}
+              className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+
+        {/* --- Storyline List --- */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {storylines.length === 0 && (
+            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines. Go create one!</p>
+          )}
+          {storylines.filter(s => s.status === 'Active').map(storyline => (
+            <div key={storyline.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white">{storyline.name}</h3>
+              <p className="text-sm text-gray-400 mb-2">
+                Heat: <span className="font-semibold text-red-400">{storyline.heat}</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {storyline.participants.map(p => (
+                  <span key={p.id} className="bg-gray-700 text-sm px-3 py-1 rounded-full">
+                    {p.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+
   // --- (NEW) Phase 3: Career History Screen ---
   const renderCareerHistoryScreen = () => {
-    if (!viewingWrestler) return renderLoadingScreen(); // Should be covered by gameState, but good failsafe
+    if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
 
-    const careerEvents = (gameData.save_career_events || [])
+    // Find all events for the selected wrestler
+    const events = (gameData.save_career_events || [])
       .filter(event => event.wrestlerId === viewingWrestler.id)
-      .sort((a, b) => b.date.toMillis() - a.date.toMillis()); // Newest first
+      .sort((a, b) => b.date.toMillis() - a.date.toMillis()); // Sort by most recent
 
-    const getEventColor = (eventType) => {
-      if (eventType.includes('Win')) return 'text-green-400';
-      if (eventType.includes('Loss')) return 'text-red-400';
-      if (eventType.includes('Draw')) return 'text-yellow-400';
-      return 'text-blue-400'; // Angle
+    const getEventColor = (type) => {
+      if (type === 'Match Win') return 'text-green-400';
+      if (type === 'Match Loss') return 'text-red-400';
+      if (type.includes('Draw')) return 'text-yellow-400';
+      return 'text-gray-300';
     };
 
     return (
@@ -1737,7 +1914,7 @@ function App() {
           </button>
         </div>
 
-        {/* --- Career Event List --- */}
+        {/* --- History List --- */}
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="flex flex-col">
             <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -1758,16 +1935,16 @@ function App() {
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
-                      {careerEvents.length === 0 ? (
+                      {events.length === 0 ? (
                         <tr>
                           <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
                             No career events found for this wrestler.
                           </td>
                         </tr>
                       ) : (
-                        careerEvents.map(event => (
+                        events.map(event => (
                           <tr key={event.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                               {event.date.toDate().toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -1791,7 +1968,7 @@ function App() {
       </div>
     );
   };
-
+  
   // --- (NEW) Phase 3: Relationships Screen ---
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
@@ -2182,7 +2359,4 @@ function App() {
 }
 
 export default App;
-
-
-
 
