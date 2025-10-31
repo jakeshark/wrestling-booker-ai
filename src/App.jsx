@@ -999,6 +999,8 @@ function App() {
       const company = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
       const companySize = company ? company.size : "Unknown";
       
+      let newCareerEvents = []; // (NEW) Create a temporary array
+
       for (const segment of segments) {
         if (!segment) continue; // Skip empty segments
         
@@ -1047,11 +1049,23 @@ function App() {
           // UPDATED: Simplified Firestore path
           const newEventRef = doc(collection(db, `users/${userId}/player_saves/${activeSave.id}/save_career_events`));
           batch.set(newEventRef, careerEventData);
+
+          // (NEW) Add the new event to our temporary array for the state update
+          newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
         }
       }
       
       await batch.commit();
       console.log("Career events successfully logged to memory.");
+
+      // (NEW) Update the local gameData state with the new events
+      setGameData(prevData => ({
+        ...prevData,
+        save_career_events: [
+          ...(prevData.save_career_events || []),
+          ...newCareerEvents
+        ]
+      }));
       
     } catch (error) {
       console.error("Error logging career events:", error);
@@ -2143,5 +2157,6 @@ function App() {
 }
 
 export default App;
+
 
 
