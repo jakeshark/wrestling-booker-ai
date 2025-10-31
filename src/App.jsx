@@ -108,6 +108,13 @@ const FireIcon = () => (
   </svg>
 );
 
+const HistoryIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+    <path fillRule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75V3a.75.75 0 0 1-1.5 0V2.25A.75.75 0 0 1 12 1.5ZM5.636 4.136a.75.75 0 0 1 1.06 0l.66.66a.75.75 0 0 1-1.06 1.06l-.66-.66a.75.75 0 0 1 0-1.06Zm12.728 0a.75.75 0 0 1 0 1.06l-.66.66a.75.75 0 0 1-1.06-1.06l.66-.66a.75.75 0 0 1 1.06 0ZM1.5 12a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H2.25A.75.75 0 0 1 1.5 12ZM21 12a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H21.75A.75.75 0 0 1 21 12ZM5.636 18.364a.75.75 0 0 1 0-1.06l.66-.66a.75.75 0 1 1 1.06 1.06l-.66.66a.75.75 0 0 1-1.06 0Zm12.728 0a.75.75 0 0 1-1.06 0l-.66-.66a.75.75 0 1 1-1.06 1.06l.66.66a.75.75 0 0 1 0-1.06ZM12 21a.75.75 0 0 1-.75.75v.75a.75.75 0 0 1 1.5 0v-.75A.75.75 0 0 1 12 21ZM10.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm1.5-3.75a.75.75 0 0 0-1.5 0V12a.75.75 0 0 0 1.5 0V8.25Z" clipRule="evenodd" />
+    <path d="M7.163 15.962c.311.23.638.448.977.652A.75.75 0 0 1 7.8 17.8a9 9 0 1 1 8.4 0 .75.75 0 0 1-1.34.614c.339-.204.666-.423.977-.652a.75.75 0 1 1 .9 1.399A10.499 10.499 0 0 1 12 20.25a10.5 10.5 0 1 1 0-21 10.5 10.5 0 0 1 4.937 1.189.75.75 0 1 1-.9 1.4A9 9 0 0 0 12 3.75a9 9 0 0 0-4.837 1.513.75.75 0 0 1-.9-1.4A10.5 10.5 0 0 1 12 1.5a10.5 10.5 0 0 1 10.5 10.5 10.5 10.5 0 0 1-1.189 4.937.75.75 0 1 1-1.4-.9Z" />
+  </svg>
+);
+
 
 // Main Application
 function App() {
@@ -119,7 +126,7 @@ function App() {
   // REMOVED: appId state (no longer needed)
 
   // --- Game State ---
-  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, BUSY
+  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, BUSY
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
   const [activeSave, setActiveSave] = useState(null); // This will hold the loaded save_game doc
@@ -150,6 +157,7 @@ function App() {
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
+  const [viewingWrestler, setViewingWrestler] = useState(null); // (NEW) For Career History
 
   // --- Design Doc Schemas ---
   // (These are the collections we need to copy for a new game)
@@ -1185,6 +1193,12 @@ function App() {
     }
   };
 
+  // --- (NEW) Phase 3: Career History Logic ---
+  const handleViewCareerHistory = (wrestler) => {
+    setViewingWrestler(wrestler);
+    setGameState('CAREER_HISTORY_SCREEN');
+  };
+
 
   // --- UI Render Functions ---
 
@@ -1632,6 +1646,15 @@ function App() {
                   <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
                 </div>
               </div>
+              
+              {/* --- (NEW) Career History Button --- */}
+              <button
+                onClick={() => handleViewCareerHistory(wrestler)}
+                className="mt-3 w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
+              >
+                <HistoryIcon />
+                View History
+              </button>
             </div>
           ))}
         </div>
@@ -1739,6 +1762,95 @@ function App() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  };
+
+  // --- (NEW) Phase 3: Career History Screen ---
+  const renderCareerHistoryScreen = () => {
+    if (!viewingWrestler) return renderLoadingScreen(); // Should be covered by gameState, but good failsafe
+
+    const careerEvents = (gameData.save_career_events || [])
+      .filter(event => event.wrestlerId === viewingWrestler.id)
+      .sort((a, b) => b.date.toMillis() - a.date.toMillis()); // Newest first
+
+    const getEventColor = (eventType) => {
+      if (eventType.includes('Win')) return 'text-green-400';
+      if (eventType.includes('Loss')) return 'text-red-400';
+      if (eventType.includes('Draw')) return 'text-yellow-400';
+      return 'text-blue-400'; // Angle
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+        {/* --- Header --- */}
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <HistoryIcon />
+            Career History: {viewingWrestler.name}
+          </h1>
+          <button 
+            onClick={() => {
+              setGameState('ROSTER_SCREEN');
+              setViewingWrestler(null);
+            }}
+            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+          >
+            Back to Roster
+          </button>
+        </div>
+
+        {/* --- Career Event List --- */}
+        <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="flex flex-col">
+            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div className="shadow overflow-hidden border-b border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Event Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {careerEvents.length === 0 ? (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
+                            No career events found for this wrestler.
+                          </td>
+                        </tr>
+                      ) : (
+                        careerEvents.map(event => (
+                          <tr key={event.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {event.date.toDate().toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`font-semibold ${getEventColor(event.eventType)}`}>
+                                {event.eventType}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                              {event.notes}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -2016,6 +2128,8 @@ function App() {
             return renderShowResultsScreen();
           case 'STORYLINE_SCREEN':
             return renderStorylineScreen();
+          case 'CAREER_HISTORY_SCREEN': // (NEW)
+            return renderCareerHistoryScreen(); // (NEW)
           default:
             return <p>An unexpected error occurred. Please refresh.</p>;
         }
@@ -2029,4 +2143,5 @@ function App() {
 }
 
 export default App;
+
 
