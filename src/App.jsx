@@ -189,6 +189,15 @@ function App() {
     'dataset_relationships',
   ];
 
+  // (NEW) Define collections that need ID mapping
+  const ID_MAPPED_COLLECTIONS = [
+    'dataset_companies',
+    'dataset_wrestlers',
+    'dataset_staff',
+    'dataset_teams',
+    'dataset_stables',
+  ];
+
   const SAVE_COLLECTIONS_MAP = {
     'dataset_companies': 'save_companies',
     'dataset_wrestlers': 'save_wrestlers',
@@ -449,38 +458,81 @@ function App() {
       const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
       const newSaveId = newSaveRef.id;
 
-      // 2. Copy all dataset collections to save collections
+      // 2. (REVISED) Copy all dataset collections in passes
       const batch = writeBatch(db);
+      const idMap = new Map(); // <old_doc_id, new_doc_id>
       let playerCompanyId = null;
 
-      for (const datasetCollectionName of DATASET_COLLECTIONS) {
+      // --- PASS 1: Create new docs for items that HAVE IDs (wrestlers, companies, etc.) ---
+      setLoadingMessage('Copying core data...');
+      for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        // (FIXED) Correct path
+        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const querySnapshot = await getDocs(q);
+
+        for (const docSnap of querySnapshot.docs) {
+          const oldDocId = docSnap.id;
+          const docData = docSnap.data();
+          
+          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          const newDocId = newDocRef.id;
+          
+          idMap.set(oldDocId, newDocId); // Store the mapping
+          
+          batch.set(newDocRef, docData);
+
+          if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
+            playerCompanyId = newDocId; // Assign the NEW company ID
+          }
+        }
+      }
+      
+      // --- PASS 2: Copy remaining docs and map foreign keys ---
+      setLoadingMessage('Linking relationships and shows...');
+      const remainingCollections = DATASET_COLLECTIONS.filter(col => !ID_MAPPED_COLLECTIONS.includes(col));
+
+      for (const datasetCollectionName of remainingCollections) {
+        const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
+        if (!saveCollectionName) continue;
+
         const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
           const docData = docSnap.data();
-          
-          // Logic for `dataset_events` becoming `save_shows`
           let newDocData = { ...docData };
+
+          // --- Map Foreign Keys ---
           if (datasetCollectionName === 'dataset_events') {
             newDocData.status = "Planned";
             const showDate = (docData.month === 1) 
               ? new Date(2025, docData.month - 1, 7, 18, 0, 0)
               : new Date(2025, docData.month - 1, 28, 18, 0, 0);
             newDocData.date = Timestamp.fromDate(showDate);
+            // Map the company ID
+            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
           
-          // (FIXED) Correct path
+          if (datasetCollectionName === 'dataset_relationships') {
+            newDocData.personA_Id = idMap.get(docData.personA_Id) || docData.personA_Id;
+            newDocData.personB_Id = idMap.get(docData.personB_Id) || docData.personB_Id;
+          }
+          
+          if (datasetCollectionName === 'dataset_titles') {
+            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
+            newDocData.initialHolderId = idMap.get(docData.initialHolderId) || null;
+            // We'd also map currentHolderId if it existed
+          }
+          
+          if (datasetCollectionName === 'dataset_tv_shows') {
+             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
+          }
+          // --- End Map ---
+
           const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
           batch.set(newDocRef, newDocData);
-
-          if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
-            playerCompanyId = newDocRef.id;
-          }
         }
       }
 
@@ -2307,4 +2359,5 @@ function App() {
 }
 
 export default App;
+
 
