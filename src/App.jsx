@@ -854,26 +854,118 @@ function App() {
     setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
   };
   
+  // (NEW) Helper function to calculate segment ratings
+  const calculateSegmentRating = (segment, allWrestlers) => {
+    if (!segment || segment.participants.length === 0) return 0;
+
+    let totalCharisma = 0;
+    let totalWorkrate = 0;
+    const participants = [];
+
+    for (const p of segment.participants) {
+      const wrestler = allWrestlers.find(w => w.id === p.id);
+      if (wrestler) {
+        participants.push(wrestler);
+        totalCharisma += wrestler.stats.charisma;
+      }
+    }
+    
+    const numParticipants = participants.length;
+    if (numParticipants === 0) return 0;
+    
+    const avgCharisma = totalCharisma / numParticipants;
+
+    if (segment.type === 'Angle') {
+      // Per EWR guides, angle rating is 100% charisma
+      return Math.min(100, Math.floor(avgCharisma));
+    }
+
+    if (segment.type === 'Match') {
+      // Per EWR guides, match rating is a blend of charisma (overness) and workrate
+      for (const wrestler of participants) {
+        totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
+      }
+      const avgWorkrate = totalWorkrate / numParticipants;
+      
+      // 60% Overness (Charisma), 40% Workrate
+      const rating = (avgCharisma * 0.6) + (avgWorkrate * 0.4);
+      return Math.min(100, Math.floor(rating));
+    }
+
+    return 0; // Default
+  };
+
+  // (NEW) Overhauled show running logic
   const handleRunShow = async () => {
     setGameState('BUSY');
-    setLoadingMessage('Simulating your show...');
-    
-    console.log("--- Running Show ---");
-    console.log(currentShow);
-    console.log(currentSegments);
+    setLoadingMessage('Calculating segment ratings...');
     
     try {
-      const showRating = Math.floor(Math.random() * 30 + 70); // Random rating 70-100
+      let ratedSegments = [];
+      let totalWeightedRating = 0;
+      let totalWeight = 0;
+
+      // --- 1. Calculate Individual Segment Ratings & Weighted Show Rating ---
+      let lastNonNullSegmentIndex = -1;
+      for (let i = currentSegments.length - 1; i >= 0; i--) {
+        if (currentSegments[i]) {
+          lastNonNullSegmentIndex = i;
+          break;
+        }
+      }
+
+      for (let i = 0; i < currentSegments.length; i++) {
+        const segment = currentSegments[i];
+        if (!segment) {
+          ratedSegments.push(null);
+          continue;
+        }
+
+        const rating = calculateSegmentRating(segment, gameData.save_wrestlers);
+        const ratedSegment = { ...segment, rating: rating };
+        ratedSegments.push(ratedSegment);
+
+        // Apply weights per EWR guides
+        let weight = 1.0;
+        if (i === 0) weight = 1.2; // Opener
+        if (i === lastNonNullSegmentIndex) weight = 2.0; // Main Event
+
+        totalWeightedRating += rating * weight;
+        totalWeight += weight;
+      }
+
+      const finalShowRating = totalWeight > 0 ? Math.floor(totalWeightedRating / totalWeight) : 0;
+      setShowRating(finalShowRating);
       
-      // (FIXED) Correct path
+      // --- 2. Run Simulation & Log Events ---
+      setLoadingMessage('Logging career events...');
+      // (NEW) Pass ratedSegments to logging
+      await logCareerEvents(ratedSegments, finalShowRating);
+
+      setLoadingMessage('Simulating backstage changes...');
+      // (NEW) Pass ratedSegments and show data to simulation
+      await runShowSimulation(ratedSegments, currentShow);
+
+      // --- 3. Generate AI Recap ---
+      setLoadingMessage('Generating show recap...');
+      // (NEW) Pass ratedSegments for more detailed recap context
+      const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
+      setShowRecap(recapText);
+
+      // --- 4. Save to Database ---
+      setLoadingMessage('Saving show results...');
       const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
       
       const showUpdateData = {
         status: "Complete",
-        segments: currentSegments,
-        rating: showRating
+        segments: ratedSegments, // Save the new segments WITH ratings
+        rating: finalShowRating,
+        recap: recapText
       };
       
+      await setDoc(showRef, showUpdateData, { merge: true });
+
+      // --- 5. Update Local State ---
       setGameData(prevData => ({
         ...prevData,
         save_shows: prevData.save_shows.map(show => 
@@ -883,24 +975,7 @@ function App() {
         )
       }));
 
-      await logCareerEvents(currentSegments, showRating);
-      await runShowSimulation(currentSegments);
-
-      setShowRating(showRating);
-      const recapText = await generateShowRecap(currentShow, currentSegments, showRating);
-      
-      await setDoc(showRef, { recap: recapText }, { merge: true });
-      
-      setGameData(prevData => ({
-        ...prevData,
-        save_shows: prevData.save_shows.map(show => 
-          show.id === currentShow.id 
-            ? { ...show, recap: recapText }
-            : show
-        )
-      }));
-      setShowRecap(recapText);
-
+      // --- 6. Go to Results Screen ---
       setGameState('SHOW_RESULTS');
       
     } catch (error) {
@@ -911,11 +986,12 @@ function App() {
   };
 
   // --- Phase 2, Task 5: AI Show Recap ---
-  const generateShowRecap = async (show, segments, rating) => {
+  // (NEW) Now accepts ratedSegments for more context
+  const generateShowRecap = async (show, ratedSegments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
-    const cardForAI = segments
+    const cardForAI = ratedSegments
       .filter(s => s) 
       .map((s, index) => {
         const participants = s.participants.map(p => p.name).join(' vs. ');
@@ -924,25 +1000,28 @@ function App() {
         const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
         const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
 
+        // (NEW) Add the segment rating to the AI prompt
+        const ratingContext = `(Rating: ${s.rating}/100)`;
+
         if (s.type === 'Match') {
           const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
           result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
         } else {
-          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')}`;
+          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
         }
-        return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result}`;
+        return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
       }).join('\n');
 
     const systemPrompt = `
       You are a professional wrestling "dirt sheet" journalist, like Dave Meltzer. 
       You are writing a recap of a wrestling show for your subscribers. 
       Your tone should be critical, insightful, and use insider terms (e.g., "went over," "clean win," "got their heat back," "Gimmick," "push," "B-show").
-      You will be given the name of the show, the final rating (out of 100), and the segments that happened.
+      You will be given the name of the show, the final rating (out of 100), and the segments that happened (including their individual ratings).
       
       Your recap should be a few paragraphs long. 
-      - First, give an overall impression of the show based on the rating.
-      - Then, pick 2-3 key segments (especially the main event, which is the last one) and describe what happened in your dirt sheet style.
-      - IMPORTANT: If a segment includes a "(Storyline: ...)" tag, pay special attention to it. Mention how the segment advanced that specific storyline.
+      - First, give an overall impression of the show based on the **overall rating**.
+      - Then, pick 2-3 key segments (especially the main event, which is the last one) and describe what happened, using their **individual segment ratings** to justify your praise or criticism.
+      - IMPORTANT: If a segment includes a "(Storyline: ...)" tag, pay special attention to it. Mention how the segment (and its rating) advanced that specific storyline.
       - Conclude with a final thought on the show's direction.
       - Do NOT just list every segment. Be selective.
     `;
@@ -993,15 +1072,23 @@ function App() {
 
 
   // --- Phase 3, Task 4: Post-Show Simulation Engine v2 ---
-  const runShowSimulation = async (segments) => {
+  // (UPDATED) Now accepts ratedSegments
+  const runShowSimulation = async (ratedSegments, show) => {
     console.log("Sim Engine v2: Running post-show simulation...");
-    if (!segments || !gameData.save_wrestlers || !gameData.save_relationships || !db || !userId || !appId) return;
+    if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
+      console.warn("Sim Engine v2: Missing required data, skipping simulation.");
+      return;
+    }
 
     const batch = writeBatch(db);
     const wrestlerUpdates = new Map();
+    const storylineUpdates = new Map();
+    
     const allWrestlers = gameData.save_wrestlers;
     const allRelationships = gameData.save_relationships;
+    const allStorylines = gameData.save_storylines;
 
+    // --- Helper Functions ---
     const getWrestler = (id) => {
       if (wrestlerUpdates.has(id)) {
         return wrestlerUpdates.get(id);
@@ -1015,61 +1102,129 @@ function App() {
         (rel.personA_Id === id2 && rel.personB_Id === id1)
       );
     };
+    
+    const getStoryline = (id) => {
+      if (storylineUpdates.has(id)) {
+        return storylineUpdates.get(id);
+      }
+      return allStorylines.find(s => s.id === id);
+    };
 
+    // (NEW) Event Tier Morale Multiplier
+    const getMoraleMultiplier = (tier) => {
+      switch (tier) {
+        case 'Flagship_Event':
+          return 2.0;
+        case 'Major_Event':
+          return 1.5;
+        case 'Monthly_Event':
+        default:
+          return 1.0;
+      }
+    };
+    
+    // (NEW) Storyline Heat change based on segment rating
+    const getHeatChange = (segmentRating) => {
+      if (segmentRating >= 75) return 5; // Good segment, big heat gain
+      if (segmentRating >= 50) return 2; // Average segment, small heat gain
+      return -3; // Bad segment, heat loss
+    };
+
+    // --- Simulation Logic ---
     try {
-      for (const segment of segments) {
-        if (!segment || segment.type !== 'Match') continue; 
+      const moraleMultiplier = getMoraleMultiplier(show.eventTier);
 
-        const participantIds = segment.participants.map(p => p.id);
+      for (const segment of ratedSegments) {
+        if (!segment) continue; 
+        
+        // (NEW) Get segment rating
+        const segmentRating = segment.rating || 50; // Default to 50 if rating is missing
 
-        for (const participant of segment.participants) {
-          const wrestler = getWrestler(participant.id);
-          if (!wrestler) continue;
-
-          let moraleChange = 0;
-          
-          const baseMorale = wrestlerUpdates.has(participant.id)
-            ? wrestlerUpdates.get(participant.id).morale
-            : wrestler.morale;
-
-          // 1. Storyline Logic
-          if (segment.storylineId) {
-            if (segment.winnerId === participant.id) {
-              moraleChange += 10; // Storyline win
-            } else if (segment.winnerId) { 
-              moraleChange -= 5; // Storyline loss
-            }
+        // 1. (NEW) Update Storyline Heat
+        if (segment.storylineId) {
+          const storyline = getStoryline(segment.storylineId);
+          if (storyline) {
+            const baseHeat = storylineUpdates.has(storyline.id)
+              ? storylineUpdates.get(storyline.id).heat
+              : storyline.heat;
+            
+            // (NEW) Use segment rating to determine heat change
+            const heatChange = getHeatChange(segmentRating);
+            const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
+            
+            storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
+            console.log(`Sim Update: Storyline '${storyline.name}' heat ${baseHeat} -> ${finalHeat} (Segment Rating: ${segmentRating})`);
           }
+        }
 
-          // 2. Relationship Logic
-          const opponentIds = participantIds.filter(id => id !== participant.id);
-          for (const oppId of opponentIds) {
-            const relationship = getRelationship(participant.id, oppId);
-            if (relationship) {
-              if (relationship.status.includes('Friend')) {
-                moraleChange += 3;
-              } else if (relationship.status.includes('Dislike') || relationship.status.includes('Hate')) {
-                moraleChange -= 3;
+        // 2. Update Wrestler Morale (only for matches for now)
+        if (segment.type === 'Match') {
+          const participantIds = segment.participants.map(p => p.id);
+
+          for (const participant of segment.participants) {
+            const wrestler = getWrestler(participant.id);
+            if (!wrestler) continue;
+
+            let moraleChange = 0;
+            const baseMorale = wrestlerUpdates.has(participant.id)
+              ? wrestlerUpdates.get(participant.id).morale
+              : wrestler.morale;
+
+            // Storyline Logic
+            if (segment.storylineId) {
+              if (segment.winnerId === participant.id) {
+                moraleChange += 10; // Storyline win
+              } else if (segment.winnerId) { 
+                moraleChange -= 5; // Storyline loss
               }
             }
-          }
 
-          if (moraleChange !== 0) {
-            const finalMorale = Math.max(0, Math.min(100, baseMorale + moraleChange));
-            wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
-            console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale}`);
+            // Relationship Logic
+            const opponentIds = participantIds.filter(id => id !== participant.id);
+            for (const oppId of opponentIds) {
+              const relationship = getRelationship(participant.id, oppId);
+              if (relationship) {
+                if (relationship.status.includes('Friend')) {
+                  moraleChange += 3;
+                } else if (relationship.status.includes('Dislike') || relationship.status.includes('Hate')) {
+                  moraleChange -= 3;
+                }
+              }
+            }
+
+            // Apply Multiplier and update
+            if (moraleChange !== 0) {
+              const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
+              wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
+              console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale} (Multiplier: ${moraleMultiplier}x)`);
+            }
           }
         }
       }
 
+      // --- Commit Updates to Firestore ---
+      let updatesMade = false;
+      
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
-          // (FIXED) Correct path
           const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
           batch.update(docRef, { morale: wrestler.morale });
         });
+        updatesMade = true;
+      }
+      
+      if (storylineUpdates.size > 0) {
+        storylineUpdates.forEach((storyline, id) => {
+          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
+          batch.update(docRef, { heat: storyline.heat });
+        });
+        updatesMade = true;
+      }
+
+      if (updatesMade) {
         await batch.commit();
 
+        // --- Update Local State ---
         setGameData(prevData => ({
           ...prevData,
           save_wrestlers: prevData.save_wrestlers.map(w => {
@@ -1077,11 +1232,17 @@ function App() {
               return wrestlerUpdates.get(w.id);
             }
             return w;
+          }),
+          save_storylines: prevData.save_storylines.map(s => {
+            if (storylineUpdates.has(s.id)) {
+              return storylineUpdates.get(s.id);
+            }
+            return s;
           })
         }));
-        console.log("Sim Engine v2: Morale updates saved and local state updated.");
+        console.log("Sim Engine v2: Morale and Storyline updates saved and local state updated.");
       } else {
-        console.log("Sim Engine v2: No morale changes to apply.");
+        console.log("Sim Engine v2: No morale or storyline changes to apply.");
       }
 
     } catch (error) {
@@ -1091,7 +1252,8 @@ function App() {
 
 
   // --- Phase 3, Task 2: Log Career Events ---
-  const logCareerEvents = async (segments, showRating) => {
+  // (UPDATED) Accepts ratedSegments
+  const logCareerEvents = async (ratedSegments, showRating) => {
     console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
     
@@ -1102,7 +1264,7 @@ function App() {
       
       let newCareerEvents = []; 
 
-      for (const segment of segments) {
+      for (const segment of ratedSegments) {
         if (!segment) continue;
         
         for (const participant of segment.participants) {
@@ -1139,7 +1301,7 @@ function App() {
             eventType: eventType,
             companyId: activeSave.playerCompanyId,
             companySize: companySize,
-            segmentRating: showRating, 
+            segmentRating: segment.rating || showRating, // (NEW) Use segment rating
             opponentIds: opponentIds,
             notes: notes,
             storylineId: segment.storylineId || null,
