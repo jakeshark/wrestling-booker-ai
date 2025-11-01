@@ -137,6 +137,7 @@ function App() {
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [appId, setAppId] = useState(null); // (NEW) Store App ID
 
   // --- Game State ---
   const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, RELATIONSHIPS_SCREEN, BUSY
@@ -215,11 +216,14 @@ function App() {
   // 1. Initialize Firebase
   useEffect(() => {
     try {
-      if (!firebaseConfig.apiKey) {
+      if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
         setLoadingMessage("Firebase config is missing. Please add it to your Vercel Environment Variables.");
         console.error("Firebase config is missing.");
         return;
       }
+      
+      // (NEW) Store the App ID from the config
+      setAppId(firebaseConfig.appId);
 
       const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
@@ -257,30 +261,30 @@ function App() {
 
   // 3. Seed Default Dataset & Fetch Main Menu Data
   useEffect(() => {
-    if (!isAuthReady || !db || !userId) return;
+    if (!isAuthReady || !db || !userId || !appId) return; // (NEW) Wait for App ID
 
     const seedAndFetch = async () => {
       setLoadingMessage('Checking for game data...');
-      // We pass 'db' and 'userId' to these functions now
-      await seedDefaultDataset(db, userId);
+      // (NEW) Pass all required instances
+      await seedDefaultDataset(db, userId, appId);
       
       setLoadingMessage('Fetching datasets...');
-      await fetchDatasets(db, userId);
+      await fetchDatasets(db, userId, appId);
       
       setLoadingMessage('Fetching your save games...');
-      await fetchPlayerSaves(db, userId);
+      await fetchPlayerSaves(db, userId, appId);
       
       setGameState('MAIN_MENU');
     };
 
     seedAndFetch();
-  }, [isAuthReady, db, userId]); // Rerun if auth is ready
+  }, [isAuthReady, db, userId, appId]); // (NEW) Rerun if auth or appId is ready
 
   // --- Phase 1, Task 3: Default Dataset Seeder ---
-  const seedDefaultDataset = async (db, userId) => {
-    // Use the passed-in db instance
+  const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
-    const datasetRef = doc(db, `public/datasets`, datasetId);
+    // (FIXED) Correct path
+    const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
     
     try {
       const docSnap = await getDoc(datasetRef);
@@ -300,7 +304,8 @@ function App() {
       });
 
       // 2. Create Company (dataset_companies)
-      const companyRef = doc(collection(db, `public/dataset_companies`));
+      // (FIXED) Correct path
+      const companyRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_companies`));
       const companyId = companyRef.id;
       batch.set(companyRef, {
         datasetId: datasetId,
@@ -328,21 +333,24 @@ function App() {
 
       const wrestlerRefs = {};
       for (const wrestler of wrestlers) {
-        const wrestlerRef = doc(collection(db, `public/dataset_wrestlers`));
+        // (FIXED) Correct path
+        const wrestlerRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
         wrestlerRefs[wrestler.name] = wrestlerRef.id;
         batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
       }
 
       // 4. Create Titles (dataset_titles)
-      batch.set(doc(collection(db, `public/dataset_titles`)), {
+      // (FIXED) Correct path
+      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
         datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
       });
-      batch.set(doc(collection(db, `public/dataset_titles`)), {
+      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
         datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
       });
 
       // 5. Create TV Show (dataset_tv_shows)
-      batch.set(doc(collection(db, `public/dataset_tv_shows`)), {
+      // (FIXED) Correct path
+      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_tv_shows`)), {
         datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
       });
 
@@ -355,7 +363,8 @@ function App() {
         if (i === 7) { tier = "Major_Event"; name = "Summer Scorcher"; }
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
         
-        batch.set(doc(collection(db, `public/dataset_events`)), {
+        // (FIXED) Correct path
+        batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_events`)), {
           datasetId: datasetId, 
           companyId: companyId, 
           month: i + 1, 
@@ -365,7 +374,8 @@ function App() {
       }
 
       // 7. Create Relationships (dataset_relationships)
-      batch.set(doc(collection(db, `public/dataset_relationships`)), {
+      // (FIXED) Correct path
+      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
         personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
@@ -373,7 +383,7 @@ function App() {
         status: 'Strongly Dislike',
         notes: "Real-life rivalry from their training days."
       });
-      batch.set(doc(collection(db, `public/dataset_relationships`)), {
+      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
         personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
@@ -392,9 +402,10 @@ function App() {
   };
 
   // --- Data Fetching Callbacks ---
-  const fetchDatasets = async (db, userId) => {
+  const fetchDatasets = async (db, userId, appId) => {
     try {
-      const q = query(collection(db, `public/datasets`));
+      // (FIXED) Correct path
+      const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
       const querySnapshot = await getDocs(q);
       const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setDatasets(datasetsData);
@@ -403,10 +414,11 @@ function App() {
     }
   };
 
-  const fetchPlayerSaves = async (db, userId) => {
+  const fetchPlayerSaves = async (db, userId, appId) => {
     if (!userId) return;
     try {
-      const q = query(collection(db, `users/${userId}/player_saves`));
+      // (FIXED) Correct path
+      const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`));
       const querySnapshot = await getDocs(q);
       const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPlayerSaves(savesData);
@@ -418,7 +430,7 @@ function App() {
   // --- Phase 1, Task 4: "New Game" & "Load Game" Logic ---
 
   const handleNewGame = async (datasetId) => {
-    if (!userId || !db) return;
+    if (!userId || !db || !appId) return;
 
     setGameState('BUSY');
     setLoadingMessage('Starting your new game... This may take a moment.');
@@ -433,7 +445,8 @@ function App() {
         currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')), // Start on Show Day
         playerCompanyId: null // We'll set this after we copy the company
       };
-      const newSaveRef = await addDoc(collection(db, `users/${userId}/player_saves`), newSaveData);
+      // (FIXED) Correct path
+      const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
       const newSaveId = newSaveRef.id;
 
       // 2. Copy all dataset collections to save collections
@@ -444,8 +457,8 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        // Get all documents from the dataset subcollection
-        const q = query(collection(db, `public/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        // (FIXED) Correct path
+        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
@@ -454,25 +467,18 @@ function App() {
           // Logic for `dataset_events` becoming `save_shows`
           let newDocData = { ...docData };
           if (datasetCollectionName === 'dataset_events') {
-            // Transform event to a "Planned" show
             newDocData.status = "Planned";
-            // Use robust Date constructor: new Date(year, monthIndex, day, hours, minutes, seconds)
-            // docData.month is 1-12, so we subtract 1 for the 0-11 monthIndex
-            
             const showDate = (docData.month === 1) 
               ? new Date(2025, docData.month - 1, 7, 18, 0, 0)
               : new Date(2025, docData.month - 1, 28, 18, 0, 0);
-              
             newDocData.date = Timestamp.fromDate(showDate);
           }
           
-          // Create a new doc in the corresponding save subcollection
-          const newDocRef = doc(collection(db, `users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          // (FIXED) Correct path
+          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
           batch.set(newDocRef, newDocData);
 
-          // Find the player's company to assign it
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
-            // In a real game, we'd let the user pick. For now, assign the first one.
             playerCompanyId = newDocRef.id;
           }
         }
@@ -494,14 +500,15 @@ function App() {
   };
 
   const handleLoadGame = async (saveId) => {
-    if (!userId || !db) return;
+    if (!userId || !db || !appId) return;
 
     setGameState('BUSY');
     setLoadingMessage('Loading your save game...');
 
     try {
       // 1. Get the save game doc
-      const saveRef = doc(db, `users/${userId}/player_saves`, saveId);
+      // (FIXED) Correct path
+      const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, saveId);
       const saveSnap = await getDoc(saveRef);
 
       if (!saveSnap.exists()) {
@@ -515,14 +522,14 @@ function App() {
       let loadedGameData = {};
       let unreadCount = 0;
       
-      for (const collectionName of SAVE_COLLECTION_NAMES) { // Use the new (and now correct) array
-        const q = query(collection(db, `users/${userId}/player_saves/${saveId}/${collectionName}`));
+      for (const collectionName of SAVE_COLLECTION_NAMES) { 
+        // (FIXED) Correct path
+        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
         const querySnapshot = await getDocs(q);
         
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         loadedGameData[collectionName] = collectionData;
         
-        // Count unread messages while we're at it
         if (collectionName === 'save_messages') {
           unreadCount = collectionData.filter(msg => !msg.isRead).length;
         }
@@ -558,7 +565,8 @@ function App() {
       const newTimestamp = Timestamp.fromDate(nextDate);
       
       // 3. Update the save game doc in Firestore
-      const saveRef = doc(db, `users/${userId}/player_saves`, activeSave.id);
+      // (FIXED) Correct path
+      const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, activeSave.id);
       await setDoc(saveRef, { 
         currentDate: newTimestamp,
         lastPlayed: Timestamp.now()
@@ -579,8 +587,8 @@ function App() {
     setActiveSave(null);
     setGameData({});
     setGameState('MAIN_MENU');
-    // We already fetched saves, but we can re-fetch to show updated "lastPlayed"
-    fetchPlayerSaves(db, userId);
+    // (FIXED) Pass correct args
+    fetchPlayerSaves(db, userId, appId);
   };
 
   // --- Phase 2: AI & Simulation Engine ---
@@ -588,22 +596,14 @@ function App() {
   const runSimulationAndEvents = async (saveId) => {
     console.log("Sim Engine: Running daily simulation...");
     
-    // In a full game, we'd loop all wrestlers, check morale, check for injuries, etc.
-    // For Phase 2, Task 2, we will just simulate a *chance* of a random event.
-    
     const wrestlers = gameData.save_wrestlers;
     if (!wrestlers || wrestlers.length === 0) return;
 
-    // 25% chance of a random message event per day
     if (Math.random() < 0.25) {
       console.log("Sim Engine: Event triggered!");
-      // Pick a random wrestler
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
-      
-      // Pick a random topic (for now)
       const topics = ['unhappy_booking', 'excited_push', 'request_time_off'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-
       await generateAndSaveMessage(saveId, randomWrestler, randomTopic);
     }
   };
@@ -671,7 +671,8 @@ function App() {
           isRead: false
         };
         
-        const messagesRef = collection(db, `users/${userId}/player_saves/${saveId}/save_messages`);
+        // (FIXED) Correct path
+        const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
         const newDocRef = await addDoc(messagesRef, messageData);
         
         // Update local state to show new message instantly
@@ -684,7 +685,6 @@ function App() {
       }
     } catch (error) {
       console.error("Error generating AI message: ", error);
-      // Don't crash the game, just log it
     }
   };
   
@@ -746,22 +746,20 @@ function App() {
     }
   };
   
-  // --- (FIXED) This function was missing ---
   const handleMarkMessagesRead = async () => {
     if (!activeSave || unreadMessages === 0) return;
     
     setUnreadMessages(0);
     
-    // Update local state first for instant UI response
     setGameData(prevData => ({
       ...prevData,
       save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
     }));
     
-    // Then, update Firestore in the background
     try {
       const batch = writeBatch(db);
-      const messagesRef = collection(db, `users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      // (FIXED) Correct path
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
       
       gameData.save_messages.forEach(msg => {
         if (!msg.isRead) {
@@ -781,31 +779,24 @@ function App() {
 
   const handleStartBookingShow = (show) => {
     setCurrentShow(show);
-    // Create an array of 10 null segments for a PPV/TV show
     setCurrentSegments(Array(10).fill(null)); 
     setGameState('BOOKING_SHOW');
   };
 
   const handleOpenSegmentModal = (index) => {
     setEditingSegmentIndex(index);
-    // If segment already exists, load it, otherwise use default
     const existingSegment = currentSegments[index];
     setSegmentFormData(existingSegment || { type: 'Match', participants: [], winnerId: null, storylineId: null });
-    // Reset search
     setParticipantSearch("");
     setParticipantResults([]);
     setShowSegmentModal(true);
   };
 
   const handleSaveSegment = () => {
-    // Create a copy of the segments array
     const newSegments = [...currentSegments];
-    // Update the segment at the specific index
     newSegments[editingSegmentIndex] = segmentFormData;
-    // Set the new array as the state
     setCurrentSegments(newSegments);
     
-    // Close modal and reset
     setShowSegmentModal(false);
     setEditingSegmentIndex(null);
     setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
@@ -815,26 +806,22 @@ function App() {
     setGameState('BUSY');
     setLoadingMessage('Simulating your show...');
     
-    // --- This is Phase 1, Task 9 & Phase 3, Task 2 ---
     console.log("--- Running Show ---");
     console.log(currentShow);
     console.log(currentSegments);
     
     try {
-      // In a real sim, we'd calculate a rating
       const showRating = Math.floor(Math.random() * 30 + 70); // Random rating 70-100
       
-      // Update the `save_shows` doc in Firestore
-      const showRef = doc(db, `users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
+      // (FIXED) Correct path
+      const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
       
-      // We will add the recap to this object after the AI call
       const showUpdateData = {
         status: "Complete",
-        segments: currentSegments, // Save the booked segments
+        segments: currentSegments,
         rating: showRating
       };
       
-      // Update local gameData (optimistically, without recap)
       setGameData(prevData => ({
         ...prevData,
         save_shows: prevData.save_shows.map(show => 
@@ -844,20 +831,14 @@ function App() {
         )
       }));
 
-      // --- (NEW) Phase 3, Task 2: Log Career Events ---
       await logCareerEvents(currentSegments, showRating);
-
-      // --- (NEW) Phase 3, Task 4: Run Post-Show Simulation ---
       await runShowSimulation(currentSegments);
 
-      // --- (NEW) Phase 2, Task 5: AI Recap ---
-      setShowRating(showRating); // Store rating for results screen
+      setShowRating(showRating);
       const recapText = await generateShowRecap(currentShow, currentSegments, showRating);
       
-      // Save recap to DB
       await setDoc(showRef, { recap: recapText }, { merge: true });
       
-      // Update local state with recap
       setGameData(prevData => ({
         ...prevData,
         save_shows: prevData.save_shows.map(show => 
@@ -868,29 +849,26 @@ function App() {
       }));
       setShowRecap(recapText);
 
-      // Go to results screen
       setGameState('SHOW_RESULTS');
       
     } catch (error) {
       console.error("Error running show:", error);
       setLoadingMessage("Error saving show. Please try again.");
-      setGameState('BOOKING_SHOW'); // Go back to booking
+      setGameState('BOOKING_SHOW');
     }
   };
 
-  // --- (NEW) Phase 2, Task 5: AI Show Recap ---
+  // --- Phase 2, Task 5: AI Show Recap ---
   const generateShowRecap = async (show, segments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
-    // 1. Format the booked card for the AI
     const cardForAI = segments
-      .filter(s => s) // Filter out null (empty) segments
+      .filter(s => s) 
       .map((s, index) => {
         const participants = s.participants.map(p => p.name).join(' vs. ');
         let result = "";
         
-        // (NEW) Find storyline name
         const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
         const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
 
@@ -898,13 +876,11 @@ function App() {
           const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
           result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
         } else {
-          // Format angle participants
           return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')}`;
         }
         return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result}`;
       }).join('\n');
 
-    // 2. Create the prompt
     const systemPrompt = `
       You are a professional wrestling "dirt sheet" journalist, like Dave Meltzer. 
       You are writing a recap of a wrestling show for your subscribers. 
@@ -914,7 +890,7 @@ function App() {
       Your recap should be a few paragraphs long. 
       - First, give an overall impression of the show based on the rating.
       - Then, pick 2-3 key segments (especially the main event, which is the last one) and describe what happened in your dirt sheet style.
-      - (NEW) IMPORTANT: If a segment includes a "(Storyline: ...)" tag, pay special attention to it. Mention how the segment advanced that specific storyline.
+      - IMPORTANT: If a segment includes a "(Storyline: ...)" tag, pay special attention to it. Mention how the segment advanced that specific storyline.
       - Conclude with a final thought on the show's direction.
       - Do NOT just list every segment. Be selective.
     `;
@@ -927,8 +903,7 @@ function App() {
       ${cardForAI}
     `;
 
-    // 3. Call the Gemini API
-    let recapText = "No AI recap could be generated for this show."; // Default
+    let recapText = "No AI recap could be generated for this show.";
     try {
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -965,18 +940,16 @@ function App() {
   };
 
 
-  // --- (NEW) Phase 3, Task 4: Post-Show Simulation Engine v2 ---
+  // --- Phase 3, Task 4: Post-Show Simulation Engine v2 ---
   const runShowSimulation = async (segments) => {
     console.log("Sim Engine v2: Running post-show simulation...");
-    if (!segments || !gameData.save_wrestlers || !gameData.save_relationships) return;
+    if (!segments || !gameData.save_wrestlers || !gameData.save_relationships || !db || !userId || !appId) return;
 
     const batch = writeBatch(db);
-    // Use a map for efficient wrestler data updates
     const wrestlerUpdates = new Map();
     const allWrestlers = gameData.save_wrestlers;
     const allRelationships = gameData.save_relationships;
 
-    // Helper to get wrestler data (and check updates map)
     const getWrestler = (id) => {
       if (wrestlerUpdates.has(id)) {
         return wrestlerUpdates.get(id);
@@ -984,7 +957,6 @@ function App() {
       return allWrestlers.find(w => w.id === id);
     };
 
-    // Helper to get relationship
     const getRelationship = (id1, id2) => {
       return allRelationships.find(rel => 
         (rel.personA_Id === id1 && rel.personB_Id === id2) ||
@@ -994,7 +966,7 @@ function App() {
 
     try {
       for (const segment of segments) {
-        if (!segment || segment.type !== 'Match') continue; // Only process matches for now
+        if (!segment || segment.type !== 'Match') continue; 
 
         const participantIds = segment.participants.map(p => p.id);
 
@@ -1004,7 +976,6 @@ function App() {
 
           let moraleChange = 0;
           
-          // Get the wrestler's most up-to-date morale from the updates map if it exists
           const baseMorale = wrestlerUpdates.has(participant.id)
             ? wrestlerUpdates.get(participant.id).morale
             : wrestler.morale;
@@ -1013,7 +984,7 @@ function App() {
           if (segment.storylineId) {
             if (segment.winnerId === participant.id) {
               moraleChange += 10; // Storyline win
-            } else if (segment.winnerId) { // They were in the match but didn't win
+            } else if (segment.winnerId) { 
               moraleChange -= 5; // Storyline loss
             }
           }
@@ -1031,27 +1002,22 @@ function App() {
             }
           }
 
-          // Apply changes if any
           if (moraleChange !== 0) {
             const finalMorale = Math.max(0, Math.min(100, baseMorale + moraleChange));
-
-            // Store update
             wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
-            
             console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale}`);
           }
         }
       }
 
-      // Commit all DB updates
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
-          const docRef = doc(db, `users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
+          // (FIXED) Correct path
+          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
           batch.update(docRef, { morale: wrestler.morale });
         });
         await batch.commit();
 
-        // Update local state
         setGameData(prevData => ({
           ...prevData,
           save_wrestlers: prevData.save_wrestlers.map(w => {
@@ -1068,24 +1034,24 @@ function App() {
 
     } catch (error) {
       console.error("Error during post-show simulation: ", error);
-      // Don't crash the game
     }
   };
 
 
-  // --- (NEW) Phase 3, Task 2: Log Career Events ---
+  // --- Phase 3, Task 2: Log Career Events ---
   const logCareerEvents = async (segments, showRating) => {
     console.log("Sim Engine: Logging career events to memory...");
+    if (!db || !userId || !appId || !activeSave) return;
     
     try {
       const batch = writeBatch(db);
       const company = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
       const companySize = company ? company.size : "Unknown";
       
-      let newCareerEvents = []; // (NEW) Create a temporary array
+      let newCareerEvents = []; 
 
       for (const segment of segments) {
-        if (!segment) continue; // Skip empty segments
+        if (!segment) continue;
         
         for (const participant of segment.participants) {
           const opponentIds = segment.participants
@@ -1117,22 +1083,21 @@ function App() {
           const careerEventData = {
             playerSaveId: activeSave.id,
             wrestlerId: participant.id,
-            date: activeSave.currentDate, // This is already a Timestamp
+            date: activeSave.currentDate, 
             eventType: eventType,
             companyId: activeSave.playerCompanyId,
             companySize: companySize,
-            segmentRating: showRating, // Proxy for now, per plan
+            segmentRating: showRating, 
             opponentIds: opponentIds,
             notes: notes,
             storylineId: segment.storylineId || null,
             showId: currentShow.id
           };
           
-          // Create a new doc in the save_career_events subcollection
-          const newEventRef = doc(collection(db, `users/${userId}/player_saves/${activeSave.id}/save_career_events`));
+          // (FIXED) Correct path
+          const newEventRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
           batch.set(newEventRef, careerEventData);
 
-          // (NEW) Add the new event to our temporary array for the state update
           newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
         }
       }
@@ -1140,7 +1105,6 @@ function App() {
       await batch.commit();
       console.log("Career events successfully logged to memory.");
 
-      // (NEW) Update the local gameData state with the new events
       setGameData(prevData => ({
         ...prevData,
         save_career_events: [
@@ -1151,24 +1115,23 @@ function App() {
       
     } catch (error) {
       console.error("Error logging career events:", error);
-      // We don't stop the game for this, just log it.
     }
   };
 
 
-  // --- (NEW) Booking Modal Handlers ---
+  // --- Booking Modal Handlers ---
   const handleParticipantSearch = (query) => {
     setParticipantSearch(query);
-    if (query.length < 1) { // MODIFIED: Changed from 2 to 1
+    if (query.length < 1) { 
       setParticipantResults([]);
       return;
     }
     
     const results = gameData.save_wrestlers
       .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
-      .filter(w => !segmentFormData.participants.find(p => p.id === w.id)); // Filter out already added
+      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
       
-    setParticipantResults(results.slice(0, 5)); // Show top 5
+    setParticipantResults(results.slice(0, 5));
   };
 
   const handleAddParticipant = (wrestler) => {
@@ -1184,7 +1147,6 @@ function App() {
     setSegmentFormData(prev => ({
       ...prev,
       participants: prev.participants.filter(p => p.id !== wrestlerId),
-      // If the removed participant was the winner, reset winner
       winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
     }));
   };
@@ -1200,7 +1162,6 @@ function App() {
     setSegmentFormData(prev => ({
       ...prev,
       type: e.target.value,
-      // Reset winner if switching to Angle
       winnerId: e.target.value === 'Angle' ? null : prev.winnerId
     }));
   };
@@ -1212,7 +1173,7 @@ function App() {
     }));
   };
 
-  // --- (NEW) Phase 3: Storyline Logic ---
+  // --- Phase 3: Storyline Logic ---
   const handleOpenCreateStorylineModal = () => {
     setStorylineFormData({ name: '', participants: [] });
     setStorylineParticipantSearch("");
@@ -1250,7 +1211,6 @@ function App() {
   
   const handleCreateStoryline = async () => {
     if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-      // Use a modal or better feedback, for now, console.log
       console.error("Storyline must have a name and at least 2 participants.");
       return;
     }
@@ -1262,16 +1222,16 @@ function App() {
       const newStorylineData = {
         ...storylineFormData,
         companyId: activeSave.playerCompanyId,
-        heat: 10, // Start with some heat
+        heat: 10,
         status: "Active",
-        beats: [] // For future use (Module 8)
+        beats: [] 
       };
       
-      const docRef = await addDoc(collection(db, `users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+      // (FIXED) Correct path
+      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
       
       const newStoryline = { id: docRef.id, ...newStorylineData };
       
-      // Update local state
       setGameData(prevData => ({
         ...prevData,
         save_storylines: [...(prevData.save_storylines || []), newStoryline]
@@ -1288,13 +1248,13 @@ function App() {
   };
 
 
-  // --- (NEW) Phase 3: Career History Logic ---
+  // --- Phase 3: Career History Logic ---
   const handleViewCareerHistory = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('CAREER_HISTORY_SCREEN');
   };
 
-  // --- (NEW) Phase 3: Relationships Logic ---
+  // --- Phase 3: Relationships Logic ---
   const handleViewRelationships = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('RELATIONSHIPS_SCREEN');
@@ -1375,10 +1335,8 @@ function App() {
   const renderGameDashboard = () => {
     if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
     
-    // Find the player's company
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
     
-    // Check if today is a show day
     const currentDateStr = activeSave.currentDate.toDate().toISOString().split('T')[0];
     const plannedShow = gameData.save_shows?.find(show => 
       show.date.toDate().toISOString().split('T')[0] === currentDateStr && show.status === 'Planned'
@@ -1509,7 +1467,7 @@ function App() {
       >
         <div 
           className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
-          onClick={(e) => e.stopPropagation()} // Prevent closing on modal click
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-4 border-b border-gray-700">
             <h2 className="text-2xl font-bold text-white">Your Messages</h2>
@@ -1614,7 +1572,7 @@ function App() {
     );
   };
   
-  // --- (NEW) Phase 1, Task 8: Booking Screen ---
+  // --- Booking Screen ---
   const renderBookingScreen = () => {
     if (!currentShow) return null;
 
@@ -1681,7 +1639,7 @@ function App() {
     );
   };
 
-  // --- (NEW) Roster Screen ---
+  // --- Roster Screen ---
   const renderRosterScreen = () => {
     const wrestlers = gameData.save_wrestlers || [];
     
@@ -1749,7 +1707,6 @@ function App() {
               </div>
               
               <div className="mt-3 grid grid-cols-2 gap-2">
-                {/* --- (UPDATED) Career History Button --- */}
                 <button
                   onClick={() => handleViewCareerHistory(wrestler)}
                   className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
@@ -1757,7 +1714,6 @@ function App() {
                   <HistoryIcon />
                   History
                 </button>
-                {/* --- (NEW) Relationships Button --- */}
                 <button
                   onClick={() => handleViewRelationships(wrestler)}
                   className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
@@ -1774,7 +1730,7 @@ function App() {
   };
 
 
-  // --- (NEW) Show Results Screen ---
+  // --- Show Results Screen ---
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -1824,7 +1780,7 @@ function App() {
     );
   };
   
-  // --- (NEW) Phase 3: Storyline Screen ---
+  // --- Storyline Screen ---
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
 
@@ -1879,14 +1835,13 @@ function App() {
   };
 
 
-  // --- (NEW) Phase 3: Career History Screen ---
+  // --- Career History Screen ---
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
 
-    // Find all events for the selected wrestler
     const events = (gameData.save_career_events || [])
       .filter(event => event.wrestlerId === viewingWrestler.id)
-      .sort((a, b) => b.date.toMillis() - a.date.toMillis()); // Sort by most recent
+      .sort((a, b) => b.date.toMillis() - a.date.toMillis()); 
 
     const getEventColor = (type) => {
       if (type === 'Match Win') return 'text-green-400';
@@ -1969,15 +1924,13 @@ function App() {
     );
   };
   
-  // --- (NEW) Phase 3: Relationships Screen ---
+  // --- Relationships Screen ---
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
 
-    // Find all relationships for the selected wrestler
     const relationships = (gameData.save_relationships || [])
       .filter(rel => rel.personA_Id === viewingWrestler.id || rel.personB_Id === viewingWrestler.id);
 
-    // Helper to get the other person's name
     const getOtherPersonName = (rel) => {
       const otherId = rel.personA_Id === viewingWrestler.id ? rel.personB_Id : rel.personA_Id;
       const otherPerson = gameData.save_wrestlers.find(w => w.id === otherId);
@@ -2071,7 +2024,7 @@ function App() {
   };
 
 
-  // --- (NEW) Booking Segment Modal ---
+  // --- Booking Segment Modal ---
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
     
@@ -2110,7 +2063,6 @@ function App() {
               </select>
             </div>
             
-            {/* --- (NEW) Storyline Selector --- */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Assign to Storyline (Optional)</label>
               <select
@@ -2126,7 +2078,6 @@ function App() {
               </select>
             </div>
 
-            {/* --- Participants --- */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Participants
@@ -2146,7 +2097,6 @@ function App() {
               </div>
             </div>
 
-            {/* --- Add Participant Search --- */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Add Participant
@@ -2216,7 +2166,7 @@ function App() {
     );
   };
   
-  // --- (NEW) Create Storyline Modal ---
+  // --- Create Storyline Modal ---
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
 
@@ -2252,7 +2202,6 @@ function App() {
               />
             </div>
 
-            {/* --- Participants --- */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Participants (min. 2)
@@ -2272,7 +2221,6 @@ function App() {
               </div>
             </div>
 
-            {/* --- Add Participant Search --- */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Add Participant
@@ -2342,10 +2290,10 @@ function App() {
             return renderShowResultsScreen();
           case 'STORYLINE_SCREEN':
             return renderStorylineScreen();
-          case 'CAREER_HISTORY_SCREEN': // (NEW)
-            return renderCareerHistoryScreen(); // (NEW)
-          case 'RELATIONSHIPS_SCREEN': // (NEW)
-            return renderRelationshipsScreen(); // (NEW)
+          case 'CAREER_HISTORY_SCREEN':
+            return renderCareerHistoryScreen();
+          case 'RELATIONSHIPS_SCREEN':
+            return renderRelationshipsScreen();
           default:
             return <p>An unexpected error occurred. Please refresh.</p>;
         }
