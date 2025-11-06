@@ -603,10 +603,12 @@ function App() {
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
     try {
-      const res = await fetch('/api/ai/wrestler-message', {
+      // TALK TO SINGLE /api/ai ENTRYPOINT
+      const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'wrestler-message',
           wrestler,
           topic,
           roster: gameData.save_wrestlers || [],
@@ -620,11 +622,13 @@ function App() {
 
       const data = await res.json();
       const messageText = data.message || data.text || "Boss, just checking in.";
-      const suggestedReplies = data.suggestedReplies || [
-        "Got it, I'll take a look.",
-        "Let's talk after the show.",
-        "Noted."
-      ];
+      const suggestedReplies = data.suggestedReplies && Array.isArray(data.suggestedReplies) && data.suggestedReplies.length > 0
+        ? data.suggestedReplies
+        : [
+            "Got it, I'll take a look.",
+            "Let's talk after the show.",
+            "Noted."
+          ];
 
       const messageData = {
         senderId: wrestler.id,
@@ -649,6 +653,29 @@ function App() {
 
     } catch (error) {
       console.error("Error generating AI message: ", error);
+      // fallback to a static message so the inbox isn't empty
+      const fallbackMsg = {
+        senderId: wrestler.id,
+        senderName: wrestler.name,
+        body: "Hey boss, can we talk about my booking?",
+        timestamp: Timestamp.now(),
+        type: 'Text',
+        isRead: false,
+        topic,
+        suggestedReplies: [
+          "I'll review your booking.",
+          "We'll see after the next show.",
+          "Stay patient."
+        ]
+      };
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
+      const newDocRef = await addDoc(messagesRef, fallbackMsg);
+      const newMessage = { id: newDocRef.id, ...fallbackMsg };
+      setGameData(prevData => ({
+        ...prevData,
+        save_messages: [...(prevData.save_messages || []), newMessage]
+      }));
+      setUnreadMessages(prev => prev + 1);
     }
   };
 
@@ -660,10 +687,12 @@ function App() {
     setAssistantResponse("");
 
     try {
-      const res = await fetch('/api/ai/booker-assistant', {
+      // TALK TO SINGLE /api/ai ENTRYPOINT
+      const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'booker-assistant',
           query: assistantQuery,
           roster: gameData.save_wrestlers || [],
           storylines: gameData.save_storylines || [],
@@ -717,7 +746,6 @@ function App() {
   // --- Messages: open reply editor ---
   const handleStartReply = (message) => {
     setReplyingToMessage(message);
-    // default to first suggestion if present
     if (message.suggestedReplies && message.suggestedReplies.length > 0) {
       setReplyText(message.suggestedReplies[0]);
     } else {
@@ -920,17 +948,19 @@ function App() {
         if (s.type === 'Match') {
           const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
           result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
+          return `${index + 1}. Match${storylineContext}: ${participants}${result} ${ratingContext}`;
         } else {
           return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
         }
-        return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
       }).join('\n');
 
     try {
-      const res = await fetch('/api/ai/show-recap', {
+      // TALK TO SINGLE /api/ai ENTRYPOINT
+      const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'show-recap',
           show,
           cardText: cardForAI,
           rating,
@@ -1524,7 +1554,6 @@ function App() {
 
     const allMessages = (gameData.save_messages || []).sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
 
-    // top-level = no parentMessageId
     const topLevel = allMessages.filter(m => !m.parentMessageId);
     const repliesByParent = {};
     allMessages.forEach(m => {
@@ -1574,7 +1603,6 @@ function App() {
                   </div>
                   <p className="text-gray-200 whitespace-pre-wrap mb-3">{msg.body}</p>
 
-                  {/* child replies */}
                   {(repliesByParent[msg.id] || []).sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()).map(reply => (
                     <div key={reply.id} className="ml-4 mt-2 p-3 bg-gray-900 rounded border border-gray-700">
                       <div className="flex justify-between items-center mb-1">
@@ -1598,7 +1626,6 @@ function App() {
             )}
           </div>
 
-          {/* reply editor */}
           {replyingToMessage && (
             <div className="border-t border-gray-700 p-4 bg-gray-900">
               <p className="text-sm text-gray-400 mb-2">
