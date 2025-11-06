@@ -1,6 +1,7 @@
 // /api/ai.js
-// Vercel serverless route for all AI calls
-// Needs: process.env.OPENAI_API_KEY
+// Vercel serverless function
+// Make sure OPENAI_API_KEY is set in your Vercel project
+
 import OpenAI from "openai";
 
 const client = new OpenAI({
@@ -8,13 +9,14 @@ const client = new OpenAI({
 });
 
 export default async function handler(req, res) {
-  // allow quick health check in browser
-  if (req.method === "GET") {
-    return res.status(200).json({ ok: true, message: "AI route is alive" });
+  // basic guard
+  if (req.method !== "POST" && req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  // quick GET check (you already hit this in the browser)
+  if (req.method === "GET") {
+    return res.status(200).json({ ok: true, message: "AI route is alive" });
   }
 
   if (!process.env.OPENAI_API_KEY) {
@@ -23,165 +25,153 @@ export default async function handler(req, res) {
 
   try {
     const {
-      mode,          // "assistant" | "wrestler-message" | "show-recap"
-      systemPrompt,  // optional
-      userQuery,     // what the user typed (assistant)
-      wrestler,      // { name, gimmick, disposition, ... }
-      topic,         // e.g. "unhappy_booking"
-      show,          // { eventName, eventTier, ... }
-      segments,      // array of rated segments
-      finalRating,   // number
-      rosterContext, // string for assistant
+      mode,
+      systemPrompt,
+      userQuery,
+      rosterContext,
+      wrestler,
+      topic,
+      show,
+      segments,
+      finalRating,
     } = req.body || {};
 
-    let messages = [];
-
-    // ------ MODE 1: Booker assistant ------
-    if (mode === "assistant") {
-      const sys = systemPrompt
-        ? systemPrompt
-        : `
-You are "AI Booker Assistant", a veteran pro-wrestling booker helping a player run a promotion.
-You know EWR-style logic: individual segment ratings matter, feud heat is moved by the segments
-tied to that feud, and backstage morale/politics matter.
-When the user asks for an idea, give:
-1) a short pitch,
-2) cast (who vs who),
-3) segment-by-segment outline,
-4) note on how it will affect heat/morale.
-Keep answers concise and actionable.
-${rosterContext ? "\nCurrent roster:\n" + rosterContext : ""}
-        `.trim();
-
-      messages = [
-        { role: "system", content: sys },
-        { role: "user", content: userQuery || "Give me a booking idea." },
-      ];
-
+    // --- helper to call OpenAI once ---
+    const callModel = async (messages) => {
       const completion = await client.chat.completions.create({
         model: "gpt-4o-mini",
         messages,
-        temperature: 0.85,
-      });
-
-      const text = completion.choices[0].message.content;
-      return res.status(200).json({ text });
-    }
-
-    // ------ MODE 2: Wrestler in-game message ------
-    if (mode === "wrestler-message") {
-      // fallback text if we somehow got no wrestler
-      const name = wrestler?.name || "Unnamed Wrestler";
-      const gimmick = wrestler?.gimmick || "no gimmick";
-      const disposition = wrestler?.disposition || "Tweener";
-
-      // pick prompt based on topic
-      let topicInstruction = "";
-      switch (topic) {
-        case "unhappy_booking":
-          topicInstruction =
-            "You're frustrated with how you've been booked lately. You feel overlooked or misused.";
-          break;
-        case "excited_push":
-          topicInstruction =
-            "You're happy with your current push and want to thank the booker but also signal you can do more.";
-          break;
-        case "request_time_off":
-        default:
-          topicInstruction =
-            "You need to ask for some time off for personal reasons but don't want to hurt your push.";
-          break;
-      }
-
-      const wrestlerSystem = `
-You are a professional wrestler sending an *informal text message* to your boss, the booker.
-Write 1-3 sentences, casual, in-character, not an email, no hashtags, no sign-off.
-Name: ${name}
-Gimmick: ${gimmick}
-Disposition: ${disposition}
-Context: ${topicInstruction}
-`.trim();
-
-      const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: wrestlerSystem },
-          {
-            role: "user",
-            content: "Write the text message now.",
-          },
-        ],
         temperature: 0.9,
       });
+      return completion.choices[0].message.content;
+    };
 
-      const text = completion.choices[0].message.content;
-      return res.status(200).json({ text });
+    // ===== MODE: ASSISTANT =====
+    if (mode === "assistant") {
+      // if React sent a roster, use it. if not, tell model to be helpful anyway
+      const rosterSection =
+        rosterContext && rosterContext.trim().length > 0
+          ? `Here is the user's current roster (names + dispositions + gimmicks + morale):\n${rosterContext}\n\nUse these exact names when you suggest feuds or pushes.`
+          : `The user did NOT send a roster. In this case, you MUST still answer with concrete, usable booking ideas. 
+- Suggest 3–5 wrestlers with archetypal names (Main Event Ace, Monster Heel, Workrate King, Hot Babyface Woman, Veteran Tag Team).
+- Then tell the user: "Map these to your real roster names." 
+- Do NOT say "I can't answer without your roster."`;
+
+      const sys = systemPrompt
+        ? systemPrompt
+        : `You are an elite pro-wrestling booker AI that understands TEW/EWR-style sims.
+You know: feuds, angles, heat, disposition (face/heel), titles, women's division, tag division, and long-term PPV blowoffs.
+You ALWAYS answer with concrete suggestions (segments, matches, feud outline) and NEVER refuse just because you don't see the roster.`;
+
+      const userMsg = `
+The user asked: ${userQuery || "(no user question??)"}
+
+${rosterSection}
+
+When you answer:
+- Give 2–3 options.
+- For each, say WHY it fits (style, charisma, morale, heel/face balance).
+- If they asked "who should I push", give at least one main eventer, one upper midcard, and one future project.
+`;
+
+      const text = await callModel([
+        { role: "system", content: sys },
+        { role: "user", content: userMsg },
+      ]);
+
+      return res.status(200).json({ ok: true, text });
     }
 
-    // ------ MODE 3: Show recap / dirt sheet ------
+    // ===== MODE: WRESTLER MESSAGE =====
+    if (mode === "wrestler-message") {
+      // we expect: { wrestler, topic }
+      const safeName = wrestler?.name || "Unnamed Wrestler";
+      const safeGimmick = wrestler?.gimmick || "generic pro wrestler";
+      const safeDisposition = wrestler?.disposition || "Tweener";
+      const morale = typeof wrestler?.morale === "number" ? wrestler.morale : 70;
+
+      const topicInstruction = (() => {
+        switch (topic) {
+          case "unhappy_booking":
+            return `Write as if ${safeName} is politely but firmly unhappy with their recent booking and wants to be protected or featured more.`;
+          case "excited_push":
+            return `Write as if ${safeName} just heard they're getting a push and wants to thank the boss + pitch a couple of angles.`;
+          case "request_time_off":
+            return `Write as if ${safeName} needs some time off (minor injury, burnout, family).`;
+          default:
+            return `Write a short in-game message about current wrestling business.`;
+        }
+      })();
+
+      const text = await callModel([
+        {
+          role: "system",
+          content: `You are generating in-universe messages for a wrestling booking sim. 
+Output ONLY the message body, no headers, no JSON. Keep it 2–5 sentences. 
+Voice should match the wrestler's persona/gimmick.`,
+        },
+        {
+          role: "user",
+          content: `
+Wrestler: ${safeName}
+Gimmick/persona: ${safeGimmick}
+Disposition: ${safeDisposition}
+Current morale: ${morale}
+
+${topicInstruction}
+
+Make it sound like a DM / office message to the booker, not a promo.`,
+        },
+      ]);
+
+      return res.status(200).json({ ok: true, text });
+    }
+
+    // ===== MODE: SHOW RECAP =====
     if (mode === "show-recap") {
       const showName = show?.eventName || "Unnamed Show";
-      const rating = typeof finalRating === "number" ? finalRating : 60;
+      const tier = show?.eventTier || "Monthly_Event";
+      const ratingNum = typeof finalRating === "number" ? finalRating : 60;
 
-      // turn segments into readable list
-      const cardLines = Array.isArray(segments)
-        ? segments
-            .filter(Boolean)
-            .map((s, idx) => {
-              const names = (s.participants || [])
-                .map((p) => p.name)
-                .join(" vs. ");
-              const ratingPart = s.rating
-                ? ` (Segment Rating: ${s.rating}/100)`
-                : "";
-              const storyPart = s.storylineName
-                ? ` (Storyline: ${s.storylineName})`
-                : s.storylineId
-                ? ` (Storyline ID: ${s.storylineId})`
-                : "";
-              return `${idx + 1}. ${s.type || "Segment"}: ${names}${storyPart}${ratingPart}`;
-            })
-            .join("\n")
-        : "No segments provided.";
+      const segmentLines = (segments || [])
+        .filter(Boolean)
+        .map((seg, idx) => {
+          const type = seg.type || "Segment";
+          const names = (seg.participants || []).map((p) => p.name).join(" vs. ");
+          const segRating = seg.rating ?? "N/A";
+          const storyline = seg.storylineId ? `(storyline: ${seg.storylineId})` : "";
+          return `#${idx + 1} ${type}: ${names} — Rating ${segRating} ${storyline}`;
+        })
+        .join("\n");
 
-      const recapSystem = `
-You are an online wrestling columnist (think WrestleZone / WON / early EWR vibe).
-Write a recap of the show. Use insider language but stay readable.
-IMPORTANT:
-- Base overall tone on the final rating.
-- Praise or bury individual segments based on *their* ratings.
-- If you see a storyline tag, mention how the segment affected that feud/heat.
-- 2-4 paragraphs max, no bullet lists.
-      `.trim();
+      const text = await callModel([
+        {
+          role: "system",
+          content: `You write smarky, dirt-sheet style recaps of booked wrestling shows. 
+Mention standout matches, bad segments, and momentum for storylines. 
+Keep it immersive and in-universe. 3–6 paragraphs.`,
+        },
+        {
+          role: "user",
+          content: `
+Show name: ${showName}
+Tier: ${tier}
+Overall rating: ${ratingNum}
 
-      const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: recapSystem },
-          {
-            role: "user",
-            content: `
-Show Name: ${showName}
-Final Rating: ${rating}/100
+Segments:
+${segmentLines}
 
-Card:
-${cardLines}
-            `.trim(),
-          },
-        ],
-        temperature: 0.8,
-      });
+Write the recap.`,
+        },
+      ]);
 
-      const text = completion.choices[0].message.content;
-      return res.status(200).json({ text });
+      return res.status(200).json({ ok: true, text });
     }
 
-    // fallback if we got an unknown mode
+    // ===== UNKNOWN MODE =====
     return res.status(400).json({ error: "Unknown mode" });
   } catch (err) {
     console.error("AI route error:", err);
-    return res
-      .status(500)
-      .json({ error: "AI call failed", detail: err.message || String(err) });
+    return res.status(500).json({ error: "AI route failed", details: err.message });
   }
 }
