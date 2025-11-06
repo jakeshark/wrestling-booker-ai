@@ -3,7 +3,6 @@ import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   signInAnonymously,
-  signInWithCustomToken,
   onAuthStateChanged
 } from 'firebase/auth';
 import {
@@ -21,11 +20,7 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 
-/* =========================================================
-   ICON COMPONENTS
-   (unchanged, just keeping them all here so file is 1:1)
-========================================================= */
-
+// --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -41,7 +36,7 @@ const GameIcon = () => (
 
 const MessageIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
-    <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408s4.262.139 6.337.408c.922.12 1.631.94 1.631 1.876v13.066c0 .936-.709 1.756-1.631 1.876-2.075.27-4.19.408-6.337.408s-4.262-.139-6.337-.408c-.922-.12-1.631-.94-1.631-1.876V4.534c0-.936.709-1.756 1.631-1.876ZM7.5 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" />
+    <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408s4.262.139 6.337.408c.922.12 1.631.94 1.631 1.876v13.066c0 .936-.709 1.756-1.631 1.876-2.075.27-4.19.408-6.337.408s-4.262-.139-6.337-.408c-.922-.12-1.631-.94-1.631-1.876V4.534c0-.936.709 1.756 1.631-1.876ZM7.5 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" />
   </svg>
 );
 
@@ -54,12 +49,6 @@ const CloseIcon = () => (
 const AssistantIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.861 2.861l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.861 2.861l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.861-2.861l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.385 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM13.5 18a.75.75 0 0 1 .721.544l.27 1.256a2.25 2.25 0 0 0 1.715 1.715l1.256.27a.75.75 0 0 1 0 1.442l-1.256.27a2.25 2.25 0 0 0-1.715 1.715l-.27 1.256a.75.75 0 0 1-1.442 0l-.27-1.256a2.25 2.25 0 0 0-1.715-1.715l-1.256-.27a.75.75 0 0 1 0-1.442l1.256.27a2.25 2.25 0 0 0 1.715-1.715l.27-1.256a.75.75 0 0 1 .721-.544Z" clipRule="evenodd" />
-  </svg>
-);
-
-const BookingIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
-    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -128,10 +117,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
-// unified AI route
-const AI_ROUTE = '/api/ai';
-
-// Main Application
 function App() {
   // --- Firebase & Auth State ---
   const [db, setDb] = useState(null);
@@ -147,12 +132,18 @@ function App() {
   const [activeSave, setActiveSave] = useState(null);
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
+
+  // --- UI Modals ---
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+
+  // --- Replying to messages ---
+  const [replyingToMessage, setReplyingToMessage] = useState(null);
+  const [replyText, setReplyText] = useState("");
 
   // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
@@ -174,6 +165,7 @@ function App() {
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
+  // --- Design Doc Collections ---
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -216,7 +208,7 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
-  // 1. Initialize Firebase
+  // --- Firebase Init ---
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
@@ -252,14 +244,13 @@ function App() {
           }
         }
       });
-
     } catch (error) {
       console.error("Error initializing Firebase:", error);
       setLoadingMessage("Failed to initialize game data. Please refresh.");
     }
   }, []);
 
-  // 3. Seed Default Dataset & Fetch Main Menu Data
+  // --- After Auth: Seed + Fetch ---
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
@@ -279,6 +270,7 @@ function App() {
     seedAndFetch();
   }, [isAuthReady, db, userId, appId]);
 
+  // --- Dataset Seeder ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
@@ -286,7 +278,6 @@ function App() {
     try {
       const docSnap = await getDoc(datasetRef);
       if (docSnap.exists()) {
-        console.log("Default dataset already exists.");
         return;
       }
 
@@ -377,13 +368,13 @@ function App() {
       });
 
       await batch.commit();
-      console.log("Default dataset created successfully.");
     } catch (error) {
       console.error("Error seeding dataset: ", error);
       setLoadingMessage("Error creating default data. Please refresh.");
     }
   };
 
+  // --- Fetchers ---
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
@@ -407,6 +398,7 @@ function App() {
     }
   };
 
+  // --- New Game ---
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
 
@@ -445,7 +437,6 @@ function App() {
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
-
           batch.set(newDocRef, docData);
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
@@ -509,6 +500,7 @@ function App() {
     }
   };
 
+  // --- Load Game ---
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
 
@@ -553,6 +545,7 @@ function App() {
     }
   };
 
+  // --- Next Day ---
   const handleNextDay = async () => {
     if (!activeSave) return;
 
@@ -589,8 +582,7 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
-  // --- AI & Simulation Engine (wired to /api/ai now) ---
-
+  // --- Daily Simulation + AI Wrestler Messages ---
   const runSimulationAndEvents = async (saveId) => {
     console.log("Sim Engine: Running daily simulation...");
 
@@ -606,28 +598,33 @@ function App() {
     }
   };
 
-  // REWIRED: this now calls /api/ai with mode: "wrestler-message"
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
     try {
-      const response = await fetch(AI_ROUTE, {
+      const res = await fetch('/api/ai/wrestler-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: 'wrestler-message',
           wrestler,
-          topic
+          topic,
+          roster: gameData.save_wrestlers || [],
+          company: gameData.save_companies?.find(c => c.id === activeSave.playerCompanyId) || null
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`AI route failed: ${response.status}`);
+      if (!res.ok) {
+        throw new Error(`AI route failed with status ${res.status}`);
       }
 
-      const data = await response.json();
-      const messageText = data.text || "Hey boss, wanted to talk about my booking.";
+      const data = await res.json();
+      const messageText = data.message || data.text || "Boss, just checking in.";
+      const suggestedReplies = data.suggestedReplies || [
+        "Got it, I'll take a look.",
+        "Let's talk after the show.",
+        "Noted."
+      ];
 
       const messageData = {
         senderId: wrestler.id,
@@ -635,7 +632,9 @@ function App() {
         body: messageText,
         timestamp: Timestamp.now(),
         type: 'Text',
-        isRead: false
+        isRead: false,
+        topic,
+        suggestedReplies
       };
 
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
@@ -653,48 +652,32 @@ function App() {
     }
   };
 
-  // REWIRED: /api/ai mode=assistant
+  // --- AI Booker Assistant ---
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
     setIsAssistantLoading(true);
     setAssistantResponse("");
 
-    const rosterContext = gameData.save_wrestlers.map(w => (
-      `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats.charisma})`
-    )).join('\n');
-
-    const systemPrompt = `
-You are an expert wrestling booker and creative assistant. The user is your boss.
-You will be given a question from the user and a list of their current roster.
-Your job is to provide creative, insightful, and actionable advice.
-Base your advice on the wrestler's disposition, gimmick, and stats.
-    `.trim();
-
     try {
-      const response = await fetch(AI_ROUTE, {
+      const res = await fetch('/api/ai/booker-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: 'assistant',
-          systemPrompt,
-          userQuery: assistantQuery,
-          rosterContext
+          query: assistantQuery,
+          roster: gameData.save_wrestlers || [],
+          storylines: gameData.save_storylines || [],
+          titles: gameData.save_titles || [],
+          company: gameData.save_companies?.find(c => c.id === activeSave?.playerCompanyId) || null
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`AI assistant call failed: ${response.status}`);
+      if (!res.ok) {
+        throw new Error(`Assistant route failed: ${res.status}`);
       }
 
-      const data = await response.json();
-      const adviceText = data.text;
-
-      if (adviceText) {
-        setAssistantResponse(adviceText);
-      } else {
-        setAssistantResponse("The AI assistant couldn't come up with a response. Try rephrasing your question.");
-      }
+      const data = await res.json();
+      setAssistantResponse(data.answer || "I couldn't come up with anything. Try again?");
     } catch (error) {
       console.error("Error getting AI advice: ", error);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
@@ -703,6 +686,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }
   };
 
+  // --- Messages: mark read ---
   const handleMarkMessagesRead = async () => {
     if (!activeSave || unreadMessages === 0) return;
 
@@ -730,6 +714,54 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }
   };
 
+  // --- Messages: open reply editor ---
+  const handleStartReply = (message) => {
+    setReplyingToMessage(message);
+    // default to first suggestion if present
+    if (message.suggestedReplies && message.suggestedReplies.length > 0) {
+      setReplyText(message.suggestedReplies[0]);
+    } else {
+      setReplyText("");
+    }
+  };
+
+  const handleSelectSuggestedReply = (text) => {
+    setReplyText(text);
+  };
+
+  const handleSendReply = async () => {
+    if (!replyingToMessage || !replyText.trim()) return;
+    if (!db || !userId || !appId || !activeSave) return;
+
+    try {
+      const messageData = {
+        senderId: userId,
+        senderName: "Booker",
+        body: replyText.trim(),
+        timestamp: Timestamp.now(),
+        type: 'BookerReply',
+        isRead: true,
+        parentMessageId: replyingToMessage.id
+      };
+
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      const newDocRef = await addDoc(messagesRef, messageData);
+
+      const newMessage = { id: newDocRef.id, ...messageData };
+      setGameData(prevData => ({
+        ...prevData,
+        save_messages: [...(prevData.save_messages || []), newMessage]
+      }));
+
+      setReplyingToMessage(null);
+      setReplyText("");
+
+    } catch (error) {
+      console.error("Error sending reply:", error);
+    }
+  };
+
+  // --- Booking ---
   const handleStartBookingShow = (show) => {
     setCurrentShow(show);
     setCurrentSegments(Array(10).fill(null));
@@ -870,39 +902,55 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }
   };
 
-  // REWIRED: /api/ai mode=show-recap
+  // --- Show Recap (AI) ---
   const generateShowRecap = async (show, ratedSegments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
+    const cardForAI = ratedSegments
+      .filter(s => s)
+      .map((s, index) => {
+        const participants = s.participants.map(p => p.name).join(' vs. ');
+        let result = "";
+
+        const storyline = s.storylineId ? gameData.save_storylines?.find(story => story.id === s.storylineId) : null;
+        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
+        const ratingContext = `(Rating: ${s.rating}/100)`;
+
+        if (s.type === 'Match') {
+          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
+          result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
+        } else {
+          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
+        }
+        return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
+      }).join('\n');
+
     try {
-      const response = await fetch(AI_ROUTE, {
+      const res = await fetch('/api/ai/show-recap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: 'show-recap',
           show,
-          segments: ratedSegments,
-          finalRating: rating
+          cardText: cardForAI,
+          rating,
+          storylines: gameData.save_storylines || []
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`AI recap call failed: ${response.status}`);
+      if (!res.ok) {
+        throw new Error(`show-recap route failed ${res.status}`);
       }
 
-      const data = await response.json();
-      const generatedText = data.text;
-      if (generatedText) {
-        return generatedText;
-      }
-      return "An AI recap could not be generated for this show.";
+      const data = await res.json();
+      return data.recap || "An AI recap could not be generated.";
     } catch (error) {
       console.error("Error generating AI recap: ", error);
       return "An error occurred while generating the show recap. The show is still saved.";
     }
   };
 
+  // --- Post Show Simulation ---
   const runShowSimulation = async (ratedSegments, show) => {
     console.log("Sim Engine v2: Running post-show simulation...");
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
@@ -1067,6 +1115,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }
   };
 
+  // --- Career Events ---
   const logCareerEvents = async (ratedSegments, showRating) => {
     console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
@@ -1145,6 +1194,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }
   };
 
+  // --- Booking participant search ---
   const handleParticipantSearch = (query) => {
     setParticipantSearch(query);
     if (query.length < 1) {
@@ -1198,6 +1248,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }));
   };
 
+  // --- Storyline logic ---
   const handleOpenCreateStorylineModal = () => {
     setStorylineFormData({ name: '', participants: [] });
     setStorylineParticipantSearch("");
@@ -1270,6 +1321,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     }
   };
 
+  // --- Career History / Relationships ---
   const handleViewCareerHistory = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('CAREER_HISTORY_SCREEN');
@@ -1280,6 +1332,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     setGameState('RELATIONSHIPS_SCREEN');
   };
 
+  // --- Renders ---
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1377,7 +1430,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
               {plannedShow ? (
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-bold text-yellow-300">IT'S SHOW DAY!</h4>
-                  <p className="text-lg mt-2">Time to book **{plannedShow.eventName}**!</p>
+                  <p className="text-lg mt-2">Time to book <b>{plannedShow.eventName}</b>!</p>
                   <p className="text-sm text-gray-400">(Tier: {plannedShow.eventTier})</p>
                   <button
                     onClick={() => handleStartBookingShow(plannedShow)}
@@ -1465,15 +1518,31 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Messages Modal (with threaded replies + prefill) ---
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
 
-    const sortedMessages = (gameData.save_messages || []).sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+    const allMessages = (gameData.save_messages || []).sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+
+    // top-level = no parentMessageId
+    const topLevel = allMessages.filter(m => !m.parentMessageId);
+    const repliesByParent = {};
+    allMessages.forEach(m => {
+      if (m.parentMessageId) {
+        if (!repliesByParent[m.parentMessageId]) repliesByParent[m.parentMessageId] = [];
+        repliesByParent[m.parentMessageId].push(m);
+      }
+    });
 
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowMessagesModal(false)}
+        onClick={() => {
+          setShowMessagesModal(false);
+          handleMarkMessagesRead();
+          setReplyingToMessage(null);
+          setReplyText("");
+        }}
       >
         <div
           className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
@@ -1485,6 +1554,8 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
               onClick={() => {
                 setShowMessagesModal(false);
                 handleMarkMessagesRead();
+                setReplyingToMessage(null);
+                setReplyText("");
               }}
               className="text-gray-400 hover:text-white"
             >
@@ -1492,25 +1563,90 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
             </button>
           </div>
           <div className="overflow-y-auto p-4 space-y-4">
-            {sortedMessages.length === 0 ? (
+            {topLevel.length === 0 ? (
               <p className="text-gray-400 text-center p-8">Your inbox is empty.</p>
             ) : (
-              sortedMessages.map(msg => (
+              topLevel.map(msg => (
                 <div key={msg.id} className={`p-4 rounded-lg ${msg.isRead ? 'bg-gray-700' : 'bg-indigo-900 border-l-4 border-indigo-400'}`}>
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-lg">{msg.senderName}</span>
                     <span className="text-xs text-gray-400">{msg.timestamp.toDate().toLocaleString()}</span>
                   </div>
-                  <p className="text-gray-200 whitespace-pre-wrap">{msg.body}</p>
+                  <p className="text-gray-200 whitespace-pre-wrap mb-3">{msg.body}</p>
+
+                  {/* child replies */}
+                  {(repliesByParent[msg.id] || []).sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()).map(reply => (
+                    <div key={reply.id} className="ml-4 mt-2 p-3 bg-gray-900 rounded border border-gray-700">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-semibold text-indigo-200">{reply.senderName}</span>
+                        <span className="text-xs text-gray-500">{reply.timestamp.toDate().toLocaleString()}</span>
+                      </div>
+                      <p className="text-sm text-gray-100 whitespace-pre-wrap">{reply.body}</p>
+                    </div>
+                  ))}
+
+                  <div className="mt-3">
+                    <button
+                      onClick={() => handleStartReply(msg)}
+                      className="px-3 py-1 bg-gray-900 text-sm rounded hover:bg-gray-700 transition-all"
+                    >
+                      Reply
+                    </button>
+                  </div>
                 </div>
               ))
             )}
           </div>
+
+          {/* reply editor */}
+          {replyingToMessage && (
+            <div className="border-t border-gray-700 p-4 bg-gray-900">
+              <p className="text-sm text-gray-400 mb-2">
+                Replying to <span className="font-semibold text-white">{replyingToMessage.senderName}</span>
+              </p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {(replyingToMessage.suggestedReplies || []).map((sr, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectSuggestedReply(sr)}
+                    className="px-3 py-1 bg-indigo-700 text-xs rounded hover:bg-indigo-600"
+                  >
+                    {sr}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                rows={3}
+                className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Type your response..."
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setReplyingToMessage(null);
+                    setReplyText("");
+                  }}
+                  className="px-4 py-1 bg-gray-700 rounded text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendReply}
+                  className="px-4 py-1 bg-green-600 rounded text-sm hover:bg-green-500"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   };
 
+  // --- Assistant Modal ---
   const renderAssistantModal = () => {
     if (!showAssistantModal) return null;
 
@@ -1582,6 +1718,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Booking Screen ---
   const renderBookingScreen = () => {
     if (!currentShow) return null;
 
@@ -1646,6 +1783,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Roster Screen ---
   const renderRosterScreen = () => {
     const wrestlers = gameData.save_wrestlers || [];
 
@@ -1733,6 +1871,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Show Results Screen ---
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -1780,6 +1919,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Storyline Screen ---
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
 
@@ -1831,6 +1971,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Career History Screen ---
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
 
@@ -1871,15 +2012,9 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Event Type
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Notes
-                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -1917,6 +2052,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Relationships Screen ---
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
 
@@ -1961,18 +2097,10 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Person
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Notes
-                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Person</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -2013,6 +2141,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Segment Modal ---
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
 
@@ -2154,6 +2283,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Create Storyline Modal ---
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
 
@@ -2257,6 +2387,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
     );
   };
 
+  // --- Main render switch ---
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
@@ -2281,7 +2412,7 @@ Base your advice on the wrestler's disposition, gimmick, and stats.
           case 'RELATIONSHIPS_SCREEN':
             return renderRelationshipsScreen();
           default:
-            return <p>An unexpected error occurred. Please refresh.</p>;
+            return <p className="text-white p-4">An unexpected error occurred. Please refresh.</p>;
         }
       })()}
       {renderMessagesModal()}
