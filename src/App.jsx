@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   signInAnonymously,
+  signInWithCustomToken,
   onAuthStateChanged
 } from 'firebase/auth';
 import {
@@ -24,6 +25,7 @@ import {
    ICON COMPONENTS
    (unchanged, just keeping them all here so file is 1:1)
 ========================================================= */
+
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -116,9 +118,7 @@ const RelationshipsIcon = () => (
   </svg>
 );
 
-/* =========================================================
-   FIREBASE CONFIG
-========================================================= */
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
   authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -128,18 +128,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
-/* =========================================================
-   MAIN APP
-========================================================= */
+// unified AI route
+const AI_ROUTE = '/api/ai';
+
+// Main Application
 function App() {
-  // firebase
+  // --- Firebase & Auth State ---
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [appId, setAppId] = useState(null);
 
-  // game state
+  // --- Game State ---
   const [gameState, setGameState] = useState('LOADING');
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
@@ -148,14 +149,12 @@ function App() {
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // AI assistant modal
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // booking
+  // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
@@ -164,18 +163,17 @@ function App() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [participantResults, setParticipantResults] = useState([]);
 
-  // show results
+  // --- Show Results State ---
   const [showRecap, setShowRecap] = useState("");
   const [showRating, setShowRating] = useState(0);
 
-  // storylines
+  // --- Storyline State ---
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
-  // constant lists
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -187,7 +185,7 @@ function App() {
     'dataset_teams',
     'dataset_stables',
     'dataset_sponsors',
-    'dataset_relationships'
+    'dataset_relationships',
   ];
 
   const ID_MAPPED_COLLECTIONS = [
@@ -195,7 +193,7 @@ function App() {
     'dataset_wrestlers',
     'dataset_staff',
     'dataset_teams',
-    'dataset_stables'
+    'dataset_stables',
   ];
 
   const SAVE_COLLECTIONS_MAP = {
@@ -218,9 +216,7 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
-  /* =========================================================
-     FIREBASE INIT
-  ========================================================= */
+  // 1. Initialize Firebase
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
@@ -234,8 +230,8 @@ function App() {
       const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
       const dbInstance = getFirestore(app);
-      setLogLevel('debug');
 
+      setLogLevel('debug');
       setDb(dbInstance);
       setAuth(authInstance);
 
@@ -263,9 +259,7 @@ function App() {
     }
   }, []);
 
-  /* =========================================================
-     AFTER AUTH: SEED + FETCH
-  ========================================================= */
+  // 3. Seed Default Dataset & Fetch Main Menu Data
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
@@ -285,9 +279,6 @@ function App() {
     seedAndFetch();
   }, [isAuthReady, db, userId, appId]);
 
-  /* =========================================================
-     SEED DEFAULT DATASET
-  ========================================================= */
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
@@ -393,9 +384,6 @@ function App() {
     }
   };
 
-  /* =========================================================
-     FETCH DATASETS / SAVES
-  ========================================================= */
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
@@ -419,9 +407,6 @@ function App() {
     }
   };
 
-  /* =========================================================
-     NEW GAME / LOAD GAME
-  ========================================================= */
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
 
@@ -460,6 +445,7 @@ function App() {
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
+
           batch.set(newDocRef, docData);
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
@@ -515,6 +501,7 @@ function App() {
       await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
 
       await handleLoadGame(newSaveId);
+
     } catch (error) {
       console.error("Error creating new game: ", error);
       setLoadingMessage("Failed to create new game. Please try again.");
@@ -556,6 +543,7 @@ function App() {
 
       setGameData(loadedGameData);
       setUnreadMessages(unreadCount);
+
       setGameState('IN_GAME');
 
     } catch (error) {
@@ -565,9 +553,6 @@ function App() {
     }
   };
 
-  /* =========================================================
-     NEXT DAY
-  ========================================================= */
   const handleNextDay = async () => {
     if (!activeSave) return;
 
@@ -604,10 +589,8 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
-  /* =========================================================
-     AI + SIM ENGINE
-     (THIS IS WHERE WE REWIRED TO /api/ai)
-  ========================================================= */
+  // --- AI & Simulation Engine (wired to /api/ai now) ---
+
   const runSimulationAndEvents = async (saveId) => {
     console.log("Sim Engine: Running daily simulation...");
 
@@ -615,6 +598,7 @@ function App() {
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
+      console.log("Sim Engine: Event triggered!");
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
       const topics = ['unhappy_booking', 'excited_push', 'request_time_off'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
@@ -622,79 +606,33 @@ function App() {
     }
   };
 
-  // *** THIS IS UPDATED TO CALL /api/ai ***
+  // REWIRED: this now calls /api/ai with mode: "wrestler-message"
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
-    // default userQuery for topic
-    let userQuery = "";
-    switch (topic) {
-      case 'unhappy_booking':
-        userQuery = "Wrestler is frustrated about their booking and wants more spotlight.";
-        break;
-      case 'excited_push':
-        userQuery = "Wrestler is happy about their current push and wants to thank the booker.";
-        break;
-      case 'request_time_off':
-      default:
-        userQuery = "Wrestler needs time off for personal reasons and asks politely.";
-        break;
-    }
-
-    // build system prompt
-    const systemPrompt = `
-You are a professional wrestler texting your boss (the booker) of a wrestling company.
-Your Name: ${wrestler.name}
-Your Gimmick: ${wrestler.gimmick}
-Your Disposition: ${wrestler.disposition}
-Write 1-3 sentences, informal, like a real text. Do NOT sign your name. No hashtags.
-`;
-
-    // we will try AI first, but have fallback text
-    let finalText = "";
     try {
-      const resp = await fetch('/api/ai', {
+      const response = await fetch(AI_ROUTE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'wrestler-message',
-          systemPrompt,
-          userQuery,
-          wrestler: {
-            id: wrestler.id,
-            name: wrestler.name,
-            disposition: wrestler.disposition,
-            gimmick: wrestler.gimmick
-          },
+          wrestler,
           topic
         })
       });
 
-      if (!resp.ok) {
-        console.error("AI wrestler-message route returned non-OK:", await resp.text());
-        throw new Error("Non-OK from /api/ai");
+      if (!response.ok) {
+        throw new Error(`AI route failed: ${response.status}`);
       }
 
-      const data = await resp.json();
-      finalText = data.text || "";
-    } catch (err) {
-      console.error("Error calling /api/ai for wrestler message:", err);
-      // fallback text
-      if (topic === 'unhappy_booking') {
-        finalText = "Hey, just wanted to say I feel like I’ve been spinning my wheels lately. Any chance we can talk about doing more?";
-      } else if (topic === 'excited_push') {
-        finalText = "Appreciate what you’re doing with me lately. I’m ready to keep it rolling whenever you are.";
-      } else {
-        finalText = "Got some stuff I need to handle, could I get a little time off soon?";
-      }
-    }
+      const data = await response.json();
+      const messageText = data.text || "Hey boss, wanted to talk about my booking.";
 
-    try {
       const messageData = {
         senderId: wrestler.id,
         senderName: wrestler.name,
-        body: finalText,
+        body: messageText,
         timestamp: Timestamp.now(),
         type: 'Text',
         isRead: false
@@ -709,12 +647,13 @@ Write 1-3 sentences, informal, like a real text. Do NOT sign your name. No hasht
         save_messages: [...(prevData.save_messages || []), newMessage]
       }));
       setUnreadMessages(prev => prev + 1);
+
     } catch (error) {
-      console.error("Error saving AI-generated message:", error);
+      console.error("Error generating AI message: ", error);
     }
   };
 
-  // *** UPDATED: BOOKER ASSISTANT CALLS /api/ai ***
+  // REWIRED: /api/ai mode=assistant
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
@@ -728,40 +667,69 @@ Write 1-3 sentences, informal, like a real text. Do NOT sign your name. No hasht
     const systemPrompt = `
 You are an expert wrestling booker and creative assistant. The user is your boss.
 You will be given a question from the user and a list of their current roster.
-Base your advice on disposition, gimmick, morale, and stats.
-Roster:
-${rosterContext}
-`;
+Your job is to provide creative, insightful, and actionable advice.
+Base your advice on the wrestler's disposition, gimmick, and stats.
+    `.trim();
 
     try {
-      const resp = await fetch('/api/ai', {
+      const response = await fetch(AI_ROUTE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: 'booker-assistant',
+          mode: 'assistant',
           systemPrompt,
-          userQuery: assistantQuery
+          userQuery: assistantQuery,
+          rosterContext
         })
       });
 
-      if (!resp.ok) {
-        console.error("AI assistant route returned non-OK:", await resp.text());
-        throw new Error("Non-OK from /api/ai");
+      if (!response.ok) {
+        throw new Error(`AI assistant call failed: ${response.status}`);
       }
 
-      const data = await resp.json();
-      setAssistantResponse(data.text || "The AI assistant didn't return anything.");
+      const data = await response.json();
+      const adviceText = data.text;
+
+      if (adviceText) {
+        setAssistantResponse(adviceText);
+      } else {
+        setAssistantResponse("The AI assistant couldn't come up with a response. Try rephrasing your question.");
+      }
     } catch (error) {
-      console.error("Error getting AI advice:", error);
+      console.error("Error getting AI advice: ", error);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
     } finally {
       setIsAssistantLoading(false);
     }
   };
 
-  /* =========================================================
-     BOOKING + SHOW RUN
-  ========================================================= */
+  const handleMarkMessagesRead = async () => {
+    if (!activeSave || unreadMessages === 0) return;
+
+    setUnreadMessages(0);
+
+    setGameData(prevData => ({
+      ...prevData,
+      save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
+    }));
+
+    try {
+      const batch = writeBatch(db);
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+
+      gameData.save_messages.forEach(msg => {
+        if (!msg.isRead) {
+          const docRef = doc(messagesRef, msg.id);
+          batch.update(docRef, { isRead: true });
+        }
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error("Error marking messages as read: ", error);
+    }
+  };
+
   const handleStartBookingShow = (show) => {
     setCurrentShow(show);
     setCurrentSegments(Array(10).fill(null));
@@ -902,76 +870,39 @@ ${rosterContext}
     }
   };
 
-  // *** UPDATED: SHOW RECAP CALLS /api/ai ***
+  // REWIRED: /api/ai mode=show-recap
   const generateShowRecap = async (show, ratedSegments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
-    const cardForAI = ratedSegments
-      .filter(s => s)
-      .map((s, index) => {
-        const participants = s.participants.map(p => p.name).join(' vs. ');
-        const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
-        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
-        const ratingContext = `(Rating: ${s.rating}/100)`;
-
-        if (s.type === 'Match') {
-          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
-          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
-          return `${index + 1}. Match${storylineContext}: ${participants}${result} ${ratingContext}`;
-        } else {
-          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
-        }
-      }).join('\n');
-
-    const systemPrompt = `
-You are a professional wrestling "dirt sheet" journalist.
-Write a recap of the show, using the overall rating as your anchor.
-Mention the main event and any storyline-tagged segments.
-Be critical but fair.
-`;
-
-    const userQuery = `
-Show Name: ${show.eventName}
-Overall Rating: ${rating}/100
-
-Booked Card:
-${cardForAI}
-`;
-
-    let recapText = "No AI recap could be generated for this show.";
-
     try {
-      const resp = await fetch('/api/ai', {
+      const response = await fetch(AI_ROUTE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'show-recap',
-          systemPrompt,
-          userQuery
+          show,
+          segments: ratedSegments,
+          finalRating: rating
         })
       });
 
-      if (!resp.ok) {
-        console.error("show-recap route returned non-OK:", await resp.text());
-        throw new Error("Non-OK from /api/ai");
+      if (!response.ok) {
+        throw new Error(`AI recap call failed: ${response.status}`);
       }
 
-      const data = await resp.json();
-      if (data.text) {
-        recapText = data.text;
+      const data = await response.json();
+      const generatedText = data.text;
+      if (generatedText) {
+        return generatedText;
       }
+      return "An AI recap could not be generated for this show.";
     } catch (error) {
       console.error("Error generating AI recap: ", error);
-      recapText = "An error occurred while generating the show recap. The show is still saved.";
+      return "An error occurred while generating the show recap. The show is still saved.";
     }
-
-    return recapText;
   };
 
-  /* =========================================================
-     POST-SHOW SIM + CAREER LOGGING
-  ========================================================= */
   const runShowSimulation = async (ratedSegments, show) => {
     console.log("Sim Engine v2: Running post-show simulation...");
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
@@ -988,7 +919,9 @@ ${cardForAI}
     const allStorylines = gameData.save_storylines;
 
     const getWrestler = (id) => {
-      if (wrestlerUpdates.has(id)) return wrestlerUpdates.get(id);
+      if (wrestlerUpdates.has(id)) {
+        return wrestlerUpdates.get(id);
+      }
       return allWrestlers.find(w => w.id === id);
     };
 
@@ -1000,16 +933,21 @@ ${cardForAI}
     };
 
     const getStoryline = (id) => {
-      if (storylineUpdates.has(id)) return storylineUpdates.get(id);
+      if (storylineUpdates.has(id)) {
+        return storylineUpdates.get(id);
+      }
       return allStorylines.find(s => s.id === id);
     };
 
     const getMoraleMultiplier = (tier) => {
       switch (tier) {
-        case 'Flagship_Event': return 2.0;
-        case 'Major_Event': return 1.5;
+        case 'Flagship_Event':
+          return 2.0;
+        case 'Major_Event':
+          return 1.5;
         case 'Monthly_Event':
-        default: return 1.0;
+        default:
+          return 1.0;
       }
     };
 
@@ -1038,6 +976,7 @@ ${cardForAI}
             const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
 
             storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
+            console.log(`Sim Update: Storyline '${storyline.name}' heat ${baseHeat} -> ${finalHeat} (Segment Rating: ${segmentRating})`);
           }
         }
 
@@ -1076,6 +1015,7 @@ ${cardForAI}
             if (moraleChange !== 0) {
               const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
               wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
+              console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale} (Multiplier: ${moraleMultiplier}x)`);
             }
           }
         }
@@ -1105,14 +1045,21 @@ ${cardForAI}
         setGameData(prevData => ({
           ...prevData,
           save_wrestlers: prevData.save_wrestlers.map(w => {
-            if (wrestlerUpdates.has(w.id)) return wrestlerUpdates.get(w.id);
+            if (wrestlerUpdates.has(w.id)) {
+              return wrestlerUpdates.get(w.id);
+            }
             return w;
           }),
           save_storylines: prevData.save_storylines.map(s => {
-            if (storylineUpdates.has(s.id)) return storylineUpdates.get(s.id);
+            if (storylineUpdates.has(s.id)) {
+              return storylineUpdates.get(s.id);
+            }
             return s;
           })
         }));
+        console.log("Sim Engine v2: Morale and Storyline updates saved and local state updated.");
+      } else {
+        console.log("Sim Engine v2: No morale or storyline changes to apply.");
       }
 
     } catch (error) {
@@ -1183,6 +1130,7 @@ ${cardForAI}
       }
 
       await batch.commit();
+      console.log("Career events successfully logged to memory.");
 
       setGameData(prevData => ({
         ...prevData,
@@ -1197,39 +1145,6 @@ ${cardForAI}
     }
   };
 
-  /* =========================================================
-     MESSAGE MODAL HELPERS
-  ========================================================= */
-  const handleMarkMessagesRead = async () => {
-    if (!activeSave || unreadMessages === 0) return;
-
-    setUnreadMessages(0);
-
-    setGameData(prevData => ({
-      ...prevData,
-      save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
-    }));
-
-    try {
-      const batch = writeBatch(db);
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-
-      gameData.save_messages.forEach(msg => {
-        if (!msg.isRead) {
-          const docRef = doc(messagesRef, msg.id);
-          batch.update(docRef, { isRead: true });
-        }
-      });
-
-      await batch.commit();
-    } catch (error) {
-      console.error("Error marking messages as read: ", error);
-    }
-  };
-
-  /* =========================================================
-     BOOKING MODAL HANDLERS
-  ========================================================= */
   const handleParticipantSearch = (query) => {
     setParticipantSearch(query);
     if (query.length < 1) {
@@ -1283,9 +1198,6 @@ ${cardForAI}
     }));
   };
 
-  /* =========================================================
-     STORYLINE CREATION
-  ========================================================= */
   const handleOpenCreateStorylineModal = () => {
     setStorylineFormData({ name: '', participants: [] });
     setStorylineParticipantSearch("");
@@ -1358,9 +1270,6 @@ ${cardForAI}
     }
   };
 
-  /* =========================================================
-     VIEW CAREER / RELATIONSHIPS
-  ========================================================= */
   const handleViewCareerHistory = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('CAREER_HISTORY_SCREEN');
@@ -1371,9 +1280,6 @@ ${cardForAI}
     setGameState('RELATIONSHIPS_SCREEN');
   };
 
-  /* =========================================================
-     RENDER HELPERS
-  ========================================================= */
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1471,7 +1377,7 @@ ${cardForAI}
               {plannedShow ? (
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-bold text-yellow-300">IT'S SHOW DAY!</h4>
-                  <p className="text-lg mt-2">Time to book <strong>{plannedShow.eventName}</strong>!</p>
+                  <p className="text-lg mt-2">Time to book **{plannedShow.eventName}**!</p>
                   <p className="text-sm text-gray-400">(Tier: {plannedShow.eventTier})</p>
                   <button
                     onClick={() => handleStartBookingShow(plannedShow)}
@@ -1965,13 +1871,13 @@ ${cardForAI}
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Event Type
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Notes
                         </th>
                       </tr>
@@ -2055,16 +1961,16 @@ ${cardForAI}
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Person
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Type
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Notes
                         </th>
                       </tr>
@@ -2351,9 +2257,6 @@ ${cardForAI}
     );
   };
 
-  /* =========================================================
-     MAIN RENDER
-  ========================================================= */
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
