@@ -1,232 +1,203 @@
 // /api/ai.js
 
+// Vercel serverless function style
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    // quick health check support
+  // Quick health check
+  if (req.method === 'GET') {
     return res.status(200).json({ ok: true, message: "AI route is alive" });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({
-      error: "Missing OPENAI_API_KEY in environment.",
-    });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    const {
-      action,
-      // common payload pieces the client sends
-      wrestler,
-      topic,
-      roster,
-      company,
-      query,
-      storylines,
-      titles,
-      show,
-      cardText,
-      rating,
-    } = req.body || {};
+  // Make sure we actually got JSON
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
+  }
 
-    if (!action) {
-      return res.status(400).json({ error: "Missing 'action' in request body." });
+  const { type } = body || {};
+
+  // If no type, bail gracefully
+  if (!type) {
+    return res.status(400).json({ error: 'Missing "type" in request body.' });
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  const hasRealAI = !!apiKey;
+
+  // Helper to safely call OpenAI and always return text
+  async function callOpenAI(system, user, maxTokens = 400) {
+    if (!hasRealAI) {
+      // Fall back to mock text so React UI still works
+      return "AI key missing on server. This is a placeholder response so the UI doesn't break.";
     }
 
-    // small helper so we don't repeat ourselves
-    async function callOpenAI(messages) {
+    try {
       const resp = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           model: "gpt-4o-mini",
-          messages,
-          temperature: 0.8,
-        }),
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user }
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.8
+        })
       });
 
       if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(`OpenAI error: ${resp.status} ${txt}`);
+        const errText = await resp.text();
+        console.error("OpenAI API error:", errText);
+        return "AI was unavailable. Try again in a bit.";
       }
 
       const data = await resp.json();
-      return data.choices[0].message.content;
+      const text = data.choices?.[0]?.message?.content?.trim();
+      return text || "AI did not return content.";
+    } catch (err) {
+      console.error("OpenAI fetch error:", err);
+      return "AI request failed. Check server logs.";
     }
+  }
 
-    // -----------------------------
-    // 1) Wrestler -> Booker message
-    // -----------------------------
-    if (action === "wrestler-message") {
-      // the front end expects: { message: string, suggestedReplies: [...] }
-      const name = wrestler?.name || "Unnamed Wrestler";
-      const companyName = company?.name || "your promotion";
+  // 1) Wrestler message generator
+  if (type === 'wrestler-message') {
+    const wrestler = body.wrestler || {};
+    const topic = body.topic || "general_backstage";
 
-      const systemPrompt = `
-You are simulating private inbox messages in a wrestling booker/GM game.
-Write short, in-character messages from wrestlers/staff to the booker.
-ALWAYS return plain text, no markdown.
-Keep it 1-4 sentences.
+    // Keep name short to avoid prompt blowups
+    const name = wrestler.name || "Unnamed Wrestler";
+    const gimmick = wrestler.gimmick || "wrestler";
+    const morale = typeof wrestler.morale === 'number' ? wrestler.morale : 70;
+
+    const systemPrompt = `
+You are simulating a private message from a professional wrestler to their booker/owner in a text-message style.
+Return ONLY the message text, no extra formatting.
+Tone should match the wrestler's gimmick if possible.
 `;
-
-      const userPrompt = `
-WRESTLER:
-${JSON.stringify(wrestler, null, 2)}
-
+    const userPrompt = `
+WRESTLER NAME: ${name}
+GIMMICK: ${gimmick}
+MORALE: ${morale}
 TOPIC: ${topic}
 
-ROSTER (for context): ${Array.isArray(roster) ? roster.map(r => r.name).join(", ") : ""}
-
-COMPANY: ${companyName}
-
-Write a short message from ${name} to the booker that fits the topic.
-Then, after that, invent 3 realistic short replies the booker might send back.
-Return them in JSON like this EXACTLY:
-
-{
-  "message": "text the wrestler sends",
-  "replies": [
-    "short booker reply 1",
-    "short booker reply 2",
-    "short booker reply 3"
-  ]
-}
-
-No explanation, just JSON.
+Write a short, 1-3 paragraph in-character message to the booker about this topic.
 `;
+    const aiText = await callOpenAI(systemPrompt, userPrompt, 260);
 
-      const raw = await callOpenAI([
-        { role: "system", content: systemPrompt.trim() },
-        { role: "user", content: userPrompt.trim() },
-      ]);
+    // Also synthesize 3 plausible reply options for the UI to prefill
+    let replyOptions = [
+      "Thanks for reaching out — let me see what I can do for your booking.",
+      "I get where you're coming from, but I need you to trust the longer-term plan.",
+      "Let's talk more after the next show."
+    ];
 
-      // try to parse their JSON
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch (e) {
-        // fallback if model didn't return JSON
-        parsed = {
-          message: raw,
-          replies: [
-            "Got it — I’ll review your booking.",
-            "Let’s talk after the show.",
-            "We can revisit this next week."
-          ]
-        };
+    if (hasRealAI) {
+      // We can ask AI for reply options too, but protect against failure
+      const replyUserPrompt = `
+The booker needs 3 short, natural replies to send back to ${name}.
+Give them as 3 separate lines, each a single sentence.
+`;
+      const repliesText = await callOpenAI(systemPrompt, replyUserPrompt, 120);
+      if (repliesText && repliesText.includes('\n')) {
+        replyOptions = repliesText
+          .split('\n')
+          .map(l => l.trim())
+          .filter(Boolean)
+          .slice(0, 3);
       }
-
-      return res.status(200).json({
-        message: parsed.message || "Hey boss, can we talk about my booking?",
-        suggestedReplies: Array.isArray(parsed.replies) && parsed.replies.length > 0
-          ? parsed.replies
-          : [
-              "Got it — I’ll review your booking.",
-              "Let’s talk after the show.",
-              "We can revisit this next week."
-            ]
-      });
     }
 
-    // -----------------------------
-    // 2) Booker Assistant
-    // -----------------------------
-    if (action === "booker-assistant") {
-      // front end expects: { answer: "..." }
-      const systemPrompt = `
-You are an AI booking assistant for a wrestling GM/booker sim based on EWR-style depth.
-You know about: roster strengths, dispositions, storylines, titles, show structure.
-When the user asks "who should I push" or "give me a feud", use the roster they sent.
-Be concise but concrete. Suggest matchups, angles, and story beats.
-`;
-
-      const rosterText = Array.isArray(roster) && roster.length
-        ? roster.map(r => {
-            const disp = r.disposition ? `(${r.disposition})` : "";
-            return `- ${r.name} ${disp} [B:${r.stats?.brawling} S:${r.stats?.speed} T:${r.stats?.technical} C:${r.stats?.charisma}]`;
-          }).join("\n")
-        : "No roster provided";
-
-      const storylineText = Array.isArray(storylines) && storylines.length
-        ? storylines.map(s => `- ${s.name} (heat: ${s.heat}) participants: ${s.participants?.map(p => p.name).join(", ")}`).join("\n")
-        : "No active storylines";
-
-      const titlesText = Array.isArray(titles) && titles.length
-        ? titles.map(t => `- ${t.titleName} (prestige: ${t.prestige})`).join("\n")
-        : "No titles";
-
-      const userPrompt = `
-USER QUESTION:
-${query || "Give me general booking guidance."}
-
-CONTEXT:
-Company: ${company?.name || "Unknown"}
-Roster:
-${rosterText}
-
-Storylines:
-${storylineText}
-
-Titles:
-${titlesText}
-
-Now answer the user's question based on THIS roster. If they ask "who should I push", pick 2-4 names from roster above.
-`;
-
-      const answer = await callOpenAI([
-        { role: "system", content: systemPrompt.trim() },
-        { role: "user", content: userPrompt.trim() },
-      ]);
-
-      return res.status(200).json({ answer });
-    }
-
-    // -----------------------------
-    // 3) Show Recap
-    // -----------------------------
-    if (action === "show-recap") {
-      // front end expects: { recap: "..." }
-      const systemPrompt = `
-You are a smarky dirt-sheet style recap writer for a wrestling sim.
-You receive a card with segments (matches + angles) and per-segment ratings, plus an overall show rating.
-Write a 3-8 paragraph recap.
-Mention key storylines if provided.
-Tone: insider-y but readable. Reference segment ratings subtly.
-`;
-
-      const userPrompt = `
-SHOW NAME: ${show?.eventName || "Unknown Show"}
-TIER: ${show?.eventTier || "Unknown"}
-OVERALL RATING: ${rating}
-
-CARD (top to bottom):
-${cardText || "No card text was provided."}
-
-STORYLINES:
-${Array.isArray(storylines) && storylines.length ? storylines.map(s => `- ${s.name} (heat ${s.heat})`).join("\n") : "None"}
-
-Write the recap now.
-`;
-
-      const recap = await callOpenAI([
-        { role: "system", content: systemPrompt.trim() },
-        { role: "user", content: userPrompt.trim() },
-      ]);
-
-      return res.status(200).json({ recap });
-    }
-
-    // if we got here, action was unknown
-    return res.status(400).json({ error: `Unknown action '${action}'` });
-
-  } catch (err) {
-    console.error("AI route error:", err);
-    return res.status(500).json({
-      error: "AI route failed",
-      details: err.message,
+    return res.status(200).json({
+      message: aiText,
+      replyOptions
     });
   }
+
+  // 2) Booker assistant (the one your modal calls)
+  if (type === 'booker-assistant') {
+    // rosterContext can get BIG — trim it
+    let rosterContext = body.rosterContext || "";
+    if (rosterContext.length > 4000) {
+      rosterContext = rosterContext.slice(0, 4000) + "\n...[trimmed roster]...";
+    }
+
+    const query = body.query || "Give me booking advice.";
+
+    const systemPrompt = `
+You are "Wrestling Booker AI Assistant," an expert in EWR/TEW-style booking.
+You know:
+- each segment is rated individually
+- angles and matches both matter
+- feud/storyline heat should come from segments involving those wrestlers
+Give concise, actionable booking advice. Include match/angle suggestions when relevant.
+`;
+    const userPrompt = `
+ROSTER (partial, may be trimmed):
+${rosterContext}
+
+QUESTION:
+${query}
+`;
+
+    const aiText = await callOpenAI(systemPrompt, userPrompt, 400);
+
+    return res.status(200).json({
+      text: aiText
+    });
+  }
+
+  // 3) Show recap generator
+  if (type === 'show-recap') {
+    const showName = body.showName || "Unnamed Show";
+    const overallRating = body.overallRating || 60;
+    const segments = Array.isArray(body.segments) ? body.segments : [];
+
+    // build a compact recap prompt
+    const compactSegments = segments
+      .filter(Boolean)
+      .map((s, i) => {
+        const names = Array.isArray(s.participants)
+          ? s.participants.map(p => p.name).join(" vs. ")
+          : "Unknown participants";
+        return `${i + 1}. ${s.type} — ${names} — Rating ${s.rating ?? 'N/A'}`;
+      })
+      .join("\n");
+
+    const systemPrompt = `
+You write "dirt sheet" style show recaps for a wrestling booking sim.
+You understand segment-by-segment grades and how they roll up to an overall show grade.
+Be specific, note highs/lows, and mention implications for feuds.
+`;
+    const userPrompt = `
+Show: ${showName}
+Overall Rating: ${overallRating}/100
+
+Segments:
+${compactSegments}
+
+Write 2-5 tight paragraphs.
+Mention what overperformed, what underperformed, and storyline momentum.
+`;
+
+    const aiText = await callOpenAI(systemPrompt, userPrompt, 350);
+
+    return res.status(200).json({
+      text: aiText
+    });
+  }
+
+  // fallback
+  return res.status(400).json({ error: `Unknown type "${type}"` });
 }
