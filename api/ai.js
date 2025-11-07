@@ -13,11 +13,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Missing OPENAI_API_KEY in environment' });
   }
 
-  // helper: topic-aware fallback replies
+  // helper: topic-aware default replies
   const buildTopicFallback = (topic = "general", wrestlerName = "the talent") => {
     const t = topic.toLowerCase();
 
-    // asking for a push / better booking
+    // booking / push
     if (t.includes('push') || t.includes('unhappy_booking') || t.includes('booking')) {
       return [
         `Yeah, we can look at spotlighting you more soon — you’ve been delivering, ${wrestlerName}.`,
@@ -30,8 +30,8 @@ export default async function handler(req, res) {
     if (t.includes('time_off') || t.includes('time off') || t.includes('request_time_off')) {
       return [
         `Yeah, we can give you that time — thanks for the heads up.`,
-        `Right now isn’t ideal, we’ve got you penciled in — I’d rather you hold off if you can.`,
-        `Let’s see how the next taping looks. If we can cover your spot, we’ll approve the week.`
+        `This week isn’t great — you’re on the sheet. If you can hold off, I’d prefer that.`,
+        `Let me see how the next taping looks. If we can cover your spot, we’ll approve the week.`
       ];
     }
 
@@ -39,56 +39,91 @@ export default async function handler(req, res) {
     if (t.includes('contract') || t.includes('money') || t.includes('pay') || t.includes('deal')) {
       return [
         `Okay, we can look at bumping your deal — you’ve been valuable.`,
-        `Can’t do that number right now — it’s above where we have you slotted.`,
-        `If business stays good and you keep producing, we can revisit the money in a few weeks.`
+        `Can’t hit that number right now — it’s above where we have you slotted.`,
+        `If business stays good and you keep producing, we can revisit the money soon.`
       ];
     }
 
-    // default catch-all
+    // default
     return [
-      `Yep, we can work with that.`,
+      `Yeah, we can work with that.`,
       `No, that doesn’t fit where we’re going right now.`,
       `Maybe — let’s see how the next couple of shows shake out.`
     ];
+  };
+
+  // helper: detect placeholder-y strings and replace
+  const sanitizeReplies = (replies, topic, wrestlerName) => {
+    const fallback = buildTopicFallback(topic, wrestlerName);
+
+    if (!Array.isArray(replies) || replies.length < 3) {
+      return fallback;
+    }
+
+    const looksPlaceholder = (s = "") => {
+      const lower = s.toLowerCase();
+      return (
+        lower.includes("a yes") ||
+        lower.includes("agreeable") ||
+        lower.includes("a no") ||
+        lower.includes("pushback") ||
+        lower.includes("a maybe") ||
+        lower.includes("conditional") ||
+        lower.trim().length < 5 // super short, probably junk
+      );
+    };
+
+    const cleaned = replies.map((r, idx) => {
+      if (!r || looksPlaceholder(r)) {
+        return fallback[idx] || fallback[0];
+      }
+      return r;
+    });
+
+    return cleaned;
   };
 
   try {
     const { type } = req.body || {};
 
     //
-    // 1) WRESTLER MESSAGES
+    // 1) WRESTLER MESSAGE
     //
     if (type === 'wrestler-message') {
       const {
         wrestler,
         topic,
-        // optional: if your client later sends the actual message text it saved
         originalMessage
       } = req.body;
 
       const wrestlerName = wrestler?.name || 'the talent';
-      const fallbackReplies = buildTopicFallback(topic, wrestlerName);
+      const topicFallback = buildTopicFallback(topic, wrestlerName);
 
-      // system prompt: behind-the-scenes, not kayfabe
       const systemPrompt = `
 You are generating INTERNAL / BACKSTAGE messages for a wrestling booking simulator.
-These are real people texting or DMing the booker about creative, money, time off, or being booked weak.
+These are *real people* talking to the booker about creative, money, time off, or being booked weak.
+NOT kayfabe. NOT promos.
+
 Rules:
-- Do NOT cut a promo.
 - Speak as the human behind the character.
 - If they mention creative, they can say “my character” or “what I’m doing on TV” in a practical way.
-- Be concise: 2-5 sentences.
+- Be concise: 2–5 sentences.
 - Tone should match the situation (frustrated, hopeful, professional).
+
 You MUST return valid JSON in this exact shape:
 
 {
   "message": "the message the talent sends the booker",
   "replyOptions": [
-    "a YES / agreeable answer the booker could send back",
-    "a NO / pushback answer the booker could send back",
-    "a MAYBE / conditional answer the booker could send back"
+    "YES-style answer the booker could send back in this specific situation",
+    "NO-style answer the booker could send back in this specific situation",
+    "MAYBE/conditional answer the booker could send back in this specific situation"
   ]
 }
+
+IMPORTANT:
+- Do NOT return placeholder text like "a YES / agreeable answer..." or "a NO / pushback answer...".
+- Write real, natural, situation-specific sentences.
       `.trim();
 
       const userPrompt = `
@@ -98,12 +133,9 @@ On-screen gimmick: ${wrestler?.gimmick || 'Unknown'}
 Current morale: ${wrestler?.morale ?? 75}
 Topic / situation: ${topic || 'general_concern'}
 
-This is the player's current in-game date context; assume it's an active TV schedule.
-
 If the topic is time off, they should sound reasonable but clear.
 If the topic is booking/push, they should mention recent results or crowd reaction.
 If the topic is contract/money, they should reference value to the company.
-
 ${
   originalMessage
     ? `The original saved message text was:\n"""${originalMessage}"""\nYou may keep the spirit of it but make it cleaner.`
@@ -124,7 +156,6 @@ ${
             { role: "user", content: userPrompt }
           ],
           temperature: 0.9,
-          // THIS is the key so we don't get plain text back
           response_format: { type: "json_object" }
         })
       });
@@ -139,20 +170,20 @@ ${
       const raw = data.choices?.[0]?.message?.content?.trim() || "";
 
       let message = `Hey, just wanted to touch base about how I'm being used.`;
-      let replyOptions = fallbackReplies;
+      let replyOptions = topicFallback;
 
-      // because of response_format, this should succeed most of the time
       try {
         const parsed = JSON.parse(raw);
         if (parsed.message) message = parsed.message;
         if (Array.isArray(parsed.replyOptions) && parsed.replyOptions.length >= 3) {
-          replyOptions = parsed.replyOptions.slice(0, 3);
+          replyOptions = sanitizeReplies(parsed.replyOptions, topic, wrestlerName);
+        } else {
+          replyOptions = topicFallback;
         }
       } catch (e) {
-        // if for some reason it still isn't JSON, use topic-aware fallback
         console.warn("JSON parse failed for wrestler-message, using topic fallback.");
         message = raw || message;
-        replyOptions = fallbackReplies;
+        replyOptions = topicFallback;
       }
 
       return res.status(200).json({ message, replyOptions });
