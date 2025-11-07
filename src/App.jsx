@@ -38,7 +38,7 @@ const GameIcon = () => (
 
 const MessageIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
-    <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408s4.262.139 6.337.408c.922.12 1.631.94 1.631 1.876v13.066c0 .936-.709 1.756-1.631 1.876-2.075.27-4.19.408-6.337.408s-4.262-.139-6.337-.408c-.922-.12-1.631-.94-1.631-1.876V4.534c0-.936.709 1.756 1.631-1.876ZM7.5 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" />
+    <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408s4.262.139 6.337.408c.922.12 1.631.94 1.631 1.876v13.066c0 .936-.709 1.756-1.631 1.876-2.075.27-4.19.408-6.337.408s-4.262-.139-6.337-.408c-.922-.12-1.631-.94-1.631-1.876V4.534c0-.936.709-1.756 1.631-1.876ZM7.5 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" />
   </svg>
 );
 
@@ -640,12 +640,14 @@ function App() {
   };
 
   // =====================
-  // GENERATE & SAVE MESSAGE (AI)
-/** uses /api/ai type=wrestler-message */
+  // GENERATE & SAVE MESSAGE (AI) — now stamps with in-game date
   // =====================
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
+
+    // use in-game date for message timestamp
+    const inGameTimestamp = activeSave?.currentDate ? activeSave.currentDate : Timestamp.now();
 
     try {
       const response = await fetch('/api/ai', {
@@ -671,7 +673,7 @@ function App() {
           senderId: wrestler.id,
           senderName: wrestler.name,
           body: messageText,
-          timestamp: Timestamp.now(),
+          timestamp: inGameTimestamp,
           type: 'Text',
           isRead: false,
           replyOptions: replyOptions
@@ -927,23 +929,6 @@ function App() {
   const generateShowRecap = async (show, ratedSegments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
-
-    const cardForAI = ratedSegments
-      .filter(s => s)
-      .map((s, index) => {
-        const participants = s.participants.map(p => p.name).join(' vs. ');
-        const ratingContext = `(Rating: ${s.rating}/100)`;
-        const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
-        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
-
-        if (s.type === 'Match') {
-          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
-          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
-          return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
-        } else {
-          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
-        }
-      }).join('\n');
 
     const payload = {
       type: 'show-recap',
@@ -1263,11 +1248,13 @@ function App() {
   };
 
   // =====================
-  // SEND BOOKER REPLY
+  // SEND BOOKER REPLY — now timestamps with in-game date
   // =====================
   const handleSendBookerReply = async (conversation, text) => {
     if (!text.trim()) return;
     if (!activeSave || !db || !userId || !appId) return;
+
+    const inGameTimestamp = activeSave?.currentDate ? activeSave.currentDate : Timestamp.now();
 
     const newMessageData = {
       senderId: 'booker',
@@ -1275,7 +1262,7 @@ function App() {
       recipientId: conversation.conversationId,
       recipientName: conversation.name,
       body: text.trim(),
-      timestamp: Timestamp.now(),
+      timestamp: inGameTimestamp,
       type: 'Text',
       isRead: true
     };
@@ -1493,7 +1480,7 @@ function App() {
   };
 
   // =====================
-  // RENDER: MESSAGES MODAL (threaded + hover-to-prefill)
+  // RENDER: MESSAGES MODAL (threaded + hover-to-prefill, but buttons say Yes/No/Maybe)
 // =====================
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
@@ -1509,6 +1496,28 @@ function App() {
     const activeMessages = activeConversation ? activeConversation.messages.slice().sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()) : [];
 
     const lastIncomingWithReplies = activeMessages.slice().reverse().find(m => m.senderId !== 'booker' && Array.isArray(m.replyOptions) && m.replyOptions.length > 0);
+
+    // We'll show simple labels...
+    const replyLabels = ["Yes", "No", "Maybe"];
+
+    // ...but on hover, we'll use the FULL AI text if present, otherwise a good default shoot-style msg.
+    const getReplyTextForIndex = (idx) => {
+      const name = activeConversation?.name || "you";
+      const aiOptions = lastIncomingWithReplies?.replyOptions || [];
+
+      if (aiOptions[idx]) {
+        return aiOptions[idx];
+      }
+
+      // fallback shoot-style replies
+      if (idx === 0) {
+        return `Yeah, I can work that in. You've been doing solid work, so let's line something up for you.`;
+      }
+      if (idx === 1) {
+        return `Not right now. The card is pretty full and we have other pieces we need to move first.`;
+      }
+      return `Let me see how the next couple of shows go and where the crowd is at — if momentum’s there, we can talk.`;
+    };
 
     return (
       <div
@@ -1596,14 +1605,15 @@ function App() {
 
               {activeConversation && (
                 <div className="border-t border-gray-700 p-4 bg-gray-900">
-                  {lastIncomingWithReplies && lastIncomingWithReplies.replyOptions && lastIncomingWithReplies.replyOptions.length > 0 && (
+                  {lastIncomingWithReplies && (
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {lastIncomingWithReplies.replyOptions.map((opt, idx) => (
+                      {replyLabels.map((label, idx) => (
                         <button
-                          key={idx}
+                          key={label}
                           onMouseEnter={() => {
+                            const fullText = getReplyTextForIndex(idx);
                             setReplyBackupText(replyText);
-                            setReplyText(opt);
+                            setReplyText(fullText);
                             setIsHoveringReply(true);
                           }}
                           onMouseLeave={() => {
@@ -1613,12 +1623,13 @@ function App() {
                             }
                           }}
                           onClick={() => {
-                            setReplyText(opt);
+                            const fullText = getReplyTextForIndex(idx);
+                            setReplyText(fullText);
                             setIsHoveringReply(false);
                           }}
                           className="px-3 py-1 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600"
                         >
-                          {opt}
+                          {label}
                         </button>
                       ))}
                     </div>
@@ -1641,7 +1652,7 @@ function App() {
                       Send
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Hover to preview, click to lock in. Replies are saved in this thread.</p>
+                  <p className="text-xs text-gray-500 mt-1">Hover to preview AI text; click to lock it in. Replies use in-game dates.</p>
                 </div>
               )}
             </div>
