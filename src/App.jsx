@@ -32,7 +32,7 @@ const LoadingIcon = () => (
 
 const GameIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-indigo-400">
-    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l2.056-7.36H4.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l2.056-7.36H4.75a.75.75 0 0 1 .548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -640,13 +640,12 @@ function App() {
   };
 
   // =====================
-  // GENERATE & SAVE MESSAGE (AI) — now stamps with in-game date
+  // GENERATE & SAVE MESSAGE (AI) — stamped with in-game date
   // =====================
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
-    // use in-game date for message timestamp
     const inGameTimestamp = activeSave?.currentDate ? activeSave.currentDate : Timestamp.now();
 
     try {
@@ -890,7 +889,12 @@ function App() {
       await runShowSimulation(ratedSegments, currentShow);
 
       setLoadingMessage('Generating show recap...');
-      const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
+      const recapText = await generateShowRecap(
+        currentShow,
+        ratedSegments,
+        finalShowRating,
+        gameData.save_wrestlers || []
+      );
       setShowRecap(recapText);
 
       setLoadingMessage('Saving show results...');
@@ -924,17 +928,27 @@ function App() {
   };
 
   // =====================
-  // AI SHOW RECAP
+  // AI SHOW RECAP — stricter, passes roster, forbids extra segments
   // =====================
-  const generateShowRecap = async (show, ratedSegments, rating) => {
+  const generateShowRecap = async (show, ratedSegments, rating, roster) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
+
+    // Build a roster name list so the AI knows who actually exists
+    const rosterNames = Array.isArray(roster) ? roster.map(r => r.name) : [];
 
     const payload = {
       type: 'show-recap',
       showName: show.eventName,
       overallRating: rating,
-      segments: ratedSegments
+      segments: ratedSegments,
+      roster: rosterNames,
+      // this is the important part: tell the backend prompt "do not invent"
+      constraints: {
+        mustOnlyDescribeProvidedSegments: true,
+        mustNotInventWrestlers: true,
+        mustNotInventAngles: true
+      }
     };
 
     let recapText = "No AI recap could be generated for this show.";
@@ -1248,7 +1262,7 @@ function App() {
   };
 
   // =====================
-  // SEND BOOKER REPLY — now timestamps with in-game date
+  // SEND BOOKER REPLY — in-game date
   // =====================
   const handleSendBookerReply = async (conversation, text) => {
     if (!text.trim()) return;
@@ -1480,7 +1494,7 @@ function App() {
   };
 
   // =====================
-  // RENDER: MESSAGES MODAL (threaded + hover-to-prefill, but buttons say Yes/No/Maybe)
+  // RENDER: MESSAGES MODAL (with placeholder scrub)
 // =====================
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
@@ -1497,26 +1511,30 @@ function App() {
 
     const lastIncomingWithReplies = activeMessages.slice().reverse().find(m => m.senderId !== 'booker' && Array.isArray(m.replyOptions) && m.replyOptions.length > 0);
 
-    // We'll show simple labels...
     const replyLabels = ["Yes", "No", "Maybe"];
 
-    // ...but on hover, we'll use the FULL AI text if present, otherwise a good default shoot-style msg.
     const getReplyTextForIndex = (idx) => {
-      const name = activeConversation?.name || "you";
       const aiOptions = lastIncomingWithReplies?.replyOptions || [];
+      const aiOptionRaw = aiOptions[idx];
 
-      if (aiOptions[idx]) {
-        return aiOptions[idx];
+      const isPlaceholder = (str) => {
+        if (!str) return false;
+        const lower = str.trim().toLowerCase();
+        return lower === 'affirmative/agree' || lower === 'decline/pushback' || lower === 'condition/maybe';
+      };
+
+      if (aiOptionRaw && !isPlaceholder(aiOptionRaw)) {
+        return aiOptionRaw;
       }
 
       // fallback shoot-style replies
       if (idx === 0) {
-        return `Yeah, I can work that in. You've been doing solid work, so let's line something up for you.`;
+        return `Yeah, we can look at moving you up — you've been delivering and I see it.`;
       }
       if (idx === 1) {
-        return `Not right now. The card is pretty full and we have other pieces we need to move first.`;
+        return `Not right now. We’ve got other pieces slotted ahead of you on the card.`;
       }
-      return `Let me see how the next couple of shows go and where the crowd is at — if momentum’s there, we can talk.`;
+      return `Let’s see how the next couple of weeks go and if the momentum is there, we can revisit.`;
     };
 
     return (
@@ -1652,7 +1670,7 @@ function App() {
                       Send
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Hover to preview AI text; click to lock it in. Replies use in-game dates.</p>
+                  <p className="text-xs text-gray-500 mt-1">Hover to preview AI text; click to lock it in. Placeholders from the AI are auto-replaced with real shoot-style text.</p>
                 </div>
               )}
             </div>
