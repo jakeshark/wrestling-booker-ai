@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
+import { 
+  getAuth, 
+  signInAnonymously, 
+  onAuthStateChanged 
 } from 'firebase/auth';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  addDoc,
-  collection,
-  query,
-  where,
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  addDoc, 
+  collection, 
+  query, 
+  where, 
   getDocs,
   Timestamp,
   writeBatch,
@@ -92,7 +92,7 @@ const FireIcon = () => (
 const HistoryIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V3a9 9 0 0 0-9 9 .75.75 0 0 1-1.5 0 10.5 10.5 0 0 1 10.5-10.5ZM10.5 10.038a5.25 5.25 0 1 0 4.93 4.93.75.75 0 0 1 1.437.426A6.75 6.75 0 1 1 9.006 8.35a.75.75 0 0 1 1.493 1.688Z" clipRule="evenodd" />
-    <path d="M7.163 15.962c.311.23.638.448.977.652A.75.75 0 0 1 7.8 17.8a9 9 0 1 1 8.4 0 .75.75 0 0 1-1.34.614c.339-.204.666-.423.977-.652a.75.75 0 1 1 .9 1.399A10.499 10.499 0 0 1 12 20.25a10.5 10.5 0 1 1 0-21 10.5 10.5 0 0 1 4.937 1.189.75.75 0 1 1-.9 1.4A9 9 0 0 0 12 3.75a9 9 0 0 0-4.837 1.513.75.75 0 0 1-.9-1.4A10.5 10.5 0 0 1 12 1.5a10.5 10.5 0 0 1 10.5 10.5 10.5 10.5 0 0 1-1.189 4.937.75.75 0 1 1-1.4-.9Z" />
+    <path d="M7.163 15.962c.311.23.638.448.977.652A.75.75 0 0 1 7.8 17.8a9 9 0 1 1 8.4 0 .75.75 0 0 1-1.34.614c.339-.204.666-.423.977-.652a.75.75 0 1 1 .9 1.399A10.499 10.499 0 0 1 12 20.25a10.5 10.5 0 1 1 0-21 10.5 10.5 0 0 1 4.937 1.189.75.75 0 1 1-.9 1.4A9 9 0 0 0 12 3.75a9 9 0 0 0-4.837 1.513.75.75 0 0 1-.9-1.4Z" />
   </svg>
 );
 
@@ -117,6 +117,7 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
+// Main Application
 function App() {
   // --- Firebase & Auth State ---
   const [db, setDb] = useState(null);
@@ -126,14 +127,12 @@ function App() {
   const [appId, setAppId] = useState(null);
 
   // --- Game State ---
-  const [gameState, setGameState] = useState('LOADING');
+  const [gameState, setGameState] = useState('LOADING'); 
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
   const [activeSave, setActiveSave] = useState(null);
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
-
-  // --- UI Modals ---
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [showAssistantModal, setShowAssistantModal] = useState(false);
@@ -141,9 +140,10 @@ function App() {
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // --- Replying to messages ---
-  const [replyingToMessage, setReplyingToMessage] = useState(null);
-  const [replyText, setReplyText] = useState("");
+  // --- NEW: Messages (iPhone-style) UI state ---
+  const [selectedConversationSenderId, setSelectedConversationSenderId] = useState(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [activeReplyOptions, setActiveReplyOptions] = useState([]);
 
   // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
@@ -165,7 +165,7 @@ function App() {
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
-  // --- Design Doc Collections ---
+  // --- Design Doc Schemas ---
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -216,13 +216,13 @@ function App() {
         console.error("Firebase config is missing.");
         return;
       }
-
+      
       setAppId(firebaseConfig.appId);
 
       const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
       const dbInstance = getFirestore(app);
-
+      
       setLogLevel('debug');
       setDb(dbInstance);
       setAuth(authInstance);
@@ -244,37 +244,38 @@ function App() {
           }
         }
       });
+
     } catch (error) {
       console.error("Error initializing Firebase:", error);
       setLoadingMessage("Failed to initialize game data. Please refresh.");
     }
   }, []);
 
-  // --- After Auth: Seed + Fetch ---
+  // Seed & Fetch
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
     const seedAndFetch = async () => {
       setLoadingMessage('Checking for game data...');
       await seedDefaultDataset(db, userId, appId);
-
+      
       setLoadingMessage('Fetching datasets...');
       await fetchDatasets(db, userId, appId);
-
+      
       setLoadingMessage('Fetching your save games...');
       await fetchPlayerSaves(db, userId, appId);
-
+      
       setGameState('MAIN_MENU');
     };
 
     seedAndFetch();
   }, [isAuthReady, db, userId, appId]);
 
-  // --- Dataset Seeder ---
+  // --- Default Dataset Seeder ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
-
+    
     try {
       const docSnap = await getDoc(datasetRef);
       if (docSnap.exists()) {
@@ -340,12 +341,12 @@ function App() {
         if (i === 3) { tier = "Major_Event"; name = "Spring Stampede"; }
         if (i === 7) { tier = "Major_Event"; name = "Summer Scorcher"; }
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
-
+        
         batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_events`)), {
-          datasetId: datasetId,
-          companyId: companyId,
-          month: i + 1,
-          eventName: name,
+          datasetId: datasetId, 
+          companyId: companyId, 
+          month: i + 1, 
+          eventName: name, 
           eventTier: tier,
         });
       }
@@ -374,7 +375,6 @@ function App() {
     }
   };
 
-  // --- Fetchers ---
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
@@ -414,6 +414,7 @@ function App() {
         currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')),
         playerCompanyId: null
       };
+
       const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
       const newSaveId = newSaveRef.id;
 
@@ -432,11 +433,12 @@ function App() {
         for (const docSnap of querySnapshot.docs) {
           const oldDocId = docSnap.id;
           const docData = docSnap.data();
-
+          
           const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
           const newDocId = newDocRef.id;
-
+          
           idMap.set(oldDocId, newDocId);
+          
           batch.set(newDocRef, docData);
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
@@ -444,7 +446,7 @@ function App() {
           }
         }
       }
-
+      
       setLoadingMessage('Linking relationships and shows...');
       const remainingCollections = DATASET_COLLECTIONS.filter(col => !ID_MAPPED_COLLECTIONS.includes(col));
 
@@ -461,25 +463,25 @@ function App() {
 
           if (datasetCollectionName === 'dataset_events') {
             newDocData.status = "Planned";
-            const showDate = (docData.month === 1)
+            const showDate = (docData.month === 1) 
               ? new Date(2025, docData.month - 1, 7, 18, 0, 0)
               : new Date(2025, docData.month - 1, 28, 18, 0, 0);
             newDocData.date = Timestamp.fromDate(showDate);
             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
-
+          
           if (datasetCollectionName === 'dataset_relationships') {
             newDocData.personA_Id = idMap.get(docData.personA_Id) || docData.personA_Id;
             newDocData.personB_Id = idMap.get(docData.personB_Id) || docData.personB_Id;
           }
-
+          
           if (datasetCollectionName === 'dataset_titles') {
             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
             newDocData.initialHolderId = idMap.get(docData.initialHolderId) || null;
           }
-
+          
           if (datasetCollectionName === 'dataset_tv_shows') {
-            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
+             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
 
           const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
@@ -500,7 +502,6 @@ function App() {
     }
   };
 
-  // --- Load Game ---
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
 
@@ -514,25 +515,25 @@ function App() {
       if (!saveSnap.exists()) {
         throw new Error("Save game not found.");
       }
-
+      
       const saveData = { id: saveSnap.id, ...saveSnap.data() };
       setActiveSave(saveData);
 
       let loadedGameData = {};
       let unreadCount = 0;
-
-      for (const collectionName of SAVE_COLLECTION_NAMES) {
+      
+      for (const collectionName of SAVE_COLLECTION_NAMES) { 
         const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
         const querySnapshot = await getDocs(q);
-
+        
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         loadedGameData[collectionName] = collectionData;
-
+        
         if (collectionName === 'save_messages') {
           unreadCount = collectionData.filter(msg => !msg.isRead).length;
         }
       }
-
+      
       setGameData(loadedGameData);
       setUnreadMessages(unreadCount);
 
@@ -548,27 +549,27 @@ function App() {
   // --- Next Day ---
   const handleNextDay = async () => {
     if (!activeSave) return;
-
+    
     setGameState('BUSY');
     setLoadingMessage('Simulating next day...');
-
+    
     try {
       await runSimulationAndEvents(activeSave.id);
 
       const currentDate = activeSave.currentDate.toDate();
       const nextDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
       const newTimestamp = Timestamp.fromDate(nextDate);
-
+      
       const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, activeSave.id);
-      await setDoc(saveRef, {
+      await setDoc(saveRef, { 
         currentDate: newTimestamp,
         lastPlayed: Timestamp.now()
       }, { merge: true });
-
+      
       setActiveSave(prevSave => ({ ...prevSave, currentDate: newTimestamp }));
-
+      
       setGameState('IN_GAME');
-
+      
     } catch (error) {
       console.error("Error advancing day: ", error);
       setLoadingMessage("Error saving progress. Please refresh.");
@@ -582,15 +583,12 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
-  // --- Daily Simulation + AI Wrestler Messages ---
+  // --- Simulation & AI message generation ---
   const runSimulationAndEvents = async (saveId) => {
-    console.log("Sim Engine: Running daily simulation...");
-
     const wrestlers = gameData.save_wrestlers;
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
-      console.log("Sim Engine: Event triggered!");
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
       const topics = ['unhappy_booking', 'excited_push', 'request_time_off'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
@@ -599,36 +597,27 @@ function App() {
   };
 
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
-    console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
     try {
-      // TALK TO SINGLE /api/ai ENTRYPOINT
-      const res = await fetch('/api/ai', {
+      // Call your unified AI route
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'wrestler-message',
+          type: 'wrestler-message',
           wrestler,
           topic,
-          roster: gameData.save_wrestlers || [],
-          company: gameData.save_companies?.find(c => c.id === activeSave.playerCompanyId) || null
         })
       });
 
-      if (!res.ok) {
-        throw new Error(`AI route failed with status ${res.status}`);
+      if (!response.ok) {
+        throw new Error(`AI route failed with status ${response.status}`);
       }
 
-      const data = await res.json();
-      const messageText = data.message || data.text || "Boss, just checking in.";
-      const suggestedReplies = data.suggestedReplies && Array.isArray(data.suggestedReplies) && data.suggestedReplies.length > 0
-        ? data.suggestedReplies
-        : [
-            "Got it, I'll take a look.",
-            "Let's talk after the show.",
-            "Noted."
-          ];
+      const result = await response.json();
+      const messageText = result.message || result.text || "Hey boss, just checking in about my booking.";
+      const replyOptions = Array.isArray(result.replyOptions) ? result.replyOptions : [];
 
       const messageData = {
         senderId: wrestler.id,
@@ -637,13 +626,12 @@ function App() {
         timestamp: Timestamp.now(),
         type: 'Text',
         isRead: false,
-        topic,
-        suggestedReplies
+        replyOptions: replyOptions
       };
-
+      
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
       const newDocRef = await addDoc(messagesRef, messageData);
-
+      
       const newMessage = { id: newDocRef.id, ...messageData };
       setGameData(prevData => ({
         ...prevData,
@@ -653,60 +641,40 @@ function App() {
 
     } catch (error) {
       console.error("Error generating AI message: ", error);
-      // fallback to a static message so the inbox isn't empty
-      const fallbackMsg = {
-        senderId: wrestler.id,
-        senderName: wrestler.name,
-        body: "Hey boss, can we talk about my booking?",
-        timestamp: Timestamp.now(),
-        type: 'Text',
-        isRead: false,
-        topic,
-        suggestedReplies: [
-          "I'll review your booking.",
-          "We'll see after the next show.",
-          "Stay patient."
-        ]
-      };
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
-      const newDocRef = await addDoc(messagesRef, fallbackMsg);
-      const newMessage = { id: newDocRef.id, ...fallbackMsg };
-      setGameData(prevData => ({
-        ...prevData,
-        save_messages: [...(prevData.save_messages || []), newMessage]
-      }));
-      setUnreadMessages(prev => prev + 1);
     }
   };
 
-  // --- AI Booker Assistant ---
+  // --- AI Assistant ---
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
     setIsAssistantLoading(true);
     setAssistantResponse("");
 
+    const rosterContext = gameData.save_wrestlers.map(w => (
+      `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats.charisma})`
+    )).join('\n');
+
     try {
-      // TALK TO SINGLE /api/ai ENTRYPOINT
-      const res = await fetch('/api/ai', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'booker-assistant',
-          query: assistantQuery,
-          roster: gameData.save_wrestlers || [],
-          storylines: gameData.save_storylines || [],
-          titles: gameData.save_titles || [],
-          company: gameData.save_companies?.find(c => c.id === activeSave?.playerCompanyId) || null
+          type: 'booker-assistant',
+          rosterContext,
+          query: assistantQuery
         })
       });
 
-      if (!res.ok) {
-        throw new Error(`Assistant route failed: ${res.status}`);
+      if (!response.ok) {
+        throw new Error(`AI assistant route failed with status ${response.status}`);
       }
 
-      const data = await res.json();
-      setAssistantResponse(data.answer || "I couldn't come up with anything. Try again?");
+      const result = await response.json();
+      const adviceText = result.text || result.message || "The AI assistant couldn't come up with a response. Try rephrasing your question.";
+
+      setAssistantResponse(adviceText);
+
     } catch (error) {
       console.error("Error getting AI advice: ", error);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
@@ -715,84 +683,180 @@ function App() {
     }
   };
 
-  // --- Messages: mark read ---
+  // --- Mark all messages as read (used when closing modal) ---
   const handleMarkMessagesRead = async () => {
-    if (!activeSave || unreadMessages === 0) return;
-
+    if (!activeSave || unreadMessages === 0) {
+      setShowMessagesModal(false);
+      return;
+    }
+    
     setUnreadMessages(0);
-
+    
     setGameData(prevData => ({
       ...prevData,
       save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
     }));
-
+    
     try {
       const batch = writeBatch(db);
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-
+      
       gameData.save_messages.forEach(msg => {
         if (!msg.isRead) {
           const docRef = doc(messagesRef, msg.id);
           batch.update(docRef, { isRead: true });
         }
       });
-
+      
       await batch.commit();
     } catch (error) {
       console.error("Error marking messages as read: ", error);
+    } finally {
+      setShowMessagesModal(false);
     }
   };
 
-  // --- Messages: open reply editor ---
-  const handleStartReply = (message) => {
-    setReplyingToMessage(message);
-    if (message.suggestedReplies && message.suggestedReplies.length > 0) {
-      setReplyText(message.suggestedReplies[0]);
+  // --- NEW: Conversation helpers for iPhone-style messages ---
+  const getConversationsFromMessages = () => {
+    const msgs = gameData.save_messages || [];
+    const map = new Map();
+
+    for (const m of msgs) {
+      const key = m.senderId || 'unknown';
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, {
+          senderId: key,
+          senderName: m.senderName || 'Unknown',
+          messages: [m],
+          lastTimestamp: m.timestamp,
+          hasUnread: !m.isRead
+        });
+      } else {
+        existing.messages.push(m);
+        // update latest
+        if (m.timestamp && existing.lastTimestamp && m.timestamp.toMillis() > existing.lastTimestamp.toMillis()) {
+          existing.lastTimestamp = m.timestamp;
+        }
+        if (!m.isRead) {
+          existing.hasUnread = true;
+        }
+      }
+    }
+
+    // turn into array and sort by lastTimestamp desc
+    const conversations = Array.from(map.values()).sort((a, b) => {
+      const aTime = a.lastTimestamp ? a.lastTimestamp.toMillis() : 0;
+      const bTime = b.lastTimestamp ? b.lastTimestamp.toMillis() : 0;
+      return bTime - aTime;
+    });
+
+    return conversations;
+  };
+
+  const handleOpenMessagesModal = () => {
+    setShowMessagesModal(true);
+    const convos = getConversationsFromMessages();
+    if (convos.length > 0) {
+      setSelectedConversationSenderId(convos[0].senderId);
+      const firstMessages = convos[0].messages || [];
+      const newest = [...firstMessages].sort((a,b) => b.timestamp.toMillis() - a.timestamp.toMillis())[0];
+      setActiveReplyOptions(newest?.replyOptions || []);
+      setReplyDraft("");
     } else {
-      setReplyText("");
+      setSelectedConversationSenderId(null);
+      setActiveReplyOptions([]);
+      setReplyDraft("");
     }
   };
 
-  const handleSelectSuggestedReply = (text) => {
-    setReplyText(text);
+  const handleSelectConversation = async (senderId) => {
+    setSelectedConversationSenderId(senderId);
+
+    const convos = getConversationsFromMessages();
+    const convo = convos.find(c => c.senderId === senderId);
+    if (convo) {
+      const newest = [...convo.messages].sort((a,b) => b.timestamp.toMillis() - a.timestamp.toMillis())[0];
+      setActiveReplyOptions(newest?.replyOptions || []);
+      setReplyDraft("");
+
+      // mark that sender's messages as read
+      if (convo.hasUnread && activeSave && db && appId && userId) {
+        try {
+          const batch = writeBatch(db);
+          const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+          for (const msg of convo.messages) {
+            if (!msg.isRead) {
+              const dref = doc(messagesRef, msg.id);
+              batch.update(dref, { isRead: true });
+            }
+          }
+          await batch.commit();
+
+          // update local
+          setGameData(prevData => ({
+            ...prevData,
+            save_messages: (prevData.save_messages || []).map(msg => {
+              if (msg.senderId === senderId) {
+                return { ...msg, isRead: true };
+              }
+              return msg;
+            })
+          }));
+
+          // recompute unread count
+          const allMsgs = gameData.save_messages || [];
+          const stillUnread = allMsgs.filter(m => m.senderId !== senderId && !m.isRead).length;
+          setUnreadMessages(stillUnread);
+        } catch (err) {
+          console.error("Error marking conversation read: ", err);
+        }
+      }
+    }
+  };
+
+  const handlePrefillReply = (text) => {
+    setReplyDraft(text);
   };
 
   const handleSendReply = async () => {
-    if (!replyingToMessage || !replyText.trim()) return;
-    if (!db || !userId || !appId || !activeSave) return;
+    if (!replyDraft.trim() || !selectedConversationSenderId || !activeSave) return;
+
+    const convos = getConversationsFromMessages();
+    const convo = convos.find(c => c.senderId === selectedConversationSenderId);
+    const senderName = convo ? convo.senderName : "Wrestler";
+
+    const replyData = {
+      senderId: selectedConversationSenderId,
+      senderName: senderName,
+      body: replyDraft.trim(),
+      timestamp: Timestamp.now(),
+      type: 'Text',
+      isRead: true,
+      fromBooker: true
+    };
 
     try {
-      const messageData = {
-        senderId: userId,
-        senderName: "Booker",
-        body: replyText.trim(),
-        timestamp: Timestamp.now(),
-        type: 'BookerReply',
-        isRead: true,
-        parentMessageId: replyingToMessage.id
-      };
-
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      const newDocRef = await addDoc(messagesRef, messageData);
+      const newDocRef = await addDoc(messagesRef, replyData);
 
-      const newMessage = { id: newDocRef.id, ...messageData };
+      const newMsg = { id: newDocRef.id, ...replyData };
       setGameData(prevData => ({
         ...prevData,
-        save_messages: [...(prevData.save_messages || []), newMessage]
+        save_messages: [...(prevData.save_messages || []), newMsg]
       }));
 
-      setReplyingToMessage(null);
-      setReplyText("");
+      setReplyDraft("");
 
-    } catch (error) {
-      console.error("Error sending reply:", error);
+    } catch (err) {
+      console.error("Error sending reply: ", err);
     }
   };
 
-  // --- Booking ---
+  // --- Booking logic helpers (unchanged logic from previous version) ---
   const handleStartBookingShow = (show) => {
     setCurrentShow(show);
-    setCurrentSegments(Array(10).fill(null));
+    setCurrentSegments(Array(10).fill(null)); 
     setGameState('BOOKING_SHOW');
   };
 
@@ -809,12 +873,12 @@ function App() {
     const newSegments = [...currentSegments];
     newSegments[editingSegmentIndex] = segmentFormData;
     setCurrentSegments(newSegments);
-
+    
     setShowSegmentModal(false);
     setEditingSegmentIndex(null);
     setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
   };
-
+  
   const calculateSegmentRating = (segment, allWrestlers) => {
     if (!segment || segment.participants.length === 0) return 0;
 
@@ -829,10 +893,10 @@ function App() {
         totalCharisma += wrestler.stats.charisma;
       }
     }
-
+    
     const numParticipants = participants.length;
     if (numParticipants === 0) return 0;
-
+    
     const avgCharisma = totalCharisma / numParticipants;
 
     if (segment.type === 'Angle') {
@@ -854,7 +918,7 @@ function App() {
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
-
+    
     try {
       let ratedSegments = [];
       let totalWeightedRating = 0;
@@ -889,7 +953,7 @@ function App() {
 
       const finalShowRating = totalWeight > 0 ? Math.floor(totalWeightedRating / totalWeight) : 0;
       setShowRating(finalShowRating);
-
+      
       setLoadingMessage('Logging career events...');
       await logCareerEvents(ratedSegments, finalShowRating);
 
@@ -902,27 +966,27 @@ function App() {
 
       setLoadingMessage('Saving show results...');
       const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
-
+      
       const showUpdateData = {
         status: "Complete",
         segments: ratedSegments,
         rating: finalShowRating,
         recap: recapText
       };
-
+      
       await setDoc(showRef, showUpdateData, { merge: true });
 
       setGameData(prevData => ({
         ...prevData,
-        save_shows: prevData.save_shows.map(show =>
-          show.id === currentShow.id
+        save_shows: prevData.save_shows.map(show => 
+          show.id === currentShow.id 
             ? { ...show, ...showUpdateData }
             : show
         )
       }));
 
       setGameState('SHOW_RESULTS');
-
+      
     } catch (error) {
       console.error("Error running show:", error);
       setLoadingMessage("Error saving show. Please try again.");
@@ -930,68 +994,78 @@ function App() {
     }
   };
 
-  // --- Show Recap (AI) ---
   const generateShowRecap = async (show, ratedSegments, rating) => {
-    console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
     const cardForAI = ratedSegments
-      .filter(s => s)
+      .filter(s => s) 
       .map((s, index) => {
         const participants = s.participants.map(p => p.name).join(' vs. ');
-        let result = "";
-
-        const storyline = s.storylineId ? gameData.save_storylines?.find(story => story.id === s.storylineId) : null;
+        const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
         const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
         const ratingContext = `(Rating: ${s.rating}/100)`;
 
         if (s.type === 'Match') {
           const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
-          result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
-          return `${index + 1}. Match${storylineContext}: ${participants}${result} ${ratingContext}`;
+          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
+          return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
         } else {
           return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
         }
       }).join('\n');
 
+    const userQuery = `
+      Show Name: ${show.eventName}
+      Overall Rating: ${rating}/100
+      
+      Booked Card:
+      ${cardForAI}
+    `;
+
+    let recapText = "No AI recap could be generated for this show.";
     try {
-      // TALK TO SINGLE /api/ai ENTRYPOINT
-      const res = await fetch('/api/ai', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'show-recap',
-          show,
-          cardText: cardForAI,
-          rating,
-          storylines: gameData.save_storylines || []
+          type: 'show-recap',
+          showName: show.eventName,
+          overallRating: rating,
+          segments: ratedSegments.map((s, i) => s ? ({
+            index: i + 1,
+            type: s.type,
+            participants: s.participants,
+            storylineId: s.storylineId,
+            rating: s.rating
+          }) : null)
         })
       });
 
-      if (!res.ok) {
-        throw new Error(`show-recap route failed ${res.status}`);
+      if (!response.ok) {
+        throw new Error("AI recap route failed");
       }
 
-      const data = await res.json();
-      return data.recap || "An AI recap could not be generated.";
+      const result = await response.json();
+      if (result.text) {
+        recapText = result.text;
+      }
     } catch (error) {
       console.error("Error generating AI recap: ", error);
-      return "An error occurred while generating the show recap. The show is still saved.";
+      recapText = "An error occurred while generating the show recap. The show is still saved.";
     }
+        
+    return recapText;
   };
 
-  // --- Post Show Simulation ---
   const runShowSimulation = async (ratedSegments, show) => {
-    console.log("Sim Engine v2: Running post-show simulation...");
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
-      console.warn("Sim Engine v2: Missing required data, skipping simulation.");
       return;
     }
 
     const batch = writeBatch(db);
     const wrestlerUpdates = new Map();
     const storylineUpdates = new Map();
-
+    
     const allWrestlers = gameData.save_wrestlers;
     const allRelationships = gameData.save_relationships;
     const allStorylines = gameData.save_storylines;
@@ -1004,12 +1078,12 @@ function App() {
     };
 
     const getRelationship = (id1, id2) => {
-      return allRelationships.find(rel =>
+      return allRelationships.find(rel => 
         (rel.personA_Id === id1 && rel.personB_Id === id2) ||
         (rel.personA_Id === id2 && rel.personB_Id === id1)
       );
     };
-
+    
     const getStoryline = (id) => {
       if (storylineUpdates.has(id)) {
         return storylineUpdates.get(id);
@@ -1028,7 +1102,7 @@ function App() {
           return 1.0;
       }
     };
-
+    
     const getHeatChange = (segmentRating) => {
       if (segmentRating >= 75) return 5;
       if (segmentRating >= 50) return 2;
@@ -1039,8 +1113,8 @@ function App() {
       const moraleMultiplier = getMoraleMultiplier(show.eventTier);
 
       for (const segment of ratedSegments) {
-        if (!segment) continue;
-
+        if (!segment) continue; 
+        
         const segmentRating = segment.rating || 50;
 
         if (segment.storylineId) {
@@ -1049,12 +1123,11 @@ function App() {
             const baseHeat = storylineUpdates.has(storyline.id)
               ? storylineUpdates.get(storyline.id).heat
               : storyline.heat;
-
+            
             const heatChange = getHeatChange(segmentRating);
             const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
-
+            
             storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
-            console.log(`Sim Update: Storyline '${storyline.name}' heat ${baseHeat} -> ${finalHeat} (Segment Rating: ${segmentRating})`);
           }
         }
 
@@ -1073,8 +1146,8 @@ function App() {
             if (segment.storylineId) {
               if (segment.winnerId === participant.id) {
                 moraleChange += 10;
-              } else if (segment.winnerId) {
-                moraleChange -= 5;
+              } else if (segment.winnerId) { 
+                moraleChange -= 5; 
               }
             }
 
@@ -1093,14 +1166,13 @@ function App() {
             if (moraleChange !== 0) {
               const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
               wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
-              console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale} (Multiplier: ${moraleMultiplier}x)`);
             }
           }
         }
       }
 
       let updatesMade = false;
-
+      
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
           const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
@@ -1108,7 +1180,7 @@ function App() {
         });
         updatesMade = true;
       }
-
+      
       if (storylineUpdates.size > 0) {
         storylineUpdates.forEach((storyline, id) => {
           const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
@@ -1135,9 +1207,6 @@ function App() {
             return s;
           })
         }));
-        console.log("Sim Engine v2: Morale and Storyline updates saved and local state updated.");
-      } else {
-        console.log("Sim Engine v2: No morale or storyline changes to apply.");
       }
 
     } catch (error) {
@@ -1145,26 +1214,24 @@ function App() {
     }
   };
 
-  // --- Career Events ---
   const logCareerEvents = async (ratedSegments, showRating) => {
-    console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
-
+    
     try {
       const batch = writeBatch(db);
       const company = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
       const companySize = company ? company.size : "Unknown";
-
-      let newCareerEvents = [];
+      
+      let newCareerEvents = []; 
 
       for (const segment of ratedSegments) {
         if (!segment) continue;
-
+        
         for (const participant of segment.participants) {
           const opponentIds = segment.participants
             .filter(p => p.id !== participant.id)
             .map(p => p.id);
-
+            
           const opponentNames = segment.participants
             .filter(p => p.id !== participant.id)
             .map(p => p.name)
@@ -1172,7 +1239,7 @@ function App() {
 
           let eventType = "Angle";
           let notes = `Participated in an angle with ${opponentNames || 'others'}`;
-
+          
           if (segment.type === 'Match') {
             if (segment.winnerId === participant.id) {
               eventType = "Match Win";
@@ -1186,11 +1253,11 @@ function App() {
               notes = `Match with ${opponentNames || 'opponent(s)'} ended in a draw/no contest.`;
             }
           }
-
+          
           const careerEventData = {
             playerSaveId: activeSave.id,
             wrestlerId: participant.id,
-            date: activeSave.currentDate,
+            date: activeSave.currentDate, 
             eventType: eventType,
             companyId: activeSave.playerCompanyId,
             companySize: companySize,
@@ -1200,16 +1267,15 @@ function App() {
             storylineId: segment.storylineId || null,
             showId: currentShow.id
           };
-
+          
           const newEventRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
           batch.set(newEventRef, careerEventData);
 
           newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
         }
       }
-
+      
       await batch.commit();
-      console.log("Career events successfully logged to memory.");
 
       setGameData(prevData => ({
         ...prevData,
@@ -1218,24 +1284,24 @@ function App() {
           ...newCareerEvents
         ]
       }));
-
+      
     } catch (error) {
       console.error("Error logging career events:", error);
     }
   };
 
-  // --- Booking participant search ---
+  // --- Booking modal handlers ---
   const handleParticipantSearch = (query) => {
     setParticipantSearch(query);
-    if (query.length < 1) {
+    if (query.length < 1) { 
       setParticipantResults([]);
       return;
     }
-
+    
     const results = gameData.save_wrestlers
       .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
       .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
-
+      
     setParticipantResults(results.slice(0, 5));
   };
 
@@ -1247,7 +1313,7 @@ function App() {
     setParticipantSearch("");
     setParticipantResults([]);
   };
-
+  
   const handleRemoveParticipant = (wrestlerId) => {
     setSegmentFormData(prev => ({
       ...prev,
@@ -1255,14 +1321,14 @@ function App() {
       winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
     }));
   };
-
+  
   const handleWinnerSelect = (e) => {
     setSegmentFormData(prev => ({
       ...prev,
       winnerId: e.target.value || null
     }));
   };
-
+  
   const handleSegmentTypeChange = (e) => {
     setSegmentFormData(prev => ({
       ...prev,
@@ -1270,7 +1336,7 @@ function App() {
       winnerId: e.target.value === 'Angle' ? null : prev.winnerId
     }));
   };
-
+  
   const handleStorylineSelect = (e) => {
     setSegmentFormData(prev => ({
       ...prev,
@@ -1278,14 +1344,14 @@ function App() {
     }));
   };
 
-  // --- Storyline logic ---
+  // --- Storyline Logic ---
   const handleOpenCreateStorylineModal = () => {
     setStorylineFormData({ name: '', participants: [] });
     setStorylineParticipantSearch("");
     setStorylineParticipantResults([]);
     setShowStorylineModal(true);
   };
-
+  
   const handleStorylineParticipantSearch = (query) => {
     setStorylineParticipantSearch(query);
     if (query.length < 1) {
@@ -1306,44 +1372,44 @@ function App() {
     setStorylineParticipantSearch("");
     setStorylineParticipantResults([]);
   };
-
+  
   const handleRemoveStorylineParticipant = (wrestlerId) => {
     setStorylineFormData(prev => ({
       ...prev,
       participants: prev.participants.filter(p => p.id !== wrestlerId)
     }));
   };
-
+  
   const handleCreateStoryline = async () => {
     if (!storylineFormData.name || storylineFormData.participants.length < 2) {
       console.error("Storyline must have a name and at least 2 participants.");
       return;
     }
-
+    
     setLoadingMessage('Creating storyline...');
     setGameState('BUSY');
-
+    
     try {
       const newStorylineData = {
         ...storylineFormData,
         companyId: activeSave.playerCompanyId,
         heat: 10,
         status: "Active",
-        beats: []
+        beats: [] 
       };
-
+      
       const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
-
+      
       const newStoryline = { id: docRef.id, ...newStorylineData };
-
+      
       setGameData(prevData => ({
         ...prevData,
         save_storylines: [...(prevData.save_storylines || []), newStoryline]
       }));
-
+      
       setShowStorylineModal(false);
       setGameState('STORYLINE_SCREEN');
-
+      
     } catch (error) {
       console.error("Error creating storyline:", error);
       setLoadingMessage("Failed to create storyline. Please try again.");
@@ -1351,7 +1417,7 @@ function App() {
     }
   };
 
-  // --- Career History / Relationships ---
+  // --- Roster detail screens ---
   const handleViewCareerHistory = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('CAREER_HISTORY_SCREEN');
@@ -1362,7 +1428,7 @@ function App() {
     setGameState('RELATIONSHIPS_SCREEN');
   };
 
-  // --- Renders ---
+  // --- UI Render Functions ---
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1379,7 +1445,7 @@ function App() {
           <p className="text-indigo-300">Welcome, Booker. (User ID: {userId})</p>
         </div>
       </div>
-
+      
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-semibold text-white mb-4">Start New Game</h2>
@@ -1400,7 +1466,7 @@ function App() {
             </div>
           )}
         </div>
-
+        
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-semibold text-white mb-4">Load Game</h2>
           {playerSaves.length === 0 ? (
@@ -1431,14 +1497,14 @@ function App() {
 
   const renderGameDashboard = () => {
     if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
-
+    
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
-
+    
     const currentDateStr = activeSave.currentDate.toDate().toISOString().split('T')[0];
-    const plannedShow = gameData.save_shows?.find(show =>
+    const plannedShow = gameData.save_shows?.find(show => 
       show.date.toDate().toISOString().split('T')[0] === currentDateStr && show.status === 'Planned'
     );
-
+    
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1451,18 +1517,18 @@ function App() {
             <p className="text-gray-400">Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}</p>
           </div>
         </div>
-
+        
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="md:col-span-3">
             <div className="bg-gray-800 p-6 rounded-lg shadow-lg min-h-[400px]">
               <h3 className="text-xl font-semibold mb-4">Today's Actions</h3>
-
+              
               {plannedShow ? (
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-bold text-yellow-300">IT'S SHOW DAY!</h4>
-                  <p className="text-lg mt-2">Time to book <b>{plannedShow.eventName}</b>!</p>
+                  <p className="text-lg mt-2">Time to book <strong>{plannedShow.eventName}</strong>!</p>
                   <p className="text-sm text-gray-400">(Tier: {plannedShow.eventTier})</p>
-                  <button
+                  <button 
                     onClick={() => handleStartBookingShow(plannedShow)}
                     className="mt-6 px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
                   >
@@ -1473,7 +1539,7 @@ function App() {
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-semibold">Downtime Day</h4>
                   <p className="text-lg mt-2 text-gray-300">Manage your company, plan storylines, and negotiate with talent.</p>
-                  <button
+                  <button 
                     onClick={handleNextDay}
                     className="mt-6 px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
                   >
@@ -1481,14 +1547,14 @@ function App() {
                   </button>
                 </div>
               )}
-
+              
             </div>
           </div>
-
+          
           <div className="md:col-span-1 space-y-4">
-            <button
+            <button 
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
-              onClick={() => setShowMessagesModal(true)}
+              onClick={handleOpenMessagesModal}
             >
               <span className="flex items-center">
                 <MessageIcon />
@@ -1500,7 +1566,7 @@ function App() {
                 </span>
               )}
             </button>
-            <button
+            <button 
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
               onClick={() => {
                 setAssistantResponse("");
@@ -1516,7 +1582,7 @@ function App() {
             <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
               Book Show (View Schedule)
             </button>
-            <button
+            <button 
               onClick={() => setGameState('ROSTER_SCREEN')}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
@@ -1526,7 +1592,7 @@ function App() {
             <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
               Staff
             </button>
-            <button
+            <button 
               onClick={() => setGameState('STORYLINE_SCREEN')}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
@@ -1536,7 +1602,7 @@ function App() {
             <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
               Finances
             </button>
-            <button
+            <button 
               onClick={handleExitGame}
               className="w-full p-4 bg-red-700 rounded-lg shadow-md text-left hover:bg-red-600 transition-all"
             >
@@ -1548,126 +1614,139 @@ function App() {
     );
   };
 
-  // --- Messages Modal (with threaded replies + prefill) ---
+  // --- NEW: iPhone-style Messages Modal ---
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
 
-    const allMessages = (gameData.save_messages || []).sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
-
-    const topLevel = allMessages.filter(m => !m.parentMessageId);
-    const repliesByParent = {};
-    allMessages.forEach(m => {
-      if (m.parentMessageId) {
-        if (!repliesByParent[m.parentMessageId]) repliesByParent[m.parentMessageId] = [];
-        repliesByParent[m.parentMessageId].push(m);
-      }
-    });
+    const conversations = getConversationsFromMessages();
+    const selectedConvo = conversations.find(c => c.senderId === selectedConversationSenderId) || null;
+    const selectedMessages = selectedConvo 
+      ? [...selectedConvo.messages].sort((a,b) => a.timestamp.toMillis() - b.timestamp.toMillis())
+      : [];
 
     return (
-      <div
+      <div 
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => {
-          setShowMessagesModal(false);
-          handleMarkMessagesRead();
-          setReplyingToMessage(null);
-          setReplyText("");
-        }}
+        onClick={handleMarkMessagesRead}
       >
-        <div
-          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+        <div 
+          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[80vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white">Your Messages</h2>
-            <button
-              onClick={() => {
-                setShowMessagesModal(false);
-                handleMarkMessagesRead();
-                setReplyingToMessage(null);
-                setReplyText("");
-              }}
+          <div className="flex justify-between items-center p-4 border-b border-gray-800">
+            <h2 className="text-2xl font-bold text-white flex items-center">
+              <MessageIcon />
+              Messages
+            </h2>
+            <button 
+              onClick={handleMarkMessagesRead}
               className="text-gray-400 hover:text-white"
             >
               <CloseIcon />
             </button>
           </div>
-          <div className="overflow-y-auto p-4 space-y-4">
-            {topLevel.length === 0 ? (
-              <p className="text-gray-400 text-center p-8">Your inbox is empty.</p>
-            ) : (
-              topLevel.map(msg => (
-                <div key={msg.id} className={`p-4 rounded-lg ${msg.isRead ? 'bg-gray-700' : 'bg-indigo-900 border-l-4 border-indigo-400'}`}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-lg">{msg.senderName}</span>
-                    <span className="text-xs text-gray-400">{msg.timestamp.toDate().toLocaleString()}</span>
-                  </div>
-                  <p className="text-gray-200 whitespace-pre-wrap mb-3">{msg.body}</p>
 
-                  {(repliesByParent[msg.id] || []).sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()).map(reply => (
-                    <div key={reply.id} className="ml-4 mt-2 p-3 bg-gray-900 rounded border border-gray-700">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-semibold text-indigo-200">{reply.senderName}</span>
-                        <span className="text-xs text-gray-500">{reply.timestamp.toDate().toLocaleString()}</span>
-                      </div>
-                      <p className="text-sm text-gray-100 whitespace-pre-wrap">{reply.body}</p>
-                    </div>
-                  ))}
-
-                  <div className="mt-3">
-                    <button
-                      onClick={() => handleStartReply(msg)}
-                      className="px-3 py-1 bg-gray-900 text-sm rounded hover:bg-gray-700 transition-all"
-                    >
-                      Reply
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {replyingToMessage && (
-            <div className="border-t border-gray-700 p-4 bg-gray-900">
-              <p className="text-sm text-gray-400 mb-2">
-                Replying to <span className="font-semibold text-white">{replyingToMessage.senderName}</span>
-              </p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {(replyingToMessage.suggestedReplies || []).map((sr, idx) => (
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left column: conversations list */}
+            <div className="w-64 bg-gray-850 bg-gray-800 border-r border-gray-800 overflow-y-auto">
+              {conversations.length === 0 ? (
+                <p className="text-gray-400 p-4">No conversations yet.</p>
+              ) : (
+                conversations.map(convo => (
                   <button
-                    key={idx}
-                    onClick={() => handleSelectSuggestedReply(sr)}
-                    className="px-3 py-1 bg-indigo-700 text-xs rounded hover:bg-indigo-600"
+                    key={convo.senderId}
+                    onClick={() => handleSelectConversation(convo.senderId)}
+                    className={`w-full text-left px-4 py-3 flex flex-col gap-1 hover:bg-gray-700 transition-all ${
+                      selectedConversationSenderId === convo.senderId ? 'bg-gray-700' : ''
+                    }`}
                   >
-                    {sr}
+                    <div className="flex items-center justify-between">
+                      <span className="text-white font-semibold">{convo.senderName}</span>
+                      {convo.hasUnread && (
+                        <span className="h-2 w-2 rounded-full bg-indigo-400"></span>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {convo.lastTimestamp ? convo.lastTimestamp.toDate().toLocaleString() : ''}
+                    </span>
+                    <span className="text-sm text-gray-300 truncate">
+                      {convo.messages && convo.messages.length > 0 ? convo.messages[convo.messages.length - 1].body : ''}
+                    </span>
                   </button>
-                ))}
+                ))
+              )}
+            </div>
+
+            {/* Right column: thread */}
+            <div className="flex-1 flex flex-col bg-gray-900">
+              {/* Thread header */}
+              <div className="border-b border-gray-800 px-4 py-3">
+                <h3 className="text-lg font-semibold text-white">
+                  {selectedConvo ? selectedConvo.senderName : 'No conversation selected'}
+                </h3>
               </div>
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                rows={3}
-                className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Type your response..."
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setReplyingToMessage(null);
-                    setReplyText("");
-                  }}
-                  className="px-4 py-1 bg-gray-700 rounded text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSendReply}
-                  className="px-4 py-1 bg-green-600 rounded text-sm hover:bg-green-500"
-                >
-                  Send
-                </button>
+
+              {/* Messages thread */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                {selectedMessages.length === 0 ? (
+                  <p className="text-gray-500 text-center mt-10">
+                    Select a conversation on the left to view messages.
+                  </p>
+                ) : (
+                  selectedMessages.map(msg => {
+                    const isBooker = msg.fromBooker === true;
+                    return (
+                      <div key={msg.id} className={`flex ${isBooker ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${isBooker ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-gray-700 text-gray-100 rounded-bl-sm'}`}>
+                          <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
+                          <p className="text-[10px] mt-1 text-gray-200 opacity-70">
+                            {msg.timestamp ? msg.timestamp.toDate().toLocaleString() : ''}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Reply box */}
+              <div className="border-t border-gray-800 p-4 bg-gray-900">
+                <div className="flex gap-2 mb-2">
+                  {activeReplyOptions && activeReplyOptions.length > 0 ? (
+                    activeReplyOptions.slice(0,3).map((opt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handlePrefillReply(opt)}
+                        className="px-3 py-1 bg-gray-700 text-sm rounded-lg hover:bg-gray-600 transition-all"
+                      >
+                        {opt.length > 28 ? opt.slice(0,28) + '…' : opt}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500 italic">
+                      No AI reply suggestions for this message.
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <textarea
+                    value={replyDraft}
+                    onChange={(e) => setReplyDraft(e.target.value)}
+                    rows={2}
+                    placeholder="Type your response as the booker..."
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={handleSendReply}
+                    className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-all h-fit"
+                  >
+                    Send
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
+
         </div>
       </div>
     );
@@ -1678,11 +1757,11 @@ function App() {
     if (!showAssistantModal) return null;
 
     return (
-      <div
+      <div 
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
         onClick={() => setShowAssistantModal(false)}
       >
-        <div
+        <div 
           className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -1691,14 +1770,14 @@ function App() {
               <AssistantIcon />
               AI Booker Assistant
             </h2>
-            <button
-              onClick={() => setShowAssistantModal(false)}
+            <button 
+              onClick={() => setShowAssistantModal(false)} 
               className="text-gray-400 hover:text-white"
             >
               <CloseIcon />
             </button>
           </div>
-
+          
           <div className="flex-grow overflow-y-auto p-4 space-y-4">
             {assistantResponse ? (
               <div className="p-4 bg-gray-700 rounded-lg whitespace-pre-wrap font-mono text-sm">
@@ -1711,7 +1790,7 @@ function App() {
                 <p className="text-sm mt-4">(e.g., "Who has main event potential?" or "Give me a feud idea for Alex Valour.")</p>
               </div>
             )}
-
+            
             {isAssistantLoading && (
               <div className="flex items-center justify-center p-4">
                 <LoadingIcon />
@@ -1719,7 +1798,7 @@ function App() {
               </div>
             )}
           </div>
-
+          
           <div className="p-4 border-t border-gray-700 bg-gray-800">
             <div className="flex space-x-2">
               <input
@@ -1760,13 +1839,13 @@ function App() {
             </p>
           </div>
           <div className="flex space-x-2 mt-4 md:mt-0">
-            <button
+            <button 
               onClick={() => setGameState('IN_GAME')}
               className="px-4 py-2 bg-gray-600 text-white font-bold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
             >
               Cancel
             </button>
-            <button
+            <button 
               onClick={handleRunShow}
               className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
             >
@@ -1777,7 +1856,7 @@ function App() {
 
         <div className="mt-6 space-y-3">
           {currentSegments.map((segment, index) => (
-            <button
+            <button 
               key={index}
               onClick={() => handleOpenSegmentModal(index)}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
@@ -1813,7 +1892,7 @@ function App() {
   // --- Roster Screen ---
   const renderRosterScreen = () => {
     const wrestlers = gameData.save_wrestlers || [];
-
+    
     const getDispositionClass = (disposition) => {
       switch (disposition) {
         case 'Face': return 'text-green-400';
@@ -1830,7 +1909,7 @@ function App() {
             <RosterIcon />
             Your Roster
           </h1>
-          <button
+          <button 
             onClick={() => setGameState('IN_GAME')}
             className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
           >
@@ -1842,11 +1921,11 @@ function App() {
           {wrestlers.length === 0 && (
             <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
           )}
-          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(wrestler => (
+          {wrestlers.sort((a,b) => a.name.localeCompare(b.name)).map(wrestler => (
             <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
               <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
               <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
-
+              
               <div className="flex justify-between text-sm mb-3">
                 <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
                   {wrestler.disposition}
@@ -1855,7 +1934,7 @@ function App() {
                   Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
                 </span>
               </div>
-
+              
               <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
                 <div>
                   <span className="text-gray-400">BRAWL</span>
@@ -1874,7 +1953,7 @@ function App() {
                   <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
                 </div>
               </div>
-
+              
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleViewCareerHistory(wrestler)}
@@ -1933,9 +2012,9 @@ function App() {
             </div>
           )}
         </div>
-
+        
         <div className="mt-6 text-center">
-          <button
+          <button 
             onClick={handleNextDay}
             className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
           >
@@ -1945,7 +2024,7 @@ function App() {
       </div>
     );
   };
-
+  
   // --- Storyline Screen ---
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
@@ -1958,14 +2037,14 @@ function App() {
             Storyline Manager
           </h1>
           <div className="flex space-x-2">
-            <button
+            <button 
               onClick={() => handleOpenCreateStorylineModal()}
               className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
             >
               <PlusIcon />
               Create Storyline
             </button>
-            <button
+            <button 
               onClick={() => setGameState('IN_GAME')}
               className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
             >
@@ -1998,13 +2077,14 @@ function App() {
     );
   };
 
+
   // --- Career History Screen ---
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
 
     const events = (gameData.save_career_events || [])
       .filter(event => event.wrestlerId === viewingWrestler.id)
-      .sort((a, b) => b.date.toMillis() - a.date.toMillis());
+      .sort((a, b) => b.date.toMillis() - a.date.toMillis()); 
 
     const getEventColor = (type) => {
       if (type === 'Match Win') return 'text-green-400';
@@ -2020,7 +2100,7 @@ function App() {
             <HistoryIcon />
             Career History: {viewingWrestler.name}
           </h1>
-          <button
+          <button 
             onClick={() => {
               setGameState('ROSTER_SCREEN');
               setViewingWrestler(null);
@@ -2039,9 +2119,15 @@ function App() {
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Event Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -2078,7 +2164,7 @@ function App() {
       </div>
     );
   };
-
+  
   // --- Relationships Screen ---
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
@@ -2105,7 +2191,7 @@ function App() {
             <RelationshipsIcon />
             Relationships: {viewingWrestler.name}
           </h1>
-          <button
+          <button 
             onClick={() => {
               setGameState('ROSTER_SCREEN');
               setViewingWrestler(null);
@@ -2124,10 +2210,18 @@ function App() {
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Person</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Person
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -2168,31 +2262,31 @@ function App() {
     );
   };
 
-  // --- Segment Modal ---
+  // --- Booking Segment Modal ---
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
-
+    
     const storylines = gameData.save_storylines || [];
 
     return (
-      <div
+      <div 
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
         onClick={() => setShowSegmentModal(false)}
       >
-        <div
+        <div 
           className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-4 border-b border-gray-700">
             <h2 className="text-2xl font-bold text-white">Edit Segment {editingSegmentIndex + 1}</h2>
-            <button
-              onClick={() => setShowSegmentModal(false)}
+            <button 
+              onClick={() => setShowSegmentModal(false)} 
               className="text-gray-400 hover:text-white"
             >
               <CloseIcon />
             </button>
           </div>
-
+          
           <div className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Segment Type</label>
@@ -2206,7 +2300,7 @@ function App() {
                 <option value="Angle">Angle</option>
               </select>
             </div>
-
+            
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Assign to Storyline (Optional)</label>
               <select
@@ -2309,30 +2403,30 @@ function App() {
       </div>
     );
   };
-
+  
   // --- Create Storyline Modal ---
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
 
     return (
-      <div
+      <div 
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
         onClick={() => setShowStorylineModal(false)}
       >
-        <div
+        <div 
           className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center p-4 border-b border-gray-700">
             <h2 className="text-2xl font-bold text-white">Create New Storyline</h2>
-            <button
-              onClick={() => setShowStorylineModal(false)}
+            <button 
+              onClick={() => setShowStorylineModal(false)} 
               className="text-gray-400 hover:text-white"
             >
               <CloseIcon />
             </button>
           </div>
-
+          
           <div className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Storyline Name</label>
@@ -2414,7 +2508,7 @@ function App() {
     );
   };
 
-  // --- Main render switch ---
+  // --- Main Render ---
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
