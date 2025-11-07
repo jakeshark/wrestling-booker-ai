@@ -13,49 +13,102 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Missing OPENAI_API_KEY in environment' });
   }
 
+  // helper: topic-aware fallback replies
+  const buildTopicFallback = (topic = "general", wrestlerName = "the talent") => {
+    const t = topic.toLowerCase();
+
+    // asking for a push / better booking
+    if (t.includes('push') || t.includes('unhappy_booking') || t.includes('booking')) {
+      return [
+        `Yeah, we can look at spotlighting you more soon — you’ve been delivering, ${wrestlerName}.`,
+        `Not right now — the top of the card is pretty set, but I don’t want you thinking we don’t see you.`,
+        `If the next couple of appearances land and the crowd stays with you, we can talk about moving you up.`
+      ];
+    }
+
+    // time off
+    if (t.includes('time_off') || t.includes('time off') || t.includes('request_time_off')) {
+      return [
+        `Yeah, we can give you that time — thanks for the heads up.`,
+        `Right now isn’t ideal, we’ve got you penciled in — I’d rather you hold off if you can.`,
+        `Let’s see how the next taping looks. If we can cover your spot, we’ll approve the week.`
+      ];
+    }
+
+    // contract / money
+    if (t.includes('contract') || t.includes('money') || t.includes('pay') || t.includes('deal')) {
+      return [
+        `Okay, we can look at bumping your deal — you’ve been valuable.`,
+        `Can’t do that number right now — it’s above where we have you slotted.`,
+        `If business stays good and you keep producing, we can revisit the money in a few weeks.`
+      ];
+    }
+
+    // default catch-all
+    return [
+      `Yep, we can work with that.`,
+      `No, that doesn’t fit where we’re going right now.`,
+      `Maybe — let’s see how the next couple of shows shake out.`
+    ];
+  };
+
   try {
     const { type } = req.body || {};
 
-    // ================
-    // 1) WRESTLER MESSAGE (shoot, 3 tones)
-    // ================
+    //
+    // 1) WRESTLER MESSAGES
+    //
     if (type === 'wrestler-message') {
-      const { wrestler, topic } = req.body;
+      const {
+        wrestler,
+        topic,
+        // optional: if your client later sends the actual message text it saved
+        originalMessage
+      } = req.body;
 
+      const wrestlerName = wrestler?.name || 'the talent';
+      const fallbackReplies = buildTopicFallback(topic, wrestlerName);
+
+      // system prompt: behind-the-scenes, not kayfabe
       const systemPrompt = `
-You are generating internal, behind-the-scenes messages for a pro wrestling booking sim.
-These are NOT on-camera promos. These are real people talking to the booker about business, creative, and their careers.
-
-Tone rules:
-- Speak as the real person behind the gimmick.
+You are generating INTERNAL / BACKSTAGE messages for a wrestling booking simulator.
+These are real people texting or DMing the booker about creative, money, time off, or being booked weak.
+Rules:
 - Do NOT cut a promo.
-- Do NOT threaten in a corny monster-heel way.
-- If they're talking about creative, they can refer to "my character" or "my current gimmick" in a practical way.
-- Keep it professional, human, and varied by temperament (confident, frustrated, hopeful, pragmatic, etc).
+- Speak as the human behind the character.
+- If they mention creative, they can say “my character” or “what I’m doing on TV” in a practical way.
+- Be concise: 2-5 sentences.
+- Tone should match the situation (frustrated, hopeful, professional).
+You MUST return valid JSON in this exact shape:
 
-You must return JSON with this shape:
 {
-  "message": "string",
-  "replyOptions": ["affirmative/agree", "decline/pushback", "condition/maybe"]
+  "message": "the message the talent sends the booker",
+  "replyOptions": [
+    "a YES / agreeable answer the booker could send back",
+    "a NO / pushback answer the booker could send back",
+    "a MAYBE / conditional answer the booker could send back"
+  ]
 }
-
-The three replyOptions MUST be clearly different in intent:
-1) a YES / agreeable response
-2) a NO / pushback / can't do it response
-3) a MAYBE / let's see / meet-me-halfway response
       `.trim();
 
       const userPrompt = `
-Wrestler info:
-- Name: ${wrestler?.name || 'Unknown Talent'}
-- Disposition/on-screen: ${wrestler?.disposition || 'Unknown'}
-- Gimmick/on-screen: ${wrestler?.gimmick || 'Unknown'}
-- Morale: ${wrestler?.morale ?? 75}
+Talent: ${wrestlerName}
+On-screen disposition: ${wrestler?.disposition || 'Unknown'}
+On-screen gimmick: ${wrestler?.gimmick || 'Unknown'}
+Current morale: ${wrestler?.morale ?? 75}
+Topic / situation: ${topic || 'general_concern'}
 
-Topic/situation: ${topic || 'general_concern'}
+This is the player's current in-game date context; assume it's an active TV schedule.
 
-Write a short internal message from this talent to the booker about that topic, as the REAL person, not the character.
-Keep it 2-5 sentences.
+If the topic is time off, they should sound reasonable but clear.
+If the topic is booking/push, they should mention recent results or crowd reaction.
+If the topic is contract/money, they should reference value to the company.
+
+${
+  originalMessage
+    ? `The original saved message text was:\n"""${originalMessage}"""\nYou may keep the spirit of it but make it cleaner.`
+    : ''
+}
       `.trim();
 
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -70,7 +123,9 @@ Keep it 2-5 sentences.
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
           ],
-          temperature: 0.9
+          temperature: 0.9,
+          // THIS is the key so we don't get plain text back
+          response_format: { type: "json_object" }
         })
       });
 
@@ -83,13 +138,10 @@ Keep it 2-5 sentences.
       const data = await openaiRes.json();
       const raw = data.choices?.[0]?.message?.content?.trim() || "";
 
-      let message = "Hey, just wanted to talk about how I'm being used.";
-      let replyOptions = [
-        "You're right, let's get you slotted higher on the card.",
-        "Right now we can’t adjust that, but we'll keep it in mind.",
-        "If your next couple of matches go well, we can revisit the push."
-      ];
+      let message = `Hey, just wanted to touch base about how I'm being used.`;
+      let replyOptions = fallbackReplies;
 
+      // because of response_format, this should succeed most of the time
       try {
         const parsed = JSON.parse(raw);
         if (parsed.message) message = parsed.message;
@@ -97,41 +149,36 @@ Keep it 2-5 sentences.
           replyOptions = parsed.replyOptions.slice(0, 3);
         }
       } catch (e) {
-        // fallback if the model didn't return JSON
-        if (raw) {
-          message = raw;
-        }
-        replyOptions = [
-          "Yeah, I can make that work — let's do it.",
-          "I can’t approve that right now, it doesn’t fit where we’re going.",
-          "If we get a good reaction next show, we can talk about it again."
-        ];
+        // if for some reason it still isn't JSON, use topic-aware fallback
+        console.warn("JSON parse failed for wrestler-message, using topic fallback.");
+        message = raw || message;
+        replyOptions = fallbackReplies;
       }
 
       return res.status(200).json({ message, replyOptions });
     }
 
-    // ================
+    //
     // 2) BOOKER ASSISTANT
-    // ================
+    //
     if (type === 'booker-assistant') {
       const { rosterContext, query } = req.body;
 
       const systemPrompt = `
 You are the AI booker assistant for a pro wrestling booking sim.
-You know modern EWR-style logic: segments are rated, show rating is derived from segments, feuds gain/lose heat from relevant segments, morale and relationships matter.
-When the user asks for ideas, make sure they FIT the roster they sent and the promotion size.
-Always answer directly — do NOT tell them to send their roster if they've already sent it in the same request.
+You know EWR-style logic: segments rated individually; show rating derived from segments; feud heat tied to relevant segments; morale and relationships matter.
+When the user asks for ideas, make sure they FIT the roster they sent.
+Always answer directly — do NOT ask for the roster again if we have one.
       `.trim();
 
       const userPrompt = `
 User question:
 ${query}
 
-Roster (partial):
+Roster:
 ${rosterContext || 'No roster provided.'}
 
-Give a concise, actionable answer with 2-3 booking ideas max.
+Give 2-3 booking ideas, short and actionable.
       `.trim();
 
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -161,24 +208,18 @@ Give a concise, actionable answer with 2-3 booking ideas max.
       return res.status(200).json({ text });
     }
 
-    // ================
-    // 3) SHOW RECAP (stricter)
-    // ================
+    //
+    // 3) SHOW RECAP
+    //
     if (type === 'show-recap') {
-      const { showName, overallRating, segments, roster = [], constraints = {} } = req.body;
-
-      const mustOnlyDescribeProvidedSegments = !!constraints.mustOnlyDescribeProvidedSegments;
-      const mustNotInventWrestlers = !!constraints.mustNotInventWrestlers;
-      const mustNotInventAngles = !!constraints.mustNotInventAngles;
+      const { showName, overallRating, segments } = req.body;
 
       const systemPrompt = `
 You are writing a "dirt sheet" style show recap for a wrestling booking sim.
-You know that in EWR-like sims, each segment is rated and the overall show rating is a weighted combination.
-Write like an insider recap: what's over, what underperformed, what angles advanced, who looked like a star.
-${mustOnlyDescribeProvidedSegments ? 'You may only reference the segments passed in "segments".' : ''}
-${mustNotInventWrestlers ? 'Do NOT invent wrestlers. If a name is not in the provided roster, do not use it.' : ''}
-${mustNotInventAngles ? 'Do NOT invent surprise returns, injuries, or extra angles that were not provided.' : ''}
-If something is missing, say it was a short show.
+Each segment is provided; the overall rating is provided.
+You may ONLY reference segments that were provided.
+Do NOT invent surprise returns, do NOT invent wrestlers, do NOT add segments that weren't booked.
+Mention the best segment, any storyline-tagged segment, and how the main event reflected on the promotion.
       `.trim();
 
       const userPrompt = `
@@ -192,14 +233,7 @@ ${(segments || [])
     const participants = (s.participants || []).map(p => p.name).join(" vs. ");
     return `${i + 1}. ${s.type}: ${participants} (rating: ${s.rating || 'N/A'})${s.storylineId ? ' [storyline]' : ''}`;
   })
-  .join("\n")
-}
-
-Allowed roster:
-${Array.isArray(roster) && roster.length > 0 ? roster.join(", ") : "No roster provided."}
-
-Write 2-4 paragraphs. Mention the best segment, any storyline segment, and how the main event reflected on the promotion.
-If a participant name is not in the allowed roster list, do NOT mention them.
+  .join("\n")}
       `.trim();
 
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
