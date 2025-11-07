@@ -16,16 +16,16 @@ export default async function handler(req, res) {
   try {
     const { type } = req.body || {};
 
+    // ================
+    // 1) WRESTLER MESSAGE (shoot, 3 tones)
+    // ================
     if (type === 'wrestler-message') {
       const { wrestler, topic } = req.body;
 
-      // We force the model to speak OUT of character:
-      // - real person tone
-      // - referring to “my character” only when talking about creative
-      // - and we force 3 distinct replies: yes, no, conditional
       const systemPrompt = `
 You are generating internal, behind-the-scenes messages for a pro wrestling booking sim.
 These are NOT on-camera promos. These are real people talking to the booker about business, creative, and their careers.
+
 Tone rules:
 - Speak as the real person behind the gimmick.
 - Do NOT cut a promo.
@@ -36,7 +36,7 @@ Tone rules:
 You must return JSON with this shape:
 {
   "message": "string",
-  "replyOptions": ["affirmative/agree", "decline/pushback", "conditional/maybe"]
+  "replyOptions": ["affirmative/agree", "decline/pushback", "condition/maybe"]
 }
 
 The three replyOptions MUST be clearly different in intent:
@@ -83,7 +83,6 @@ Keep it 2-5 sentences.
       const data = await openaiRes.json();
       const raw = data.choices?.[0]?.message?.content?.trim() || "";
 
-      // Try to parse JSON if the model followed instructions
       let message = "Hey, just wanted to talk about how I'm being used.";
       let replyOptions = [
         "You're right, let's get you slotted higher on the card.",
@@ -98,8 +97,7 @@ Keep it 2-5 sentences.
           replyOptions = parsed.replyOptions.slice(0, 3);
         }
       } catch (e) {
-        // fallback: model didn't return json, make our own 3-tone options
-        // also keep message = raw if it looks like normal text
+        // fallback if the model didn't return JSON
         if (raw) {
           message = raw;
         }
@@ -113,6 +111,9 @@ Keep it 2-5 sentences.
       return res.status(200).json({ message, replyOptions });
     }
 
+    // ================
+    // 2) BOOKER ASSISTANT
+    // ================
     if (type === 'booker-assistant') {
       const { rosterContext, query } = req.body;
 
@@ -160,14 +161,24 @@ Give a concise, actionable answer with 2-3 booking ideas max.
       return res.status(200).json({ text });
     }
 
+    // ================
+    // 3) SHOW RECAP (stricter)
+    // ================
     if (type === 'show-recap') {
-      const { showName, overallRating, segments } = req.body;
+      const { showName, overallRating, segments, roster = [], constraints = {} } = req.body;
+
+      const mustOnlyDescribeProvidedSegments = !!constraints.mustOnlyDescribeProvidedSegments;
+      const mustNotInventWrestlers = !!constraints.mustNotInventWrestlers;
+      const mustNotInventAngles = !!constraints.mustNotInventAngles;
 
       const systemPrompt = `
 You are writing a "dirt sheet" style show recap for a wrestling booking sim.
 You know that in EWR-like sims, each segment is rated and the overall show rating is a weighted combination.
 Write like an insider recap: what's over, what underperformed, what angles advanced, who looked like a star.
-You may only reference the segments passed in segments. Do not invent surprise returns, do not invent wrestlers, do not add injury updates, and do not mention anyone not in the provided roster. If something is missing, say it was a short show.
+${mustOnlyDescribeProvidedSegments ? 'You may only reference the segments passed in "segments".' : ''}
+${mustNotInventWrestlers ? 'Do NOT invent wrestlers. If a name is not in the provided roster, do not use it.' : ''}
+${mustNotInventAngles ? 'Do NOT invent surprise returns, injuries, or extra angles that were not provided.' : ''}
+If something is missing, say it was a short show.
       `.trim();
 
       const userPrompt = `
@@ -184,7 +195,11 @@ ${(segments || [])
   .join("\n")
 }
 
+Allowed roster:
+${Array.isArray(roster) && roster.length > 0 ? roster.join(", ") : "No roster provided."}
+
 Write 2-4 paragraphs. Mention the best segment, any storyline segment, and how the main event reflected on the promotion.
+If a participant name is not in the allowed roster list, do NOT mention them.
       `.trim();
 
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
