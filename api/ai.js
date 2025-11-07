@@ -167,6 +167,7 @@ Give a concise, actionable answer with 2-3 booking ideas max.
 You are writing a "dirt sheet" style show recap for a wrestling booking sim.
 You know that in EWR-like sims, each segment is rated and the overall show rating is a weighted combination.
 Write like an insider recap: what's over, what underperformed, what angles advanced, who looked like a star.
+You may only reference the segments passed in segments. Do not invent surprise returns, do not invent wrestlers, do not add injury updates, and do not mention anyone not in the provided roster. If something is missing, say it was a short show.
       `.trim();
 
       const userPrompt = `
