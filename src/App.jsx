@@ -54,10 +54,40 @@ const AssistantIcon = () => (
   </svg>
 );
 
+const BookingIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
+    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
+  </svg>
+);
+
 const RosterIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM21 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM9.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM7.06 12.236a.75.75 0 0 0-1.06 0l-.03.03a.75.75 0 0 0 1.06 1.06l.03-.03a.75.75 0 0 0 0-1.06Zm10.97 0a.75.75 0 0 0 0 1.06l.03.03a.75.75 0 0 0 1.06-1.06l-.03-.03a.75.75 0 0 0-1.06 0ZM7.5 15a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Zm3.375-1.5a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.75 0a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.375 1.5a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Z" clipRule="evenodd" />
     <path d="M4.5 19.5a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-5.63l-3.03-3.03a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 0-1.06 0L4.5 13.87V19.5Z" />
+  </svg>
+);
+
+const UserPlusIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+    <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM1.646 13.107a.75.75 0 0 1 .862.088c.854.63 1.91.955 3.028.955s2.174-.325 3.028-.955a.75.75 0 1 1 .95 1.169A4.502 4.502 0 0 0 8.5 15.5c-1.318 0-2.55-.42-3.53-1.134a.75.75 0 0 1 .088-.95l-.002-.002ZM15 9.75a.75.75 0 0 1 .75.75v2.25h2.25a.75.75 0 0 1 0 1.5H15.75v2.25a.75.75 0 0 1-1.5 0v-2.25H12a.75.75 0 0 1 0-1.5h2.25V10.5a.75.75 0 0 1 .75-.75Z" />
+  </svg>
+);
+
+const XCircleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+    <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.707-11.707a1 1 0 0 0-1.414-1.414L10 8.586 7.707 6.293a1 1 0 0 0-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 1 0 1.414 1.414L10 11.414l2.293 2.293a1 1 0 0 0 1.414-1.414L11.414 10l2.293-2.293Z" clipRule="evenodd" />
+  </svg>
+);
+
+const StarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400">
+    <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -85,24 +115,6 @@ const RelationshipsIcon = () => (
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
-    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
-  </svg>
-);
-
-const XCircleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-    <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.707-11.707a1 1 0 0 0-1.414-1.414L10 8.586 7.707 6.293a1 1 0 0 0-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 1 0 1.414 1.414L10 11.414l2.293 2.293a1 1 0 0 0 1.414-1.414L11.414 10l2.293-2.293Z" clipRule="evenodd" />
-  </svg>
-);
-
-const StarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400">
-    <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
-  </svg>
-);
-
 // =====================
 // FIREBASE CONFIG
 // =====================
@@ -115,6 +127,9 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
+// =====================
+// MAIN APP
+// =====================
 function App() {
   // Firebase
   const [db, setDb] = useState(null);
@@ -136,6 +151,8 @@ function App() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [isHoveringReply, setIsHoveringReply] = useState(false);
+  const [replyBackupText, setReplyBackupText] = useState('');
 
   // Assistant
   const [showAssistantModal, setShowAssistantModal] = useState(false);
@@ -222,8 +239,8 @@ function App() {
       const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
       const dbInstance = getFirestore(app);
-      setLogLevel('debug');
 
+      setLogLevel('debug');
       setDb(dbInstance);
       setAuth(authInstance);
 
@@ -244,13 +261,16 @@ function App() {
           }
         }
       });
+
     } catch (error) {
       console.error("Error initializing Firebase:", error);
       setLoadingMessage("Failed to initialize game data. Please refresh.");
     }
   }, []);
 
-  // SEED + FETCH
+  // =====================
+  // SEED + FETCH AFTER AUTH
+  // =====================
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
@@ -379,7 +399,7 @@ function App() {
   };
 
   // =====================
-  // FETCH DATA
+  // FETCH DATASETS
   // =====================
   const fetchDatasets = async (db, userId, appId) => {
     try {
@@ -392,6 +412,9 @@ function App() {
     }
   };
 
+  // =====================
+  // FETCH PLAYER SAVES
+  // =====================
   const fetchPlayerSaves = async (db, userId, appId) => {
     if (!userId) return;
     try {
@@ -445,6 +468,7 @@ function App() {
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
+
           batch.set(newDocRef, docData);
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
@@ -500,6 +524,7 @@ function App() {
       await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
 
       await handleLoadGame(newSaveId);
+
     } catch (error) {
       console.error("Error creating new game: ", error);
       setLoadingMessage("Failed to create new game. Please try again.");
@@ -538,7 +563,7 @@ function App() {
         loadedGameData[collectionName] = collectionData;
 
         if (collectionName === 'save_messages') {
-          unreadCount = collectionData.filter(msg => !msg.isRead && msg.senderId !== 'booker').length;
+          unreadCount = collectionData.filter(msg => !msg.isRead).length;
         }
       }
 
@@ -546,6 +571,7 @@ function App() {
       setUnreadMessages(unreadCount);
 
       setGameState('IN_GAME');
+
     } catch (error) {
       console.error("Error loading game: ", error);
       setLoadingMessage("Failed to load game. Please try again.");
@@ -578,12 +604,16 @@ function App() {
       setActiveSave(prevSave => ({ ...prevSave, currentDate: newTimestamp }));
 
       setGameState('IN_GAME');
+
     } catch (error) {
       console.error("Error advancing day: ", error);
       setLoadingMessage("Error saving progress. Please refresh.");
     }
   };
 
+  // =====================
+  // EXIT GAME
+  // =====================
   const handleExitGame = () => {
     setActiveSave(null);
     setGameData({});
@@ -601,15 +631,17 @@ function App() {
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
+      console.log("Sim Engine: Event triggered!");
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
-      const topics = ['unhappy_booking', 'excited_push', 'request_time_off'];
+      const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_negotiation'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
       await generateAndSaveMessage(saveId, randomWrestler, randomTopic);
     }
   };
 
   // =====================
-  // AI: WRESTLER MESSAGE (via /api/ai)
+  // GENERATE & SAVE MESSAGE (AI)
+/** uses /api/ai type=wrestler-message */
   // =====================
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
@@ -621,51 +653,47 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'wrestler-message',
-          wrestler: {
-            id: wrestler.id,
-            name: wrestler.name,
-            gimmick: wrestler.gimmick,
-            disposition: wrestler.disposition,
-            morale: wrestler.morale,
-          },
+          wrestler,
           topic
         })
       });
 
       if (!response.ok) {
-        throw new Error(`AI route failed with status: ${response.status}`);
+        throw new Error(`API call failed with status: ${response.status}`);
       }
 
       const result = await response.json();
-      const messageText = result.message || "Hey boss, wanted to talk about my booking.";
+      const messageText = result.message;
       const replyOptions = Array.isArray(result.replyOptions) ? result.replyOptions : [];
 
-      const messageData = {
-        senderId: wrestler.id,
-        senderName: wrestler.name,
-        body: messageText,
-        timestamp: Timestamp.now(),
-        type: 'Text',
-        isRead: false,
-        replyOptions: replyOptions,
-      };
+      if (messageText) {
+        const messageData = {
+          senderId: wrestler.id,
+          senderName: wrestler.name,
+          body: messageText,
+          timestamp: Timestamp.now(),
+          type: 'Text',
+          isRead: false,
+          replyOptions: replyOptions
+        };
 
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
-      const newDocRef = await addDoc(messagesRef, messageData);
+        const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
+        const newDocRef = await addDoc(messagesRef, messageData);
 
-      const newMessage = { id: newDocRef.id, ...messageData };
-      setGameData(prevData => ({
-        ...prevData,
-        save_messages: [...(prevData.save_messages || []), newMessage]
-      }));
-      setUnreadMessages(prev => prev + 1);
+        const newMessage = { id: newDocRef.id, ...messageData };
+        setGameData(prevData => ({
+          ...prevData,
+          save_messages: [...(prevData.save_messages || []), newMessage]
+        }));
+        setUnreadMessages(prev => prev + 1);
+      }
     } catch (error) {
       console.error("Error generating AI message: ", error);
     }
   };
 
   // =====================
-  // AI ASSISTANT (with roster slice)
+  // AI ASSISTANT
   // =====================
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
@@ -673,13 +701,9 @@ function App() {
     setIsAssistantLoading(true);
     setAssistantResponse("");
 
-    // <-- THIS IS THE CHANGE YOU WANTED: we cap the roster at 40 entries
-    const rosterContext = (gameData.save_wrestlers || [])
-      .slice(0, 40)
-      .map(w => (
-        `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats?.charisma})`
-      ))
-      .join('\n');
+    const rosterContext = gameData.save_wrestlers.map(w => (
+      `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats.charisma})`
+    )).join('\n');
 
     try {
       const response = await fetch('/api/ai', {
@@ -693,7 +717,7 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`AI assistant call failed: ${response.status}`);
+        throw new Error(`API call failed with status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -742,13 +766,13 @@ function App() {
       await batch.commit();
     } catch (error) {
       console.error("Error marking messages as read: ", error);
+    } finally {
+      setShowMessagesModal(false);
     }
-
-    setShowMessagesModal(false);
   };
 
   // =====================
-  // BOOKING
+  // BOOKING: START
   // =====================
   const handleStartBookingShow = (show) => {
     setCurrentShow(show);
@@ -775,6 +799,9 @@ function App() {
     setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
   };
 
+  // =====================
+  // SEGMENT RATING
+  // =====================
   const calculateSegmentRating = (segment, allWrestlers) => {
     if (!segment || segment.participants.length === 0) return 0;
 
@@ -804,6 +831,7 @@ function App() {
         totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
       }
       const avgWorkrate = totalWorkrate / numParticipants;
+
       const rating = (avgCharisma * 0.6) + (avgWorkrate * 0.4);
       return Math.min(100, Math.floor(rating));
     }
@@ -811,6 +839,9 @@ function App() {
     return 0;
   };
 
+  // =====================
+  // RUN SHOW
+  // =====================
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
@@ -882,6 +913,7 @@ function App() {
       }));
 
       setGameState('SHOW_RESULTS');
+
     } catch (error) {
       console.error("Error running show:", error);
       setLoadingMessage("Error saving show. Please try again.");
@@ -890,50 +922,62 @@ function App() {
   };
 
   // =====================
-  // AI SHOW RECAP (/api/ai)
+  // AI SHOW RECAP
   // =====================
   const generateShowRecap = async (show, ratedSegments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
-    const segmentsForAI = ratedSegments
+    const cardForAI = ratedSegments
       .filter(s => s)
       .map((s, index) => {
         const participants = s.participants.map(p => p.name).join(' vs. ');
         const ratingContext = `(Rating: ${s.rating}/100)`;
+        const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
+        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
 
         if (s.type === 'Match') {
           const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
           const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
-          return `${index + 1}. Match: ${participants}${result} ${ratingContext}`;
+          return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
         } else {
-          return `${index + 1}. Angle: ${participants} ${ratingContext}`;
+          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
         }
-      });
+      }).join('\n');
+
+    const payload = {
+      type: 'show-recap',
+      showName: show.eventName,
+      overallRating: rating,
+      segments: ratedSegments
+    };
+
+    let recapText = "No AI recap could be generated for this show.";
 
     try {
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'show-recap',
-          showName: show.eventName,
-          overallRating: rating,
-          segments: ratedSegments
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        throw new Error(`AI recap failed with status ${response.status}`);
+        throw new Error(`API call failed with status: ${response.status}`);
       }
 
       const result = await response.json();
       const generatedText = result.text;
-      return generatedText || "AI recap could not be generated.";
+
+      if (generatedText) {
+        recapText = generatedText;
+      }
+
     } catch (error) {
       console.error("Error generating AI recap: ", error);
-      return "An error occurred while generating the show recap. The show is still saved.";
+      recapText = "An error occurred while generating the show recap. The show is still saved.";
     }
+
+    return recapText;
   };
 
   // =====================
@@ -981,6 +1025,7 @@ function App() {
           return 2.0;
         case 'Major_Event':
           return 1.5;
+        case 'Monthly_Event':
         default:
           return 1.0;
       }
@@ -1103,7 +1148,7 @@ function App() {
   };
 
   // =====================
-  // CAREER EVENTS LOG
+  // LOG CAREER EVENTS
   // =====================
   const logCareerEvents = async (ratedSegments, showRating) => {
     console.log("Sim Engine: Logging career events to memory...");
@@ -1177,160 +1222,16 @@ function App() {
           ...newCareerEvents
         ]
       }));
+
     } catch (error) {
       console.error("Error logging career events:", error);
     }
   };
 
   // =====================
-  // PARTICIPANT SEARCH
-  // =====================
-  const handleParticipantSearch = (queryStr) => {
-    setParticipantSearch(queryStr);
-    if (queryStr.length < 1) {
-      setParticipantResults([]);
-      return;
-    }
-
-    const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(queryStr.toLowerCase()))
-      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
-
-    setParticipantResults(results.slice(0, 5));
-  };
-
-  const handleAddParticipant = (wrestler) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
-    }));
-    setParticipantSearch("");
-    setParticipantResults([]);
-  };
-
-  const handleRemoveParticipant = (wrestlerId) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(p => p.id !== wrestlerId),
-      winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
-    }));
-  };
-
-  const handleWinnerSelect = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      winnerId: e.target.value || null
-    }));
-  };
-
-  const handleSegmentTypeChange = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      type: e.target.value,
-      winnerId: e.target.value === 'Angle' ? null : prev.winnerId
-    }));
-  };
-
-  const handleStorylineSelect = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      storylineId: e.target.value || null
-    }));
-  };
-
-  // =====================
-  // STORYLINES
-  // =====================
-  const handleOpenCreateStorylineModal = () => {
-    setStorylineFormData({ name: '', participants: [] });
-    setStorylineParticipantSearch("");
-    setStorylineParticipantResults([]);
-    setShowStorylineModal(true);
-  };
-
-  const handleStorylineParticipantSearch = (queryStr) => {
-    setStorylineParticipantSearch(queryStr);
-    if (queryStr.length < 1) {
-      setStorylineParticipantResults([]);
-      return;
-    }
-    const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(queryStr.toLowerCase()))
-      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
-    setStorylineParticipantResults(results.slice(0, 5));
-  };
-
-  const handleAddStorylineParticipant = (wrestler) => {
-    setStorylineFormData(prev => ({
-      ...prev,
-      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
-    }));
-    setStorylineParticipantSearch("");
-    setStorylineParticipantResults([]);
-  };
-
-  const handleRemoveStorylineParticipant = (wrestlerId) => {
-    setStorylineFormData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(p => p.id !== wrestlerId)
-    }));
-  };
-
-  const handleCreateStoryline = async () => {
-    if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-      console.error("Storyline must have a name and at least 2 participants.");
-      return;
-    }
-
-    setLoadingMessage('Creating storyline...');
-    setGameState('BUSY');
-
-    try {
-      const newStorylineData = {
-        ...storylineFormData,
-        companyId: activeSave.playerCompanyId,
-        heat: 10,
-        status: "Active",
-        beats: []
-      };
-
-      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
-
-      const newStoryline = { id: docRef.id, ...newStorylineData };
-
-      setGameData(prevData => ({
-        ...prevData,
-        save_storylines: [...(prevData.save_storylines || []), newStoryline]
-      }));
-
-      setShowStorylineModal(false);
-      setGameState('STORYLINE_SCREEN');
-
-    } catch (error) {
-      console.error("Error creating storyline:", error);
-      setLoadingMessage("Failed to create storyline. Please try again.");
-      setGameState('STORYLINE_SCREEN');
-    }
-  };
-
-  // =====================
-  // CAREER HISTORY / RELATIONSHIPS
-  // =====================
-  const handleViewCareerHistory = (wrestler) => {
-    setViewingWrestler(wrestler);
-    setGameState('CAREER_HISTORY_SCREEN');
-  };
-
-  const handleViewRelationships = (wrestler) => {
-    setViewingWrestler(wrestler);
-    setGameState('RELATIONSHIPS_SCREEN');
-  };
-
-  // =====================
-  // MESSAGES: HELPER TO BUILD CONVERSATIONS
+  // MESSAGE THREAD BUILD
   // =====================
   const buildConversationsFromMessages = (messages) => {
-    // Group by "other person" — if senderId !== 'booker', use senderId, else use recipientId
     const convMap = new Map();
 
     messages.forEach(msg => {
@@ -1350,14 +1251,12 @@ function App() {
       convMap.get(otherPartyId).messages.push(msg);
     });
 
-    // sort messages inside each conversation by timestamp
     const conversations = Array.from(convMap.values()).map(conv => {
       conv.messages.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
       conv.lastTimestamp = conv.messages[0]?.timestamp;
       return conv;
     });
 
-    // sort conversations by lastTimestamp desc
     conversations.sort((a, b) => b.lastTimestamp.toMillis() - a.lastTimestamp.toMillis());
 
     return conversations;
@@ -1368,41 +1267,39 @@ function App() {
   // =====================
   const handleSendBookerReply = async (conversation, text) => {
     if (!text.trim()) return;
-    if (!activeSave || !db || !appId || !userId) return;
-    if (!conversation) return;
+    if (!activeSave || !db || !userId || !appId) return;
 
-    const now = Timestamp.now();
-
-    const messageData = {
+    const newMessageData = {
       senderId: 'booker',
       senderName: 'Booker',
       recipientId: conversation.conversationId,
       recipientName: conversation.name,
       body: text.trim(),
-      timestamp: now,
+      timestamp: Timestamp.now(),
       type: 'Text',
       isRead: true
     };
 
     try {
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      const newDocRef = await addDoc(messagesRef, messageData);
+      const newDocRef = await addDoc(messagesRef, newMessageData);
 
-      const newMessage = { id: newDocRef.id, ...messageData };
+      const newMessage = { id: newDocRef.id, ...newMessageData };
 
       setGameData(prevData => ({
         ...prevData,
         save_messages: [...(prevData.save_messages || []), newMessage]
       }));
 
-      setReplyText("");
-    } catch (err) {
-      console.error("Error sending booker reply:", err);
+      setReplyText('');
+
+    } catch (error) {
+      console.error("Error sending booker reply:", error);
     }
   };
 
   // =====================
-  // RENDERING
+  // RENDER: LOADING
   // =====================
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
@@ -1411,6 +1308,9 @@ function App() {
     </div>
   );
 
+  // =====================
+  // RENDER: MAIN MENU
+  // =====================
   const renderMainMenu = () => (
     <div className="max-w-4xl mx-auto p-4 md:p-8">
       <div className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1448,23 +1348,21 @@ function App() {
             <p className="text-gray-400">No save games found.</p>
           ) : (
             <div className="space-y-3">
-              {playerSaves
-                .sort((a, b) => b.lastPlayed.toMillis() - a.lastPlayed.toMillis())
-                .map(save => (
-                  <button
-                    key={save.id}
-                    onClick={() => handleLoadGame(save.id)}
-                    className="w-full text-left p-4 bg-gray-700 rounded-lg hover:bg-gray-600 shadow-md transition-all duration-200"
-                  >
-                    <h3 className="text-lg font-bold text-white">{save.saveName}</h3>
-                    <p className="text-gray-300 text-sm">
-                      In-Game Date: {save.currentDate.toDate().toLocaleDateString()}
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      Last Played: {save.lastPlayed.toDate().toLocaleString()}
-                    </p>
-                  </button>
-                ))}
+              {playerSaves.sort((a, b) => b.lastPlayed.toMillis() - a.lastPlayed.toMillis()).map(save => (
+                <button
+                  key={save.id}
+                  onClick={() => handleLoadGame(save.id)}
+                  className="w-full text-left p-4 bg-gray-700 rounded-lg hover:bg-gray-600 shadow-md transition-all duration-200"
+                >
+                  <h3 className="text-lg font-bold text-white">{save.saveName}</h3>
+                  <p className="text-gray-300 text-sm">
+                    In-Game Date: {save.currentDate.toDate().toLocaleDateString()}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    Last Played: {save.lastPlayed.toDate().toLocaleString()}
+                  </p>
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -1472,6 +1370,9 @@ function App() {
     </div>
   );
 
+  // =====================
+  // RENDER: DASHBOARD
+  // =====================
   const renderGameDashboard = () => {
     if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
 
@@ -1490,17 +1391,8 @@ function App() {
             <p className="text-indigo-300">{activeSave.saveName}</p>
           </div>
           <div className="text-center md:text-right mt-4 md:mt-0">
-            <h2 className="text-xl font-semibold">
-              {activeSave.currentDate.toDate().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </h2>
-            <p className="text-gray-400">
-              Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}
-            </p>
+            <h2 className="text-xl font-semibold">{activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h2>
+            <p className="text-gray-400">Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}</p>
           </div>
         </div>
 
@@ -1540,9 +1432,7 @@ function App() {
           <div className="md:col-span-1 space-y-4">
             <button
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
-              onClick={() => {
-                setShowMessagesModal(true);
-              }}
+              onClick={() => setShowMessagesModal(true)}
             >
               <span className="flex items-center">
                 <MessageIcon />
@@ -1577,12 +1467,18 @@ function App() {
               <RosterIcon />
               Roster
             </button>
+            <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
+              Staff
+            </button>
             <button
               onClick={() => setGameState('STORYLINE_SCREEN')}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
               <FireIcon />
               Storyline Planner
+            </button>
+            <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
+              Finances
             </button>
             <button
               onClick={handleExitGame}
@@ -1597,8 +1493,8 @@ function App() {
   };
 
   // =====================
-  // MESSAGES MODAL (iPhone style)
-  // =====================
+  // RENDER: MESSAGES MODAL (threaded + hover-to-prefill)
+// =====================
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
 
@@ -1617,9 +1513,7 @@ function App() {
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => {
-          handleMarkMessagesRead();
-        }}
+        onClick={() => handleMarkMessagesRead()}
       >
         <div
           className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col"
@@ -1639,7 +1533,6 @@ function App() {
           </div>
 
           <div className="flex flex-1 min-h-0">
-            {/* Left: conversation list */}
             <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
               {conversations.length === 0 ? (
                 <p className="text-gray-500 p-4">No messages yet.</p>
@@ -1677,7 +1570,6 @@ function App() {
               )}
             </div>
 
-            {/* Right: active conversation */}
             <div className="flex-1 flex flex-col">
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {activeConversation ? (
@@ -1702,16 +1594,28 @@ function App() {
                 )}
               </div>
 
-              {/* Reply composer */}
               {activeConversation && (
                 <div className="border-t border-gray-700 p-4 bg-gray-900">
-                  {/* Prefill buttons */}
                   {lastIncomingWithReplies && lastIncomingWithReplies.replyOptions && lastIncomingWithReplies.replyOptions.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
                       {lastIncomingWithReplies.replyOptions.map((opt, idx) => (
                         <button
                           key={idx}
-                          onClick={() => setReplyText(opt)}
+                          onMouseEnter={() => {
+                            setReplyBackupText(replyText);
+                            setReplyText(opt);
+                            setIsHoveringReply(true);
+                          }}
+                          onMouseLeave={() => {
+                            if (isHoveringReply) {
+                              setReplyText(replyBackupText);
+                              setIsHoveringReply(false);
+                            }
+                          }}
+                          onClick={() => {
+                            setReplyText(opt);
+                            setIsHoveringReply(false);
+                          }}
                           className="px-3 py-1 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600"
                         >
                           {opt}
@@ -1723,8 +1627,11 @@ function App() {
                   <div className="flex gap-2">
                     <textarea
                       value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      placeholder="Type your reply to this wrestler..."
+                      onChange={(e) => {
+                        setReplyText(e.target.value);
+                        if (isHoveringReply) setIsHoveringReply(false);
+                      }}
+                      placeholder="Type your reply to this employee..."
                       className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"
                     />
                     <button
@@ -1734,7 +1641,7 @@ function App() {
                       Send
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Replies are saved in this thread.</p>
+                  <p className="text-xs text-gray-500 mt-1">Hover to preview, click to lock in. Replies are saved in this thread.</p>
                 </div>
               )}
             </div>
@@ -1745,7 +1652,7 @@ function App() {
   };
 
   // =====================
-  // ASSISTANT MODAL
+  // RENDER: ASSISTANT MODAL
   // =====================
   const renderAssistantModal = () => {
     if (!showAssistantModal) return null;
@@ -1802,7 +1709,7 @@ function App() {
                 placeholder="Ask for booking advice..."
                 className="flex-grow bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={isAssistantLoading}
-                onKeyDown={(e) => e.key === 'Enter' && !isAssistantLoading && handleGetAIAdvice()}
+                onKeyPress={(e) => e.key === 'Enter' && !isAssistantLoading && handleGetAIAdvice()}
               />
               <button
                 onClick={handleGetAIAdvice}
@@ -1819,7 +1726,7 @@ function App() {
   };
 
   // =====================
-  // BOOKING SCREEN
+  // RENDER: BOOKING SCREEN
   // =====================
   const renderBookingScreen = () => {
     if (!currentShow) return null;
@@ -1830,12 +1737,7 @@ function App() {
           <div>
             <h1 className="text-2xl font-bold text-white">Book Show: {currentShow.eventName}</h1>
             <p className="text-indigo-300">
-              {activeSave.currentDate.toDate().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+              {activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               <span className="ml-4 font-semibold text-yellow-400">(Tier: {currentShow.eventTier})</span>
             </p>
           </div>
@@ -1891,7 +1793,7 @@ function App() {
   };
 
   // =====================
-  // ROSTER SCREEN
+  // RENDER: ROSTER SCREEN
   // =====================
   const renderRosterScreen = () => {
     const wrestlers = gameData.save_wrestlers || [];
@@ -1959,14 +1861,20 @@ function App() {
 
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => handleViewCareerHistory(wrestler)}
+                  onClick={() => {
+                    setViewingWrestler(wrestler);
+                    setGameState('CAREER_HISTORY_SCREEN');
+                  }}
                   className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
                 >
                   <HistoryIcon />
                   History
                 </button>
                 <button
-                  onClick={() => handleViewRelationships(wrestler)}
+                  onClick={() => {
+                    setViewingWrestler(wrestler);
+                    setGameState('RELATIONSHIPS_SCREEN');
+                  }}
                   className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
                 >
                   <RelationshipsIcon />
@@ -1981,7 +1889,7 @@ function App() {
   };
 
   // =====================
-  // SHOW RESULTS SCREEN
+  // RENDER: SHOW RESULTS
   // =====================
   const renderShowResultsScreen = () => {
     return (
@@ -2031,7 +1939,7 @@ function App() {
   };
 
   // =====================
-  // STORYLINE SCREEN
+  // RENDER: STORYLINE SCREEN
   // =====================
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
@@ -2045,7 +1953,12 @@ function App() {
           </h1>
           <div className="flex space-x-2">
             <button
-              onClick={() => handleOpenCreateStorylineModal()}
+              onClick={() => {
+                setStorylineFormData({ name: '', participants: [] });
+                setStorylineParticipantSearch("");
+                setStorylineParticipantResults([]);
+                setShowStorylineModal(true);
+              }}
               className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
             >
               <PlusIcon />
@@ -2085,7 +1998,7 @@ function App() {
   };
 
   // =====================
-  // CAREER HISTORY SCREEN
+  // RENDER: CAREER HISTORY
   // =====================
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
@@ -2120,45 +2033,49 @@ function App() {
         </div>
 
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="flex flex-col">
-            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div className="shadow overflow-hidden border-b border-gray-700">
-                  <table className="min-w-full divide-y divide-gray-700">
-                    <thead className="bg-gray-700">
+          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div className="shadow overflow-hidden border-b border-gray-700">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Event Type
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Notes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {events.length === 0 ? (
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
+                        <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
+                          No career events found for this wrestler.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-gray-800 divide-y divide-gray-700">
-                      {events.length === 0 ? (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
-                            No career events found for this wrestler.
+                    ) : (
+                      events.map(event => (
+                        <tr key={event.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {event.date.toDate().toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-semibold ${getEventColor(event.eventType)}`}>
+                              {event.eventType}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                            {event.notes}
                           </td>
                         </tr>
-                      ) : (
-                        events.map(event => (
-                          <tr key={event.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                              {event.date.toDate().toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <span className={`font-semibold ${getEventColor(event.eventType)}`}>
-                                {event.eventType}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                              {event.notes}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2168,7 +2085,7 @@ function App() {
   };
 
   // =====================
-  // RELATIONSHIPS SCREEN
+  // RENDER: RELATIONSHIPS
   // =====================
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
@@ -2207,49 +2124,55 @@ function App() {
         </div>
 
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="flex flex-col">
-            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div className="shadow overflow-hidden border-b border-gray-700">
-                  <table className="min-w-full divide-y divide-gray-700">
-                    <thead className="bg-gray-700">
+          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div className="shadow overflow-hidden border-b border-gray-700">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Person
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Notes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {relationships.length === 0 ? (
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Person</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
+                        <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                          No relationships found for this wrestler.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-gray-800 divide-y divide-gray-700">
-                      {relationships.length === 0 ? (
-                        <tr>
-                          <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
-                            No relationships found for this wrestler.
+                    ) : (
+                      relationships.map(rel => (
+                        <tr key={rel.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                            {getOtherPersonName(rel)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {rel.relationshipType}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-semibold ${getStatusColor(rel.status)}`}>
+                              {rel.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                            {rel.notes}
                           </td>
                         </tr>
-                      ) : (
-                        relationships.map(rel => (
-                          <tr key={rel.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
-                              {getOtherPersonName(rel)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                              {rel.relationshipType}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <span className={`font-semibold ${getStatusColor(rel.status)}`}>
-                                {rel.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                              {rel.notes}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2259,7 +2182,7 @@ function App() {
   };
 
   // =====================
-  // SEGMENT MODAL
+  // RENDER: SEGMENT MODAL
   // =====================
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
@@ -2291,7 +2214,11 @@ function App() {
               <select
                 name="type"
                 value={segmentFormData.type}
-                onChange={handleSegmentTypeChange}
+                onChange={(e) => setSegmentFormData(prev => ({
+                  ...prev,
+                  type: e.target.value,
+                  winnerId: e.target.value === 'Angle' ? null : prev.winnerId
+                }))}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="Match">Match</option>
@@ -2304,7 +2231,7 @@ function App() {
               <select
                 name="storylineId"
                 value={segmentFormData.storylineId || ""}
-                onChange={handleStorylineSelect}
+                onChange={(e) => setSegmentFormData(prev => ({ ...prev, storylineId: e.target.value || null }))}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">-- None --</option>
@@ -2323,7 +2250,11 @@ function App() {
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
                     {p.name}
                     <button
-                      onClick={() => handleRemoveParticipant(p.id)}
+                      onClick={() => setSegmentFormData(prev => ({
+                        ...prev,
+                        participants: prev.participants.filter(pp => pp.id !== p.id),
+                        winnerId: prev.winnerId === p.id ? null : prev.winnerId
+                      }))}
                       className="ml-2 text-indigo-100 hover:text-white"
                     >
                       <XCircleIcon />
@@ -2338,12 +2269,24 @@ function App() {
                 Add Participant
               </label>
               <div className="flex items-center">
+                <UserPlusIcon className="absolute left-3 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={participantSearch}
-                  onChange={(e) => handleParticipantSearch(e.target.value)}
+                  onChange={(e) => {
+                    const q = e.target.value;
+                    setParticipantSearch(q);
+                    if (q.length < 1) {
+                      setParticipantResults([]);
+                      return;
+                    }
+                    const results = gameData.save_wrestlers
+                      .filter(w => w.name.toLowerCase().includes(q.toLowerCase()))
+                      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
+                    setParticipantResults(results.slice(0, 5));
+                  }}
                   placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               {participantResults.length > 0 && (
@@ -2351,7 +2294,14 @@ function App() {
                   {participantResults.map(w => (
                     <button
                       key={w.id}
-                      onClick={() => handleAddParticipant(w)}
+                      onClick={() => {
+                        setSegmentFormData(prev => ({
+                          ...prev,
+                          participants: [...prev.participants, { id: w.id, name: w.name }]
+                        }));
+                        setParticipantSearch("");
+                        setParticipantResults([]);
+                      }}
                       className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
                     >
                       {w.name}
@@ -2369,7 +2319,7 @@ function App() {
                 <select
                   name="winnerId"
                   value={segmentFormData.winnerId || ""}
-                  onChange={handleWinnerSelect}
+                  onChange={(e) => setSegmentFormData(prev => ({ ...prev, winnerId: e.target.value || null }))}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={segmentFormData.participants.length === 0}
                 >
@@ -2402,7 +2352,7 @@ function App() {
   };
 
   // =====================
-  // CREATE STORYLINE MODAL
+  // RENDER: CREATE STORYLINE MODAL
   // =====================
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
@@ -2448,7 +2398,10 @@ function App() {
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
                     {p.name}
                     <button
-                      onClick={() => handleRemoveStorylineParticipant(p.id)}
+                      onClick={() => setStorylineFormData(prev => ({
+                        ...prev,
+                        participants: prev.participants.filter(pp => pp.id !== p.id)
+                      }))}
                       className="ml-2 text-indigo-100 hover:text-white"
                     >
                       <XCircleIcon />
@@ -2463,12 +2416,24 @@ function App() {
                 Add Participant
               </label>
               <div className="flex items-center">
+                <UserPlusIcon className="absolute left-3 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={storylineParticipantSearch}
-                  onChange={(e) => handleStorylineParticipantSearch(e.target.value)}
+                  onChange={(e) => {
+                    const q = e.target.value;
+                    setStorylineParticipantSearch(q);
+                    if (q.length < 1) {
+                      setStorylineParticipantResults([]);
+                      return;
+                    }
+                    const results = gameData.save_wrestlers
+                      .filter(w => w.name.toLowerCase().includes(q.toLowerCase()))
+                      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
+                    setStorylineParticipantResults(results.slice(0, 5));
+                  }}
                   placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               {storylineParticipantResults.length > 0 && (
@@ -2476,7 +2441,14 @@ function App() {
                   {storylineParticipantResults.map(w => (
                     <button
                       key={w.id}
-                      onClick={() => handleAddStorylineParticipant(w)}
+                      onClick={() => {
+                        setStorylineFormData(prev => ({
+                          ...prev,
+                          participants: [...prev.participants, { id: w.id, name: w.name }]
+                        }));
+                        setStorylineParticipantSearch("");
+                        setStorylineParticipantResults([]);
+                      }}
                       className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
                     >
                       {w.name}
@@ -2495,7 +2467,42 @@ function App() {
               Cancel
             </button>
             <button
-              onClick={handleCreateStoryline}
+              onClick={async () => {
+                if (!storylineFormData.name || storylineFormData.participants.length < 2) {
+                  console.error("Storyline must have a name and at least 2 participants.");
+                  return;
+                }
+
+                setLoadingMessage('Creating storyline...');
+                setGameState('BUSY');
+
+                try {
+                  const newStorylineData = {
+                    ...storylineFormData,
+                    companyId: activeSave.playerCompanyId,
+                    heat: 10,
+                    status: "Active",
+                    beats: []
+                  };
+
+                  const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+
+                  const newStoryline = { id: docRef.id, ...newStorylineData };
+
+                  setGameData(prevData => ({
+                    ...prevData,
+                    save_storylines: [...(prevData.save_storylines || []), newStoryline]
+                  }));
+
+                  setShowStorylineModal(false);
+                  setGameState('STORYLINE_SCREEN');
+
+                } catch (error) {
+                  console.error("Error creating storyline:", error);
+                  setLoadingMessage("Failed to create storyline. Please try again.");
+                  setGameState('STORYLINE_SCREEN');
+                }
+              }}
               className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
             >
               Create Storyline
@@ -2507,7 +2514,7 @@ function App() {
   };
 
   // =====================
-  // MAIN RENDER
+  // MAIN RENDER SWITCH
   // =====================
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
@@ -2536,7 +2543,6 @@ function App() {
             return <p className="text-white p-8">An unexpected error occurred. Please refresh.</p>;
         }
       })()}
-
       {renderMessagesModal()}
       {renderAssistantModal()}
       {renderSegmentModal()}
