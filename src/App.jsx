@@ -1,4 +1,4 @@
-// src/App.jsx (full expanded version with iPhone-style messages + reply workflow)
+// src/App.jsx (full expanded version with iPhone-style messages + reply workflow + click-to-lock replies + spikier no/maybe followups)
 
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
@@ -125,16 +125,15 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
-// Main Application
 function App() {
-  // --- Firebase & Auth State ---
+  // Firebase & auth
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [appId, setAppId] = useState(null);
 
-  // --- Game State ---
+  // Game/global state
   const [gameState, setGameState] = useState('LOADING');
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
@@ -142,23 +141,23 @@ function App() {
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
 
-  // --- Messages UI State ---
+  // Messages UI
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [selectedMessageSenderId, setSelectedMessageSenderId] = useState(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [isReplyDirty, setIsReplyDirty] = useState(false);
   const [hoveredReplyText, setHoveredReplyText] = useState('');
-  const [activeMessageForReply, setActiveMessageForReply] = useState(null); // the message we're replying to
-  const [inlineFeedback, setInlineFeedback] = useState(null); // small string after send
+  const [activeMessageForReply, setActiveMessageForReply] = useState(null);
+  const [inlineFeedback, setInlineFeedback] = useState(null);
 
-  // --- Assistant State ---
+  // Assistant
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // --- Booking State ---
+  // Booking
   const [currentShow, setCurrentShow] = useState(null);
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
@@ -167,18 +166,18 @@ function App() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [participantResults, setParticipantResults] = useState([]);
 
-  // --- Show Results State ---
+  // Show Results
   const [showRecap, setShowRecap] = useState("");
   const [showRating, setShowRating] = useState(0);
 
-  // --- Storyline State ---
+  // Storyline
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
-  // --- Collections info ---
+  // Collections
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -221,7 +220,7 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
-  // --- Init Firebase ---
+  // init firebase
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
@@ -264,7 +263,7 @@ function App() {
     }
   }, []);
 
-  // --- After auth ready, seed & fetch ---
+  // after auth
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
@@ -284,7 +283,6 @@ function App() {
     seedAndFetch();
   }, [isAuthReady, db, userId, appId]);
 
-  // --- Seed default dataset ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
@@ -292,7 +290,6 @@ function App() {
     try {
       const docSnap = await getDoc(datasetRef);
       if (docSnap.exists()) {
-        console.log("Default dataset already exists.");
         return;
       }
 
@@ -383,14 +380,13 @@ function App() {
       });
 
       await batch.commit();
-      console.log("Default dataset created successfully.");
+
     } catch (error) {
       console.error("Error seeding dataset: ", error);
       setLoadingMessage("Error creating default data. Please refresh.");
     }
   };
 
-  // --- Data Fetching ---
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
@@ -414,7 +410,7 @@ function App() {
     }
   };
 
-  // --- New Game Logic ---
+  // start new game
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
 
@@ -516,7 +512,7 @@ function App() {
     }
   };
 
-  // --- Load Game ---
+  // load game
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
 
@@ -561,7 +557,7 @@ function App() {
     }
   };
 
-  // --- Next Day ---
+  // next day
   const handleNextDay = async () => {
     if (!activeSave) return;
 
@@ -598,10 +594,8 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
-  // --- Simulation & AI Messages ---
+  // sim & ai messages
   const runSimulationAndEvents = async (saveId) => {
-    console.log("Sim Engine: Running daily simulation...");
-
     const wrestlers = gameData.save_wrestlers;
     if (!wrestlers || wrestlers.length === 0) return;
 
@@ -614,7 +608,6 @@ function App() {
   };
 
   const getCurrentGameTimestamp = () => {
-    // We want messages to match in-game time
     if (activeSave && activeSave.currentDate) {
       return activeSave.currentDate;
     }
@@ -622,9 +615,6 @@ function App() {
   };
 
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
-    console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
-    setLoadingMessage(`Generating event for ${wrestler.name}...`);
-
     try {
       const response = await fetch('/api/ai', {
         method: 'POST',
@@ -671,7 +661,7 @@ function App() {
     }
   };
 
-  // --- AI Assistant ---
+  // booker assistant
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
@@ -734,7 +724,7 @@ function App() {
     }
   };
 
-  // --- Booking Logic (segment rating) ---
+  // segment rating
   const calculateSegmentRating = (segment, allWrestlers) => {
     if (!segment || segment.participants.length === 0) return 0;
 
@@ -796,7 +786,7 @@ function App() {
     setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
   };
 
-  // --- Run Show ---
+  // run show
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
@@ -876,28 +866,8 @@ function App() {
     }
   };
 
-  // --- AI Show Recap ---
+  // ai show recap
   const generateShowRecap = async (show, ratedSegments, rating) => {
-    console.log(`AI Engine: Generating recap for ${show.eventName}`);
-    setLoadingMessage(`Generating show recap for ${show.eventName}...`);
-
-    const cardForAI = ratedSegments
-      .filter(s => s)
-      .map((s, index) => {
-        const participants = s.participants.map(p => p.name).join(' vs. ');
-        const storyline = s.storylineId ? gameData.save_storylines?.find(story => story.id === s.storylineId) : null;
-        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
-        const ratingContext = `(Rating: ${s.rating}/100)`;
-
-        if (s.type === 'Match') {
-          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
-          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
-          return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
-        } else {
-          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
-        }
-      }).join('\n');
-
     const payload = {
       type: 'show-recap',
       showName: show.eventName,
@@ -933,11 +903,9 @@ function App() {
     }
   };
 
-  // --- Post-show sim ---
+  // post-show sim
   const runShowSimulation = async (ratedSegments, show) => {
-    console.log("Sim Engine v2: Running post-show simulation...");
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
-      console.warn("Sim Engine v2: Missing required data, skipping simulation.");
       return;
     }
 
@@ -1007,7 +975,6 @@ function App() {
             const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
 
             storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
-            console.log(`Sim Update: Storyline '${storyline.name}' heat ${baseHeat} -> ${finalHeat} (Segment Rating: ${segmentRating})`);
           }
         }
 
@@ -1046,7 +1013,6 @@ function App() {
             if (moraleChange !== 0) {
               const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
               wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
-              console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale} (Multiplier: ${moraleMultiplier}x)`);
             }
           }
         }
@@ -1088,9 +1054,6 @@ function App() {
             return s;
           })
         }));
-        console.log("Sim Engine v2: Morale and Storyline updates saved and local state updated.");
-      } else {
-        console.log("Sim Engine v2: No morale or storyline changes to apply.");
       }
 
     } catch (error) {
@@ -1098,9 +1061,8 @@ function App() {
     }
   };
 
-  // --- Career Events ---
+  // career events
   const logCareerEvents = async (ratedSegments, showRating) => {
-    console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
 
     try {
@@ -1162,7 +1124,6 @@ function App() {
       }
 
       await batch.commit();
-      console.log("Career events successfully logged to memory.");
 
       setGameData(prevData => ({
         ...prevData,
@@ -1177,7 +1138,7 @@ function App() {
     }
   };
 
-  // --- Handlers for segment modal ---
+  // segment modal handlers
   const handleParticipantSearch = (query) => {
     setParticipantSearch(query);
     if (query.length < 1) {
@@ -1231,7 +1192,7 @@ function App() {
     }));
   };
 
-  // --- Storyline creation ---
+  // storyline creation
   const handleOpenCreateStorylineModal = () => {
     setStorylineFormData({ name: '', participants: [] });
     setStorylineParticipantSearch("");
@@ -1269,7 +1230,6 @@ function App() {
 
   const handleCreateStoryline = async () => {
     if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-      console.error("Storyline must have a name and at least 2 participants.");
       return;
     }
 
@@ -1304,7 +1264,7 @@ function App() {
     }
   };
 
-  // --- Career / Relationships view ---
+  // career/relationships
   const handleViewCareerHistory = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('CAREER_HISTORY_SCREEN');
@@ -1315,7 +1275,7 @@ function App() {
     setGameState('RELATIONSHIPS_SCREEN');
   };
 
-  // --- Messages: iPhone-style helpers ---
+  // messages helpers
   const getAllMessages = () => {
     return gameData.save_messages || [];
   };
@@ -1375,63 +1335,76 @@ function App() {
     }
   };
 
-  const handleSelectThread = (senderId) => {
-    setSelectedMessageSenderId(senderId);
-    const threads = getConversationThreads();
-    const selected = threads.find(t => t.senderId === senderId);
-    if (selected && selected.messages.length > 0) {
-      setActiveMessageForReply(selected.messages[selected.messages.length - 1]);
-    } else {
-      setActiveMessageForReply(null);
-    }
-    setReplyDraft('');
-    setIsReplyDirty(false);
-    setHoveredReplyText('');
-    setInlineFeedback(null);
-  };
-
-  const generateLocalFollowUp = (tone, originalMsg) => {
+  // spikier follow-ups
+  const generateLocalFollowUp = (tone, originalMsg, wrestlerObj) => {
     const topic = originalMsg?.topic || 'general';
     const senderName = originalMsg?.senderName || 'Talent';
+    const morale = wrestlerObj?.morale ?? 75;
+    const isAlreadyIcy = morale < 60;
 
     if (tone === 'yes') {
       switch (topic) {
         case 'request_time_off':
-          return `${senderName}: Appreciate you being flexible about time off. I’ll make sure to come back ready to go.`;
+          return `${senderName}: Thanks for working with me on the time off — I’ll make sure I come back ready.`;
         case 'contract_negotiation':
-          return `${senderName}: Good to hear. I’ll have my agent look it over but this sounds closer to what I wanted.`;
+          return `${senderName}: Appreciate you meeting me in the middle. I’ll keep showing I’m worth it.`;
         case 'unhappy_booking':
-          return `${senderName}: Thanks for hearing me out. I’ll keep delivering so the push makes sense.`;
+          return `${senderName}: That’s what I needed to hear. I’ll keep delivering so it makes sense on TV.`;
         case 'excited_push':
-          return `${senderName}: Awesome — I’ll make sure the character stays hot.`;
+          return `${senderName}: Awesome. I’ll make sure the character stays hot.`;
         default:
-          return `${senderName}: Sounds good, thanks for backing me.`;
+          return `${senderName}: Cool, thanks for backing me on that.`;
       }
     }
 
     if (tone === 'no') {
-      switch (topic) {
-        case 'request_time_off':
-          return `${senderName}: Got it. Not ideal but I’ll work around it.`;
-        case 'contract_negotiation':
-          return `${senderName}: Okay. I still think I’m worth more, but I hear you.`;
-        case 'unhappy_booking':
-          return `${senderName}: That’s disappointing. I’ll keep doing the work but I want this on your radar.`;
-        default:
-          return `${senderName}: Alright. I’ll roll with it for now.`;
+      // harsher if morale is already low
+      if (isAlreadyIcy) {
+        switch (topic) {
+          case 'request_time_off':
+            return `${senderName}: That’s rough. I was hoping for a little more understanding, but I get where your head’s at.`;
+          case 'contract_negotiation':
+            return `${senderName}: Okay… that’s not really what I was aiming for. I’ll keep my options open then.`;
+          case 'unhappy_booking':
+            return `${senderName}: So basically I stay where I am. Got it. I’ll do the job, but I want this on your radar.`;
+          default:
+            return `${senderName}: Understood. Not thrilled, but I hear you.`;
+        }
+      } else {
+        switch (topic) {
+          case 'request_time_off':
+            return `${senderName}: Alright. I’ll figure it out, but it’s not ideal.`;
+          case 'contract_negotiation':
+            return `${senderName}: Got it. I still think I’m worth more, but I’ll keep working.`;
+          case 'unhappy_booking':
+            return `${senderName}: That’s disappointing. I’ll keep getting reactions and we can talk again.`;
+          default:
+            return `${senderName}: Okay. I’ll roll with it for now.`;
+        }
       }
     }
 
-  if (tone === 'maybe') {
-      switch (topic) {
-        case 'request_time_off':
-          return `${senderName}: Fair enough — I’ll keep you posted on dates and we can try to make it fit.`;
-        case 'contract_negotiation':
-          return `${senderName}: Okay, let’s see where things land after the next couple of shows.`;
-        case 'unhappy_booking':
-          return `${senderName}: I get it. If I keep getting good reactions, I’ll circle back.`;
-        default:
-          return `${senderName}: That’s reasonable. Let’s revisit when the timing’s better.`;
+    if (tone === 'maybe') {
+      if (isAlreadyIcy) {
+        switch (topic) {
+          case 'contract_negotiation':
+            return `${senderName}: Alright, but I don’t want this dragged out forever. Let’s circle back soon.`;
+          case 'unhappy_booking':
+            return `${senderName}: Okay… I’ll see what I can do in the meantime, but I do want movement.`;
+          default:
+            return `${senderName}: Fair. Keep me in the loop if things change.`;
+        }
+      } else {
+        switch (topic) {
+          case 'request_time_off':
+            return `${senderName}: That’s fair — I’ll keep you posted on dates and we’ll make it work.`;
+          case 'contract_negotiation':
+            return `${senderName}: Okay, let’s revisit after the next run of shows.`;
+          case 'unhappy_booking':
+            return `${senderName}: I get it. If the reactions keep coming, I’ll nudge you again.`;
+          default:
+            return `${senderName}: Sounds good — we can revisit when the timing’s better.`;
+        }
       }
     }
 
@@ -1464,14 +1437,34 @@ function App() {
     };
 
     let usedTone = 'maybe';
+    // simple heuristic: if draft looks like we hovered "yes" variant, or user typed "yes"/"ok" we could detect, but we keep it simple
     if (hoveredReplyText && replyDraft.trim() === hoveredReplyText.trim()) {
-      if (hoveredReplyText.toLowerCase().includes("can do") || hoveredReplyText.toLowerCase().includes("okay") || hoveredReplyText.toLowerCase().includes("yes")) {
+      // We can't reliably tell which button, but we'll default to the intent based on index
+      // so instead we'll infer from keywords:
+      if (replyDraft.toLowerCase().includes("not") || replyDraft.toLowerCase().includes("can’t") || replyDraft.toLowerCase().includes("cant") || replyDraft.toLowerCase().includes("won’t")) {
+        usedTone = 'no';
+      } else if (replyDraft.toLowerCase().includes("if") || replyDraft.toLowerCase().includes("let’s see") || replyDraft.toLowerCase().includes("let us see") || replyDraft.toLowerCase().includes("revisit")) {
+        usedTone = 'maybe';
+      } else {
         usedTone = 'yes';
+      }
+    } else {
+      // user typed manually; let's do a tiny heuristic
+      const lower = replyDraft.toLowerCase();
+      if (lower.startsWith("yes") || lower.startsWith("yeah") || lower.includes("we can do that") || lower.includes("okay we can do that")) {
+        usedTone = 'yes';
+      } else if (lower.startsWith("no") || lower.includes("not right now") || lower.includes("can’t do that") || lower.includes("cant do that")) {
+        usedTone = 'no';
+      } else if (lower.includes("if") || lower.includes("let's see") || lower.includes("lets see") || lower.includes("revisit")) {
+        usedTone = 'maybe';
       }
     }
 
     const moraleDelta = getMoraleDeltaForTone(usedTone);
-    const followUpText = generateLocalFollowUp(usedTone, activeMessageForReply);
+
+    // find wrestler so we can make "no" harsher if morale is low
+    const wrestlerObj = gameData.save_wrestlers?.find(w => w.id === senderId);
+    const followUpText = generateLocalFollowUp(usedTone, activeMessageForReply, wrestlerObj);
 
     const talentReply = {
       senderId: senderId,
@@ -1543,8 +1536,15 @@ function App() {
     setIsReplyDirty(true);
   };
 
-  // --- Render Functions ---
+  // NEW: click-to-lock handler
+  const handleReplyButtonClick = (text) => {
+    if (!text) return;
+    setReplyDraft(text);
+    setIsReplyDirty(true);     // so hover leave doesn't wipe it
+    setHoveredReplyText('');   // we don't need hover text now
+  };
 
+  // render screens
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1751,7 +1751,7 @@ function App() {
           className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] flex"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Left pane: threads */}
+          {/* left pane */}
           <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h2 className="text-xl font-bold text-white">Inbox</h2>
@@ -1772,7 +1772,14 @@ function App() {
               {threads.map(thread => (
                 <button
                   key={thread.senderId}
-                  onClick={() => handleSelectThread(thread.senderId)}
+                  onClick={() => {
+                    setSelectedMessageSenderId(thread.senderId);
+                    setActiveMessageForReply(thread.messages[thread.messages.length - 1]);
+                    setReplyDraft('');
+                    setIsReplyDirty(false);
+                    setHoveredReplyText('');
+                    setInlineFeedback(null);
+                  }}
                   className={`w-full flex flex-col items-start px-4 py-3 text-left hover:bg-gray-800 transition-all ${thread.senderId === selectedMessageSenderId ? 'bg-gray-800' : ''}`}
                 >
                   <div className="flex items-center w-full justify-between">
@@ -1784,7 +1791,8 @@ function App() {
               ))}
             </div>
           </div>
-          {/* Right pane: chat */}
+
+          {/* right pane */}
           <div className="w-2/3 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <div>
@@ -1813,13 +1821,15 @@ function App() {
                 </div>
               )}
             </div>
-            {/* Reply area */}
+
+            {/* reply area */}
             {selectedThread && (
               <div className="p-4 border-t border-gray-700 bg-gray-900">
                 <div className="flex space-x-2 mb-3">
                   <button
                     onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[0] || '')}
                     onMouseLeave={handleReplyHoverLeave}
+                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[0] || '')}
                     className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
                   >
                     Yes
@@ -1827,6 +1837,7 @@ function App() {
                   <button
                     onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[1] || '')}
                     onMouseLeave={handleReplyHoverLeave}
+                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[1] || '')}
                     className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
                   >
                     No
@@ -1834,6 +1845,7 @@ function App() {
                   <button
                     onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[2] || '')}
                     onMouseLeave={handleReplyHoverLeave}
+                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[2] || '')}
                     className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
                   >
                     Maybe
@@ -1855,7 +1867,7 @@ function App() {
                     Send
                   </button>
                 </div>
-                <p className="text-[0.65rem] text-gray-500 mt-2">Hover a button to prefill. Move away to clear (unless you start typing).</p>
+                <p className="text-[0.65rem] text-gray-500 mt-2">Hover a button to preview. Click it to lock it in, then send.</p>
               </div>
             )}
           </div>
@@ -2610,7 +2622,7 @@ function App() {
     );
   };
 
-  // --- Main Render ---
+  // main render
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
