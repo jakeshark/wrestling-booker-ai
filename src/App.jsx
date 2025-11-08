@@ -1,3 +1,5 @@
+// src/App.jsx (full expanded version with iPhone-style messages + reply workflow)
+
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -20,9 +22,7 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 
-// =====================
-// ICONS
-// =====================
+// --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -32,7 +32,7 @@ const LoadingIcon = () => (
 
 const GameIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-indigo-400">
-    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l2.056-7.36H4.75a.75.75 0 0 1 .548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l2.056-7.36H4.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -44,7 +44,7 @@ const MessageIcon = () => (
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-    <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06Z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -85,8 +85,8 @@ const XCircleIcon = () => (
   </svg>
 );
 
-const StarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400">
+const StarIcon = ({ className = "w-5 h-5 text-yellow-400" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
     <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
   </svg>
 );
@@ -115,9 +115,7 @@ const RelationshipsIcon = () => (
   </svg>
 );
 
-// =====================
-// FIREBASE CONFIG
-// =====================
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
   authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -127,18 +125,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
-// =====================
-// MAIN APP
-// =====================
+// Main Application
 function App() {
-  // Firebase
+  // --- Firebase & Auth State ---
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [appId, setAppId] = useState(null);
 
-  // Game state
+  // --- Game State ---
   const [gameState, setGameState] = useState('LOADING');
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
@@ -146,21 +142,23 @@ function App() {
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
 
-  // Messaging UI
+  // --- Messages UI State ---
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const [replyText, setReplyText] = useState('');
-  const [isHoveringReply, setIsHoveringReply] = useState(false);
-  const [replyBackupText, setReplyBackupText] = useState('');
+  const [selectedMessageSenderId, setSelectedMessageSenderId] = useState(null);
+  const [replyDraft, setReplyDraft] = useState('');
+  const [isReplyDirty, setIsReplyDirty] = useState(false);
+  const [hoveredReplyText, setHoveredReplyText] = useState('');
+  const [activeMessageForReply, setActiveMessageForReply] = useState(null); // the message we're replying to
+  const [inlineFeedback, setInlineFeedback] = useState(null); // small string after send
 
-  // Assistant
+  // --- Assistant State ---
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // Booking
+  // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
@@ -169,18 +167,18 @@ function App() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [participantResults, setParticipantResults] = useState([]);
 
-  // Show results
+  // --- Show Results State ---
   const [showRecap, setShowRecap] = useState("");
   const [showRating, setShowRating] = useState(0);
 
-  // Storylines
+  // --- Storyline State ---
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
-  // Dataset collections
+  // --- Collections info ---
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -223,9 +221,7 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
-  // =====================
-  // FIREBASE INIT
-  // =====================
+  // --- Init Firebase ---
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
@@ -268,9 +264,7 @@ function App() {
     }
   }, []);
 
-  // =====================
-  // SEED + FETCH AFTER AUTH
-  // =====================
+  // --- After auth ready, seed & fetch ---
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
@@ -290,9 +284,7 @@ function App() {
     seedAndFetch();
   }, [isAuthReady, db, userId, appId]);
 
-  // =====================
-  // SEED DEFAULT DATASET
-  // =====================
+  // --- Seed default dataset ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
@@ -398,9 +390,7 @@ function App() {
     }
   };
 
-  // =====================
-  // FETCH DATASETS
-  // =====================
+  // --- Data Fetching ---
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
@@ -412,9 +402,6 @@ function App() {
     }
   };
 
-  // =====================
-  // FETCH PLAYER SAVES
-  // =====================
   const fetchPlayerSaves = async (db, userId, appId) => {
     if (!userId) return;
     try {
@@ -427,9 +414,7 @@ function App() {
     }
   };
 
-  // =====================
-  // NEW GAME
-  // =====================
+  // --- New Game Logic ---
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
 
@@ -468,7 +453,6 @@ function App() {
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
-
           batch.set(newDocRef, docData);
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
@@ -532,9 +516,7 @@ function App() {
     }
   };
 
-  // =====================
-  // LOAD GAME
-  // =====================
+  // --- Load Game ---
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
 
@@ -579,9 +561,7 @@ function App() {
     }
   };
 
-  // =====================
-  // NEXT DAY
-  // =====================
+  // --- Next Day ---
   const handleNextDay = async () => {
     if (!activeSave) return;
 
@@ -611,9 +591,6 @@ function App() {
     }
   };
 
-  // =====================
-  // EXIT GAME
-  // =====================
   const handleExitGame = () => {
     setActiveSave(null);
     setGameData({});
@@ -621,9 +598,7 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
-  // =====================
-  // SIM ENGINE (DAILY)
-  // =====================
+  // --- Simulation & AI Messages ---
   const runSimulationAndEvents = async (saveId) => {
     console.log("Sim Engine: Running daily simulation...");
 
@@ -631,7 +606,6 @@ function App() {
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
-      console.log("Sim Engine: Event triggered!");
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
       const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_negotiation'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
@@ -639,14 +613,17 @@ function App() {
     }
   };
 
-  // =====================
-  // GENERATE & SAVE MESSAGE (AI) — stamped with in-game date
-  // =====================
+  const getCurrentGameTimestamp = () => {
+    // We want messages to match in-game time
+    if (activeSave && activeSave.currentDate) {
+      return activeSave.currentDate;
+    }
+    return Timestamp.now();
+  };
+
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
-
-    const inGameTimestamp = activeSave?.currentDate ? activeSave.currentDate : Timestamp.now();
 
     try {
       const response = await fetch('/api/ai', {
@@ -660,21 +637,22 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed with status: ${response.status}`);
+        throw new Error(`AI route failed: ${response.status}`);
       }
 
       const result = await response.json();
       const messageText = result.message;
-      const replyOptions = Array.isArray(result.replyOptions) ? result.replyOptions : [];
+      const replyOptions = Array.isArray(result.replyOptions) ? result.replyOptions.slice(0, 3) : [];
 
       if (messageText) {
         const messageData = {
           senderId: wrestler.id,
           senderName: wrestler.name,
           body: messageText,
-          timestamp: inGameTimestamp,
+          timestamp: getCurrentGameTimestamp(),
           type: 'Text',
           isRead: false,
+          topic: topic,
           replyOptions: replyOptions
         };
 
@@ -693,9 +671,7 @@ function App() {
     }
   };
 
-  // =====================
-  // AI ASSISTANT
-  // =====================
+  // --- AI Assistant ---
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
@@ -718,17 +694,11 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed with status: ${response.status}`);
+        throw new Error(`Assistant API failed with status: ${response.status}`);
       }
 
-      const result = await response.json();
-      const adviceText = result.text;
-
-      if (adviceText) {
-        setAssistantResponse(adviceText);
-      } else {
-        setAssistantResponse("The AI assistant couldn't come up with a response. Try rephrasing your question.");
-      }
+      const data = await response.json();
+      setAssistantResponse(data.text || "The AI assistant couldn't come up with a response. Try rephrasing your question.");
     } catch (error) {
       console.error("Error getting AI advice: ", error);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
@@ -737,14 +707,8 @@ function App() {
     }
   };
 
-  // =====================
-  // MARK MESSAGES READ
-  // =====================
   const handleMarkMessagesRead = async () => {
-    if (!activeSave || unreadMessages === 0) {
-      setShowMessagesModal(false);
-      return;
-    }
+    if (!activeSave || unreadMessages === 0) return;
 
     setUnreadMessages(0);
 
@@ -767,42 +731,10 @@ function App() {
       await batch.commit();
     } catch (error) {
       console.error("Error marking messages as read: ", error);
-    } finally {
-      setShowMessagesModal(false);
     }
   };
 
-  // =====================
-  // BOOKING: START
-  // =====================
-  const handleStartBookingShow = (show) => {
-    setCurrentShow(show);
-    setCurrentSegments(Array(10).fill(null));
-    setGameState('BOOKING_SHOW');
-  };
-
-  const handleOpenSegmentModal = (index) => {
-    setEditingSegmentIndex(index);
-    const existingSegment = currentSegments[index];
-    setSegmentFormData(existingSegment || { type: 'Match', participants: [], winnerId: null, storylineId: null });
-    setParticipantSearch("");
-    setParticipantResults([]);
-    setShowSegmentModal(true);
-  };
-
-  const handleSaveSegment = () => {
-    const newSegments = [...currentSegments];
-    newSegments[editingSegmentIndex] = segmentFormData;
-    setCurrentSegments(newSegments);
-
-    setShowSegmentModal(false);
-    setEditingSegmentIndex(null);
-    setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
-  };
-
-  // =====================
-  // SEGMENT RATING
-  // =====================
+  // --- Booking Logic (segment rating) ---
   const calculateSegmentRating = (segment, allWrestlers) => {
     if (!segment || segment.participants.length === 0) return 0;
 
@@ -832,7 +764,6 @@ function App() {
         totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
       }
       const avgWorkrate = totalWorkrate / numParticipants;
-
       const rating = (avgCharisma * 0.6) + (avgWorkrate * 0.4);
       return Math.min(100, Math.floor(rating));
     }
@@ -840,9 +771,32 @@ function App() {
     return 0;
   };
 
-  // =====================
-  // RUN SHOW
-  // =====================
+  const handleStartBookingShow = (show) => {
+    setCurrentShow(show);
+    setCurrentSegments(Array(10).fill(null));
+    setGameState('BOOKING_SHOW');
+  };
+
+  const handleOpenSegmentModal = (index) => {
+    setEditingSegmentIndex(index);
+    const existingSegment = currentSegments[index];
+    setSegmentFormData(existingSegment || { type: 'Match', participants: [], winnerId: null, storylineId: null });
+    setParticipantSearch("");
+    setParticipantResults([]);
+    setShowSegmentModal(true);
+  };
+
+  const handleSaveSegment = () => {
+    const newSegments = [...currentSegments];
+    newSegments[editingSegmentIndex] = segmentFormData;
+    setCurrentSegments(newSegments);
+
+    setShowSegmentModal(false);
+    setEditingSegmentIndex(null);
+    setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
+  };
+
+  // --- Run Show ---
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
@@ -889,12 +843,7 @@ function App() {
       await runShowSimulation(ratedSegments, currentShow);
 
       setLoadingMessage('Generating show recap...');
-      const recapText = await generateShowRecap(
-        currentShow,
-        ratedSegments,
-        finalShowRating,
-        gameData.save_wrestlers || []
-      );
+      const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
       setShowRecap(recapText);
 
       setLoadingMessage('Saving show results...');
@@ -927,61 +876,64 @@ function App() {
     }
   };
 
-  // =====================
-  // AI SHOW RECAP — stricter, passes roster, forbids extra segments
-  // =====================
-  const generateShowRecap = async (show, ratedSegments, rating, roster) => {
+  // --- AI Show Recap ---
+  const generateShowRecap = async (show, ratedSegments, rating) => {
     console.log(`AI Engine: Generating recap for ${show.eventName}`);
     setLoadingMessage(`Generating show recap for ${show.eventName}...`);
 
-    // Build a roster name list so the AI knows who actually exists
-    const rosterNames = Array.isArray(roster) ? roster.map(r => r.name) : [];
+    const cardForAI = ratedSegments
+      .filter(s => s)
+      .map((s, index) => {
+        const participants = s.participants.map(p => p.name).join(' vs. ');
+        const storyline = s.storylineId ? gameData.save_storylines?.find(story => story.id === s.storylineId) : null;
+        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
+        const ratingContext = `(Rating: ${s.rating}/100)`;
+
+        if (s.type === 'Match') {
+          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
+          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
+          return `${index + 1}. ${s.type}${storylineContext}: ${participants}${result} ${ratingContext}`;
+        } else {
+          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
+        }
+      }).join('\n');
 
     const payload = {
       type: 'show-recap',
       showName: show.eventName,
       overallRating: rating,
-      segments: ratedSegments,
-      roster: rosterNames,
-      // this is the important part: tell the backend prompt "do not invent"
-      constraints: {
-        mustOnlyDescribeProvidedSegments: true,
-        mustNotInventWrestlers: true,
-        mustNotInventAngles: true
-      }
+      segments: ratedSegments.map(seg => {
+        if (!seg) return null;
+        return {
+          type: seg.type,
+          participants: seg.participants,
+          rating: seg.rating,
+          storylineId: seg.storylineId || null
+        };
+      })
     };
 
-    let recapText = "No AI recap could be generated for this show.";
-
     try {
-      const response = await fetch('/api/ai', {
+      const resp = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
-        throw new Error(`API call failed with status: ${response.status}`);
+      if (!resp.ok) {
+        throw new Error(`AI recap call failed: ${resp.status}`);
       }
 
-      const result = await response.json();
-      const generatedText = result.text;
-
-      if (generatedText) {
-        recapText = generatedText;
-      }
-
+      const data = await resp.json();
+      const generatedText = data.text;
+      return generatedText || "An error occurred while generating the show recap. The show is still saved.";
     } catch (error) {
       console.error("Error generating AI recap: ", error);
-      recapText = "An error occurred while generating the show recap. The show is still saved.";
+      return "An error occurred while generating the show recap. The show is still saved.";
     }
-
-    return recapText;
   };
 
-  // =====================
-  // POST-SHOW SIM
-  // =====================
+  // --- Post-show sim ---
   const runShowSimulation = async (ratedSegments, show) => {
     console.log("Sim Engine v2: Running post-show simulation...");
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
@@ -1146,9 +1098,7 @@ function App() {
     }
   };
 
-  // =====================
-  // LOG CAREER EVENTS
-  // =====================
+  // --- Career Events ---
   const logCareerEvents = async (ratedSegments, showRating) => {
     console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
@@ -1227,81 +1177,374 @@ function App() {
     }
   };
 
-  // =====================
-  // MESSAGE THREAD BUILD
-  // =====================
-  const buildConversationsFromMessages = (messages) => {
-    const convMap = new Map();
+  // --- Handlers for segment modal ---
+  const handleParticipantSearch = (query) => {
+    setParticipantSearch(query);
+    if (query.length < 1) {
+      setParticipantResults([]);
+      return;
+    }
 
-    messages.forEach(msg => {
-      const isFromBooker = msg.senderId === 'booker';
-      const otherPartyId = isFromBooker ? msg.recipientId : msg.senderId;
-      const otherPartyName = isFromBooker ? msg.recipientName : msg.senderName;
+    const results = gameData.save_wrestlers
+      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
 
-      if (!otherPartyId) return;
-
-      if (!convMap.has(otherPartyId)) {
-        convMap.set(otherPartyId, {
-          conversationId: otherPartyId,
-          name: otherPartyName,
-          messages: []
-        });
-      }
-      convMap.get(otherPartyId).messages.push(msg);
-    });
-
-    const conversations = Array.from(convMap.values()).map(conv => {
-      conv.messages.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
-      conv.lastTimestamp = conv.messages[0]?.timestamp;
-      return conv;
-    });
-
-    conversations.sort((a, b) => b.lastTimestamp.toMillis() - a.lastTimestamp.toMillis());
-
-    return conversations;
+    setParticipantResults(results.slice(0, 5));
   };
 
-  // =====================
-  // SEND BOOKER REPLY — in-game date
-  // =====================
-  const handleSendBookerReply = async (conversation, text) => {
-    if (!text.trim()) return;
-    if (!activeSave || !db || !userId || !appId) return;
+  const handleAddParticipant = (wrestler) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
+    }));
+    setParticipantSearch("");
+    setParticipantResults([]);
+  };
 
-    const inGameTimestamp = activeSave?.currentDate ? activeSave.currentDate : Timestamp.now();
+  const handleRemoveParticipant = (wrestlerId) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(p => p.id !== wrestlerId),
+      winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
+    }));
+  };
 
-    const newMessageData = {
-      senderId: 'booker',
-      senderName: 'Booker',
-      recipientId: conversation.conversationId,
-      recipientName: conversation.name,
-      body: text.trim(),
-      timestamp: inGameTimestamp,
-      type: 'Text',
-      isRead: true
-    };
+  const handleWinnerSelect = (e) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      winnerId: e.target.value || null
+    }));
+  };
+
+  const handleSegmentTypeChange = (e) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      type: e.target.value,
+      winnerId: e.target.value === 'Angle' ? null : prev.winnerId
+    }));
+  };
+
+  const handleStorylineSelect = (e) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      storylineId: e.target.value || null
+    }));
+  };
+
+  // --- Storyline creation ---
+  const handleOpenCreateStorylineModal = () => {
+    setStorylineFormData({ name: '', participants: [] });
+    setStorylineParticipantSearch("");
+    setStorylineParticipantResults([]);
+    setShowStorylineModal(true);
+  };
+
+  const handleStorylineParticipantSearch = (query) => {
+    setStorylineParticipantSearch(query);
+    if (query.length < 1) {
+      setStorylineParticipantResults([]);
+      return;
+    }
+    const results = gameData.save_wrestlers
+      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
+    setStorylineParticipantResults(results.slice(0, 5));
+  };
+
+  const handleAddStorylineParticipant = (wrestler) => {
+    setStorylineFormData(prev => ({
+      ...prev,
+      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
+    }));
+    setStorylineParticipantSearch("");
+    setStorylineParticipantResults([]);
+  };
+
+  const handleRemoveStorylineParticipant = (wrestlerId) => {
+    setStorylineFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(p => p.id !== wrestlerId)
+    }));
+  };
+
+  const handleCreateStoryline = async () => {
+    if (!storylineFormData.name || storylineFormData.participants.length < 2) {
+      console.error("Storyline must have a name and at least 2 participants.");
+      return;
+    }
+
+    setLoadingMessage('Creating storyline...');
+    setGameState('BUSY');
 
     try {
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      const newDocRef = await addDoc(messagesRef, newMessageData);
+      const newStorylineData = {
+        ...storylineFormData,
+        companyId: activeSave.playerCompanyId,
+        heat: 10,
+        status: "Active",
+        beats: []
+      };
 
-      const newMessage = { id: newDocRef.id, ...newMessageData };
+      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+
+      const newStoryline = { id: docRef.id, ...newStorylineData };
 
       setGameData(prevData => ({
         ...prevData,
-        save_messages: [...(prevData.save_messages || []), newMessage]
+        save_storylines: [...(prevData.save_storylines || []), newStoryline]
       }));
 
-      setReplyText('');
+      setShowStorylineModal(false);
+      setGameState('STORYLINE_SCREEN');
 
     } catch (error) {
-      console.error("Error sending booker reply:", error);
+      console.error("Error creating storyline:", error);
+      setLoadingMessage("Failed to create storyline. Please try again.");
+      setGameState('STORYLINE_SCREEN');
     }
   };
 
-  // =====================
-  // RENDER: LOADING
-  // =====================
+  // --- Career / Relationships view ---
+  const handleViewCareerHistory = (wrestler) => {
+    setViewingWrestler(wrestler);
+    setGameState('CAREER_HISTORY_SCREEN');
+  };
+
+  const handleViewRelationships = (wrestler) => {
+    setViewingWrestler(wrestler);
+    setGameState('RELATIONSHIPS_SCREEN');
+  };
+
+  // --- Messages: iPhone-style helpers ---
+  const getAllMessages = () => {
+    return gameData.save_messages || [];
+  };
+
+  const getConversationThreads = () => {
+    const all = getAllMessages();
+    const map = new Map();
+
+    all.forEach(msg => {
+      const senderId = msg.senderId || 'unknown';
+      if (!map.has(senderId)) {
+        map.set(senderId, []);
+      }
+      map.get(senderId).push(msg);
+    });
+
+    const threads = [];
+    map.forEach((msgs, senderId) => {
+      msgs.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+      threads.push({
+        senderId,
+        senderName: msgs[0]?.senderName || 'Unknown',
+        lastMessage: msgs[0],
+        messages: msgs.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis())
+      });
+    });
+
+    threads.sort((a, b) => b.lastMessage.timestamp.toMillis() - a.lastMessage.timestamp.toMillis());
+    return threads;
+  };
+
+  const formatGameTimestamp = (ts) => {
+    if (!ts) return '';
+    try {
+      const d = ts.toDate();
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const handleOpenMessagesModal = () => {
+    setShowMessagesModal(true);
+    const threads = getConversationThreads();
+    if (threads.length > 0) {
+      setSelectedMessageSenderId(threads[0].senderId);
+      setActiveMessageForReply(threads[0].messages[threads[0].messages.length - 1]);
+    } else {
+      setSelectedMessageSenderId(null);
+      setActiveMessageForReply(null);
+    }
+  };
+
+  const handleSelectThread = (senderId) => {
+    setSelectedMessageSenderId(senderId);
+    const threads = getConversationThreads();
+    const selected = threads.find(t => t.senderId === senderId);
+    if (selected && selected.messages.length > 0) {
+      setActiveMessageForReply(selected.messages[selected.messages.length - 1]);
+    } else {
+      setActiveMessageForReply(null);
+    }
+    setReplyDraft('');
+    setIsReplyDirty(false);
+    setHoveredReplyText('');
+    setInlineFeedback(null);
+  };
+
+  const generateLocalFollowUp = (tone, originalMsg) => {
+    const topic = originalMsg?.topic || 'general';
+    const senderName = originalMsg?.senderName || 'Talent';
+
+    if (tone === 'yes') {
+      switch (topic) {
+        case 'request_time_off':
+          return `${senderName}: Appreciate you being flexible about time off. I’ll make sure to come back ready to go.`;
+        case 'contract_negotiation':
+          return `${senderName}: Good to hear. I’ll have my agent look it over but this sounds closer to what I wanted.`;
+        case 'unhappy_booking':
+          return `${senderName}: Thanks for hearing me out. I’ll keep delivering so the push makes sense.`;
+        case 'excited_push':
+          return `${senderName}: Awesome — I’ll make sure the character stays hot.`;
+        default:
+          return `${senderName}: Sounds good, thanks for backing me.`;
+      }
+    }
+
+    if (tone === 'no') {
+      switch (topic) {
+        case 'request_time_off':
+          return `${senderName}: Got it. Not ideal but I’ll work around it.`;
+        case 'contract_negotiation':
+          return `${senderName}: Okay. I still think I’m worth more, but I hear you.`;
+        case 'unhappy_booking':
+          return `${senderName}: That’s disappointing. I’ll keep doing the work but I want this on your radar.`;
+        default:
+          return `${senderName}: Alright. I’ll roll with it for now.`;
+      }
+    }
+
+  if (tone === 'maybe') {
+      switch (topic) {
+        case 'request_time_off':
+          return `${senderName}: Fair enough — I’ll keep you posted on dates and we can try to make it fit.`;
+        case 'contract_negotiation':
+          return `${senderName}: Okay, let’s see where things land after the next couple of shows.`;
+        case 'unhappy_booking':
+          return `${senderName}: I get it. If I keep getting good reactions, I’ll circle back.`;
+        default:
+          return `${senderName}: That’s reasonable. Let’s revisit when the timing’s better.`;
+      }
+    }
+
+    return `${senderName}: Cool.`;
+  };
+
+  const getMoraleDeltaForTone = (tone) => {
+    if (tone === 'yes') return +5;
+    if (tone === 'no') return -5;
+    if (tone === 'maybe') return 0;
+    return 0;
+  };
+
+  const handleSendReply = async () => {
+    if (!activeMessageForReply || !replyDraft.trim()) return;
+    if (!activeSave || !db || !userId || !appId) return;
+
+    const senderId = activeMessageForReply.senderId;
+    const senderName = activeMessageForReply.senderName;
+
+    const bookerMessage = {
+      senderId: 'booker',
+      senderName: 'Booker',
+      body: replyDraft.trim(),
+      timestamp: getCurrentGameTimestamp(),
+      type: 'Text',
+      isRead: true,
+      isFromBooker: true,
+      inReplyTo: activeMessageForReply.id
+    };
+
+    let usedTone = 'maybe';
+    if (hoveredReplyText && replyDraft.trim() === hoveredReplyText.trim()) {
+      if (hoveredReplyText.toLowerCase().includes("can do") || hoveredReplyText.toLowerCase().includes("okay") || hoveredReplyText.toLowerCase().includes("yes")) {
+        usedTone = 'yes';
+      }
+    }
+
+    const moraleDelta = getMoraleDeltaForTone(usedTone);
+    const followUpText = generateLocalFollowUp(usedTone, activeMessageForReply);
+
+    const talentReply = {
+      senderId: senderId,
+      senderName: senderName,
+      body: followUpText,
+      timestamp: getCurrentGameTimestamp(),
+      type: 'Text',
+      isRead: false,
+      isFollowUp: true
+    };
+
+    const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+    const bookerDocRef = await addDoc(messagesRef, bookerMessage);
+    const talentDocRef = await addDoc(messagesRef, talentReply);
+
+    let updatedWrestlers = gameData.save_wrestlers;
+    if (senderId && gameData.save_wrestlers) {
+      const target = gameData.save_wrestlers.find(w => w.id === senderId);
+      if (target) {
+        const newMorale = Math.max(0, Math.min(100, (target.morale ?? 75) + moraleDelta));
+        const wrestlerRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, senderId);
+        await setDoc(wrestlerRef, { morale: newMorale }, { merge: true });
+        updatedWrestlers = gameData.save_wrestlers.map(w => w.id === senderId ? { ...w, morale: newMorale } : w);
+
+        if (moraleDelta !== 0) {
+          setInlineFeedback(`System: ${senderName} morale ${moraleDelta > 0 ? '+' : ''}${moraleDelta}`);
+        } else {
+          setInlineFeedback(`System: ${senderName} acknowledged your response.`);
+        }
+      } else {
+        setInlineFeedback(`System: ${senderName} acknowledged your response.`);
+      }
+    } else {
+      setInlineFeedback(`System: ${senderName} acknowledged your response.`);
+    }
+
+    setGameData(prevData => ({
+      ...prevData,
+      save_messages: [
+        ...(prevData.save_messages || []),
+        { id: bookerDocRef.id, ...bookerMessage },
+        { id: talentDocRef.id, ...talentReply }
+      ],
+      save_wrestlers: updatedWrestlers
+    }));
+
+    setReplyDraft('');
+    setIsReplyDirty(false);
+    setHoveredReplyText('');
+  };
+
+  const handleReplyHover = (text) => {
+    if (!text) return;
+    setHoveredReplyText(text);
+    if (!isReplyDirty) {
+      setReplyDraft(text);
+    }
+  };
+
+  const handleReplyHoverLeave = () => {
+    setHoveredReplyText('');
+    if (!isReplyDirty) {
+      setReplyDraft('');
+    }
+  };
+
+  const handleReplyDraftChange = (e) => {
+    setReplyDraft(e.target.value);
+    setIsReplyDirty(true);
+  };
+
+  // --- Render Functions ---
+
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1309,9 +1552,6 @@ function App() {
     </div>
   );
 
-  // =====================
-  // RENDER: MAIN MENU
-  // =====================
   const renderMainMenu = () => (
     <div className="max-w-4xl mx-auto p-4 md:p-8">
       <div className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1371,9 +1611,6 @@ function App() {
     </div>
   );
 
-  // =====================
-  // RENDER: DASHBOARD
-  // =====================
   const renderGameDashboard = () => {
     if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
 
@@ -1392,7 +1629,9 @@ function App() {
             <p className="text-indigo-300">{activeSave.saveName}</p>
           </div>
           <div className="text-center md:text-right mt-4 md:mt-0">
-            <h2 className="text-xl font-semibold">{activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h2>
+            <h2 className="text-xl font-semibold">
+              {activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </h2>
             <p className="text-gray-400">Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}</p>
           </div>
         </div>
@@ -1405,7 +1644,7 @@ function App() {
               {plannedShow ? (
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-bold text-yellow-300">IT'S SHOW DAY!</h4>
-                  <p className="text-lg mt-2">Time to book <strong>{plannedShow.eventName}</strong>!</p>
+                  <p className="text-lg mt-2">Time to book {plannedShow.eventName}!</p>
                   <p className="text-sm text-gray-400">(Tier: {plannedShow.eventTier})</p>
                   <button
                     onClick={() => handleStartBookingShow(plannedShow)}
@@ -1426,14 +1665,13 @@ function App() {
                   </button>
                 </div>
               )}
-
             </div>
           </div>
 
           <div className="md:col-span-1 space-y-4">
             <button
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
-              onClick={() => setShowMessagesModal(true)}
+              onClick={handleOpenMessagesModal}
             >
               <span className="flex items-center">
                 <MessageIcon />
@@ -1493,196 +1731,139 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: MESSAGES MODAL (with placeholder scrub)
-// =====================
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
 
-    const messages = gameData.save_messages || [];
-    const conversations = buildConversationsFromMessages(messages);
-
-    let activeConversation = conversations.find(c => c.conversationId === selectedConversationId);
-    if (!activeConversation && conversations.length > 0) {
-      activeConversation = conversations[0];
-    }
-
-    const activeMessages = activeConversation ? activeConversation.messages.slice().sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()) : [];
-
-    const lastIncomingWithReplies = activeMessages.slice().reverse().find(m => m.senderId !== 'booker' && Array.isArray(m.replyOptions) && m.replyOptions.length > 0);
-
-    const replyLabels = ["Yes", "No", "Maybe"];
-
-    const getReplyTextForIndex = (idx) => {
-      const aiOptions = lastIncomingWithReplies?.replyOptions || [];
-      const aiOptionRaw = aiOptions[idx];
-
-      const isPlaceholder = (str) => {
-        if (!str) return false;
-        const lower = str.trim().toLowerCase();
-        return lower === 'affirmative/agree' || lower === 'decline/pushback' || lower === 'condition/maybe';
-      };
-
-      if (aiOptionRaw && !isPlaceholder(aiOptionRaw)) {
-        return aiOptionRaw;
-      }
-
-      // fallback shoot-style replies
-      if (idx === 0) {
-        return `Yeah, we can look at moving you up — you've been delivering and I see it.`;
-      }
-      if (idx === 1) {
-        return `Not right now. We’ve got other pieces slotted ahead of you on the card.`;
-      }
-      return `Let’s see how the next couple of weeks go and if the momentum is there, we can revisit.`;
-    };
+    const threads = getConversationThreads();
+    const selectedThread = threads.find(t => t.senderId === selectedMessageSenderId);
+    const messagesForThread = selectedThread ? selectedThread.messages : [];
+    const activeMessageReplyOptions = activeMessageForReply?.replyOptions || [];
 
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => handleMarkMessagesRead()}
+        onClick={() => {
+          setShowMessagesModal(false);
+          handleMarkMessagesRead();
+        }}
       >
         <div
-          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col"
+          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] flex"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white flex items-center">
-              <MessageIcon />
-              Messages
-            </h2>
-            <button
-              onClick={() => handleMarkMessagesRead()}
-              className="text-gray-400 hover:text-white"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="flex flex-1 min-h-0">
-            <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
-              {conversations.length === 0 ? (
-                <p className="text-gray-500 p-4">No messages yet.</p>
-              ) : (
-                conversations.map(conv => {
-                  const latest = conv.messages[0];
-                  const isSelected = activeConversation && activeConversation.conversationId === conv.conversationId;
-                  const hasUnread = conv.messages.some(m => !m.isRead && m.senderId !== 'booker');
-                  return (
-                    <button
-                      key={conv.conversationId}
-                      onClick={() => {
-                        setSelectedConversationId(conv.conversationId);
-                        setReplyText("");
-                      }}
-                      className={`w-full text-left p-4 flex flex-col border-b border-gray-800 hover:bg-gray-800 transition-all ${isSelected ? 'bg-gray-800' : ''}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">{conv.name}</span>
-                        {hasUnread && (
-                          <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 px-2 flex items-center justify-center">
-                            New
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-400 mt-1">
-                        {latest?.timestamp?.toDate().toLocaleString()}
-                      </span>
-                      <p className="text-sm text-gray-300 truncate mt-1">
-                        {latest?.body}
-                      </p>
-                    </button>
-                  );
-                })
-              )}
+          {/* Left pane: threads */}
+          <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 className="text-xl font-bold text-white">Inbox</h2>
+              <button
+                onClick={() => {
+                  setShowMessagesModal(false);
+                  handleMarkMessagesRead();
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <CloseIcon />
+              </button>
             </div>
-
-            <div className="flex-1 flex flex-col">
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {activeConversation ? (
-                  activeMessages.map(msg => {
-                    const isBooker = msg.senderId === 'booker';
-                    return (
-                      <div key={msg.id} className={`flex ${isBooker ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[75%] rounded-lg px-3 py-2 ${isBooker ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-white'}`}>
-                          {!isBooker && (
-                            <p className="text-xs text-gray-200 mb-1 font-semibold">{msg.senderName}</p>
-                          )}
-                          <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
-                          <p className="text-[10px] text-gray-300 mt-1 text-right">
-                            {msg.timestamp?.toDate().toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-gray-500">Select a conversation.</p>
-                )}
-              </div>
-
-              {activeConversation && (
-                <div className="border-t border-gray-700 p-4 bg-gray-900">
-                  {lastIncomingWithReplies && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {replyLabels.map((label, idx) => (
-                        <button
-                          key={label}
-                          onMouseEnter={() => {
-                            const fullText = getReplyTextForIndex(idx);
-                            setReplyBackupText(replyText);
-                            setReplyText(fullText);
-                            setIsHoveringReply(true);
-                          }}
-                          onMouseLeave={() => {
-                            if (isHoveringReply) {
-                              setReplyText(replyBackupText);
-                              setIsHoveringReply(false);
-                            }
-                          }}
-                          onClick={() => {
-                            const fullText = getReplyTextForIndex(idx);
-                            setReplyText(fullText);
-                            setIsHoveringReply(false);
-                          }}
-                          className="px-3 py-1 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600"
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <textarea
-                      value={replyText}
-                      onChange={(e) => {
-                        setReplyText(e.target.value);
-                        if (isHoveringReply) setIsHoveringReply(false);
-                      }}
-                      placeholder="Type your reply to this employee..."
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"
-                    />
-                    <button
-                      onClick={() => handleSendBookerReply(activeConversation, replyText)}
-                      className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 h-fit"
-                    >
-                      Send
-                    </button>
+            <div>
+              {threads.length === 0 && (
+                <p className="text-gray-400 p-4 text-sm">Your inbox is empty.</p>
+              )}
+              {threads.map(thread => (
+                <button
+                  key={thread.senderId}
+                  onClick={() => handleSelectThread(thread.senderId)}
+                  className={`w-full flex flex-col items-start px-4 py-3 text-left hover:bg-gray-800 transition-all ${thread.senderId === selectedMessageSenderId ? 'bg-gray-800' : ''}`}
+                >
+                  <div className="flex items-center w-full justify-between">
+                    <span className="text-white font-semibold">{thread.senderName}</span>
+                    <span className="text-xs text-gray-400">{formatGameTimestamp(thread.lastMessage.timestamp)}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Hover to preview AI text; click to lock it in. Placeholders from the AI are auto-replaced with real shoot-style text.</p>
+                  <p className="text-xs text-gray-400 truncate w-full">{thread.lastMessage.body}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Right pane: chat */}
+          <div className="w-2/3 flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <div>
+                <h3 className="text-lg font-bold text-white">{selectedThread ? selectedThread.senderName : 'Select a conversation'}</h3>
+                <p className="text-xs text-gray-400">All messages are shoot / backstage messages.</p>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messagesForThread.length === 0 ? (
+                <p className="text-gray-400 text-sm">No messages in this conversation yet.</p>
+              ) : (
+                messagesForThread.map(msg => (
+                  <div key={msg.id} className={`flex ${msg.isFromBooker ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[75%] rounded-lg px-4 py-2 ${msg.isFromBooker ? 'bg-indigo-600 text-white' : msg.isFollowUp ? 'bg-gray-700 text-gray-100' : 'bg-gray-800 text-white'}`}>
+                      <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
+                      <p className="text-[0.6rem] text-gray-300 mt-1 text-right">{formatGameTimestamp(msg.timestamp)}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              {inlineFeedback && (
+                <div className="flex justify-center">
+                  <div className="bg-yellow-900 text-yellow-100 text-xs px-3 py-1 rounded-full">
+                    {inlineFeedback}
+                  </div>
                 </div>
               )}
             </div>
+            {/* Reply area */}
+            {selectedThread && (
+              <div className="p-4 border-t border-gray-700 bg-gray-900">
+                <div className="flex space-x-2 mb-3">
+                  <button
+                    onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[0] || '')}
+                    onMouseLeave={handleReplyHoverLeave}
+                    className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[1] || '')}
+                    onMouseLeave={handleReplyHoverLeave}
+                    className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
+                  >
+                    No
+                  </button>
+                  <button
+                    onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[2] || '')}
+                    onMouseLeave={handleReplyHoverLeave}
+                    className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
+                  >
+                    Maybe
+                  </button>
+                </div>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={replyDraft}
+                    onChange={handleReplyDraftChange}
+                    placeholder="Type a response to this talent..."
+                    className="flex-grow bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={handleSendReply}
+                    disabled={!replyDraft.trim()}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 disabled:bg-gray-600"
+                  >
+                    Send
+                  </button>
+                </div>
+                <p className="text-[0.65rem] text-gray-500 mt-2">Hover a button to prefill. Move away to clear (unless you start typing).</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   };
 
-  // =====================
-  // RENDER: ASSISTANT MODAL
-  // =====================
   const renderAssistantModal = () => {
     if (!showAssistantModal) return null;
 
@@ -1754,9 +1935,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: BOOKING SCREEN
-  // =====================
   const renderBookingScreen = () => {
     if (!currentShow) return null;
 
@@ -1821,9 +1999,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: ROSTER SCREEN
-  // =====================
   const renderRosterScreen = () => {
     const wrestlers = gameData.save_wrestlers || [];
 
@@ -1890,20 +2065,14 @@ function App() {
 
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => {
-                    setViewingWrestler(wrestler);
-                    setGameState('CAREER_HISTORY_SCREEN');
-                  }}
+                  onClick={() => handleViewCareerHistory(wrestler)}
                   className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
                 >
                   <HistoryIcon />
                   History
                 </button>
                 <button
-                  onClick={() => {
-                    setViewingWrestler(wrestler);
-                    setGameState('RELATIONSHIPS_SCREEN');
-                  }}
+                  onClick={() => handleViewRelationships(wrestler)}
                   className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
                 >
                   <RelationshipsIcon />
@@ -1917,9 +2086,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: SHOW RESULTS
-  // =====================
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -1967,9 +2133,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: STORYLINE SCREEN
-  // =====================
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
 
@@ -1982,12 +2145,7 @@ function App() {
           </h1>
           <div className="flex space-x-2">
             <button
-              onClick={() => {
-                setStorylineFormData({ name: '', participants: [] });
-                setStorylineParticipantSearch("");
-                setStorylineParticipantResults([]);
-                setShowStorylineModal(true);
-              }}
+              onClick={() => handleOpenCreateStorylineModal()}
               className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
             >
               <PlusIcon />
@@ -2026,9 +2184,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: CAREER HISTORY
-  // =====================
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
 
@@ -2062,49 +2217,51 @@ function App() {
         </div>
 
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-              <div className="shadow overflow-hidden border-b border-gray-700">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-700">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Event Type
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Notes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {events.length === 0 ? (
+          <div className="flex flex-col">
+            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div className="shadow overflow-hidden border-b border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
                       <tr>
-                        <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
-                          No career events found for this wrestler.
-                        </td>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Event Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
                       </tr>
-                    ) : (
-                      events.map(event => (
-                        <tr key={event.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                            {event.date.toDate().toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span className={`font-semibold ${getEventColor(event.eventType)}`}>
-                              {event.eventType}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                            {event.notes}
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {events.length === 0 ? (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
+                            No career events found for this wrestler.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        events.map(event => (
+                          <tr key={event.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                              {event.date.toDate().toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`font-semibold ${getEventColor(event.eventType)}`}>
+                                {event.eventType}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                              {event.notes}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -2113,9 +2270,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: RELATIONSHIPS
-  // =====================
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
 
@@ -2153,55 +2307,57 @@ function App() {
         </div>
 
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-              <div className="shadow overflow-hidden border-b border-gray-700">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-700">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Person
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Notes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {relationships.length === 0 ? (
+          <div className="flex flex-col">
+            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div className="shadow overflow-hidden border-b border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
                       <tr>
-                        <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
-                          No relationships found for this wrestler.
-                        </td>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Person
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
                       </tr>
-                    ) : (
-                      relationships.map(rel => (
-                        <tr key={rel.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
-                            {getOtherPersonName(rel)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {rel.relationshipType}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span className={`font-semibold ${getStatusColor(rel.status)}`}>
-                              {rel.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                            {rel.notes}
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {relationships.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                            No relationships found for this wrestler.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        relationships.map(rel => (
+                          <tr key={rel.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                              {getOtherPersonName(rel)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {rel.relationshipType}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`font-semibold ${getStatusColor(rel.status)}`}>
+                                {rel.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                              {rel.notes}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -2210,9 +2366,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: SEGMENT MODAL
-  // =====================
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
 
@@ -2243,11 +2396,7 @@ function App() {
               <select
                 name="type"
                 value={segmentFormData.type}
-                onChange={(e) => setSegmentFormData(prev => ({
-                  ...prev,
-                  type: e.target.value,
-                  winnerId: e.target.value === 'Angle' ? null : prev.winnerId
-                }))}
+                onChange={handleSegmentTypeChange}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="Match">Match</option>
@@ -2260,7 +2409,7 @@ function App() {
               <select
                 name="storylineId"
                 value={segmentFormData.storylineId || ""}
-                onChange={(e) => setSegmentFormData(prev => ({ ...prev, storylineId: e.target.value || null }))}
+                onChange={handleStorylineSelect}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">-- None --</option>
@@ -2279,11 +2428,7 @@ function App() {
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
                     {p.name}
                     <button
-                      onClick={() => setSegmentFormData(prev => ({
-                        ...prev,
-                        participants: prev.participants.filter(pp => pp.id !== p.id),
-                        winnerId: prev.winnerId === p.id ? null : prev.winnerId
-                      }))}
+                      onClick={() => handleRemoveParticipant(p.id)}
                       className="ml-2 text-indigo-100 hover:text-white"
                     >
                       <XCircleIcon />
@@ -2302,18 +2447,7 @@ function App() {
                 <input
                   type="text"
                   value={participantSearch}
-                  onChange={(e) => {
-                    const q = e.target.value;
-                    setParticipantSearch(q);
-                    if (q.length < 1) {
-                      setParticipantResults([]);
-                      return;
-                    }
-                    const results = gameData.save_wrestlers
-                      .filter(w => w.name.toLowerCase().includes(q.toLowerCase()))
-                      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
-                    setParticipantResults(results.slice(0, 5));
-                  }}
+                  onChange={(e) => handleParticipantSearch(e.target.value)}
                   placeholder="Search roster..."
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
@@ -2323,14 +2457,7 @@ function App() {
                   {participantResults.map(w => (
                     <button
                       key={w.id}
-                      onClick={() => {
-                        setSegmentFormData(prev => ({
-                          ...prev,
-                          participants: [...prev.participants, { id: w.id, name: w.name }]
-                        }));
-                        setParticipantSearch("");
-                        setParticipantResults([]);
-                      }}
+                      onClick={() => handleAddParticipant(w)}
                       className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
                     >
                       {w.name}
@@ -2348,7 +2475,7 @@ function App() {
                 <select
                   name="winnerId"
                   value={segmentFormData.winnerId || ""}
-                  onChange={(e) => setSegmentFormData(prev => ({ ...prev, winnerId: e.target.value || null }))}
+                  onChange={handleWinnerSelect}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={segmentFormData.participants.length === 0}
                 >
@@ -2380,9 +2507,6 @@ function App() {
     );
   };
 
-  // =====================
-  // RENDER: CREATE STORYLINE MODAL
-  // =====================
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
 
@@ -2427,10 +2551,7 @@ function App() {
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
                     {p.name}
                     <button
-                      onClick={() => setStorylineFormData(prev => ({
-                        ...prev,
-                        participants: prev.participants.filter(pp => pp.id !== p.id)
-                      }))}
+                      onClick={() => handleRemoveStorylineParticipant(p.id)}
                       className="ml-2 text-indigo-100 hover:text-white"
                     >
                       <XCircleIcon />
@@ -2449,18 +2570,7 @@ function App() {
                 <input
                   type="text"
                   value={storylineParticipantSearch}
-                  onChange={(e) => {
-                    const q = e.target.value;
-                    setStorylineParticipantSearch(q);
-                    if (q.length < 1) {
-                      setStorylineParticipantResults([]);
-                      return;
-                    }
-                    const results = gameData.save_wrestlers
-                      .filter(w => w.name.toLowerCase().includes(q.toLowerCase()))
-                      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
-                    setStorylineParticipantResults(results.slice(0, 5));
-                  }}
+                  onChange={(e) => handleStorylineParticipantSearch(e.target.value)}
                   placeholder="Search roster..."
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
@@ -2470,14 +2580,7 @@ function App() {
                   {storylineParticipantResults.map(w => (
                     <button
                       key={w.id}
-                      onClick={() => {
-                        setStorylineFormData(prev => ({
-                          ...prev,
-                          participants: [...prev.participants, { id: w.id, name: w.name }]
-                        }));
-                        setStorylineParticipantSearch("");
-                        setStorylineParticipantResults([]);
-                      }}
+                      onClick={() => handleAddStorylineParticipant(w)}
                       className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
                     >
                       {w.name}
@@ -2496,42 +2599,7 @@ function App() {
               Cancel
             </button>
             <button
-              onClick={async () => {
-                if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-                  console.error("Storyline must have a name and at least 2 participants.");
-                  return;
-                }
-
-                setLoadingMessage('Creating storyline...');
-                setGameState('BUSY');
-
-                try {
-                  const newStorylineData = {
-                    ...storylineFormData,
-                    companyId: activeSave.playerCompanyId,
-                    heat: 10,
-                    status: "Active",
-                    beats: []
-                  };
-
-                  const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
-
-                  const newStoryline = { id: docRef.id, ...newStorylineData };
-
-                  setGameData(prevData => ({
-                    ...prevData,
-                    save_storylines: [...(prevData.save_storylines || []), newStoryline]
-                  }));
-
-                  setShowStorylineModal(false);
-                  setGameState('STORYLINE_SCREEN');
-
-                } catch (error) {
-                  console.error("Error creating storyline:", error);
-                  setLoadingMessage("Failed to create storyline. Please try again.");
-                  setGameState('STORYLINE_SCREEN');
-                }
-              }}
+              onClick={handleCreateStoryline}
               className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
             >
               Create Storyline
@@ -2542,9 +2610,7 @@ function App() {
     );
   };
 
-  // =====================
-  // MAIN RENDER SWITCH
-  // =====================
+  // --- Main Render ---
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
@@ -2569,7 +2635,7 @@ function App() {
           case 'RELATIONSHIPS_SCREEN':
             return renderRelationshipsScreen();
           default:
-            return <p className="text-white p-8">An unexpected error occurred. Please refresh.</p>;
+            return <p className="text-white p-4">An unexpected error occurred. Please refresh.</p>;
         }
       })()}
       {renderMessagesModal()}
