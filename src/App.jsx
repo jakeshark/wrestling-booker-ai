@@ -20,9 +20,7 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 
-// ---------------------------------------------------
-// ICONS
-// ---------------------------------------------------
+// --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -62,7 +60,7 @@ const PlusIcon = () => (
 
 const RosterIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
-    <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM21 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM9.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM7.06 12.236a.75.75 0 0 0-1.06 0l-.03.03a.75.75 0 0 0 1.06 1.06l.03-.03a.75.75 0 0 0 0-1.06Zm10.97 0a.75.75 0 0 0 0 1.06l.03.03a.75.75 0 0 0 1.06-1.06l-.03-.03a.75.75 0 0 0-1.06 0ZM7.5 15a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Zm3.375-1.5a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.75 0a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.375 1.5a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM21 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM9.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM7.06 12.236a.75.75 0 0 0-1.06 0l-.03.03a.75.75 0 0 0 1.06 1.06l.03-.03a.75.75 0 0 0 0-1.06Zm10.97 0a.75.75 0 0 0 0 1.06l.03.03a.75.75 0 0 0 1.06-1.06l-.03-.03a.75.75 0 0 0-1.06 0ZM7.5 15a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Zm3.375-1.5a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.75 0a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.375 1.5a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Z" />
     <path d="M4.5 19.5a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-5.63l-3.03-3.03a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 0-1.06 0L4.5 13.87V19.5Z" />
   </svg>
 );
@@ -73,8 +71,8 @@ const XCircleIcon = () => (
   </svg>
 );
 
-const StarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400">
+const StarIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={props.className || "w-5 h-5 text-yellow-400"}>
     <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
   </svg>
 );
@@ -103,9 +101,7 @@ const RelationshipsIcon = () => (
   </svg>
 );
 
-// ---------------------------------------------------
-// FIREBASE CONFIG
-// ---------------------------------------------------
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
   authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -115,39 +111,29 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
-// ---------------------------------------------------
-// MAIN APP
-// ---------------------------------------------------
 function App() {
+  // --- Firebase & Auth State ---
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [appId, setAppId] = useState(null);
 
-  const [gameState, setGameState] = useState('LOADING');
+  // --- Game State ---
+  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, RELATIONSHIPS_SCREEN, BUSY
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
   const [activeSave, setActiveSave] = useState(null);
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
-
-  // Messaging UI state
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const [replyDraft, setReplyDraft] = useState('');
-  const [hoveredReply, setHoveredReply] = useState(null);
-  const [lockedReply, setLockedReply] = useState(null);
-  const [currentReplyOptions, setCurrentReplyOptions] = useState([]);
-
-  // AI Assistant
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // Booking state
+  // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
@@ -156,18 +142,24 @@ function App() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [participantResults, setParticipantResults] = useState([]);
 
-  // Show results
+  // --- Show Results State ---
   const [showRecap, setShowRecap] = useState("");
   const [showRating, setShowRating] = useState(0);
 
-  // Storylines
+  // --- Storyline State ---
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
-  // Constants
+  // --- Messages (iPhone-style) State ---
+  const [selectedContactId, setSelectedContactId] = useState(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [hoverReply, setHoverReply] = useState(null);
+  const [lockedReply, setLockedReply] = useState(null);
+
+  // --- Constants from original design ---
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -210,20 +202,21 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
-  // ---------------------------------------------------
-  // INITIALIZE FIREBASE
-  // ---------------------------------------------------
+  // --- Firebase Init ---
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
         setLoadingMessage("Firebase config is missing. Please add it to your Vercel Environment Variables.");
+        console.error("Firebase config is missing.");
         return;
       }
 
       setAppId(firebaseConfig.appId);
+
       const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
       const dbInstance = getFirestore(app);
+
       setLogLevel('debug');
       setDb(dbInstance);
       setAuth(authInstance);
@@ -237,7 +230,11 @@ function App() {
             await signInAnonymously(authInstance);
           } catch (error) {
             console.error("Error signing in anonymously:", error);
-            setLoadingMessage("Authentication failed. Please refresh.");
+            if (error.code === 'auth/internal-error' || error.code === 'auth/operation-not-allowed') {
+              setLoadingMessage("Authentication Error: Anonymous Sign-In is disabled in your Firebase project. Please enable it in the Firebase Console.");
+            } else {
+              setLoadingMessage("Authentication failed. Please refresh.");
+            }
           }
         }
       });
@@ -247,13 +244,11 @@ function App() {
     }
   }, []);
 
-  // ---------------------------------------------------
-  // SEED + FETCH
-  // ---------------------------------------------------
+  // --- Seed & Fetch once auth is ready ---
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
-    const run = async () => {
+    const seedAndFetch = async () => {
       setLoadingMessage('Checking for game data...');
       await seedDefaultDataset(db, userId, appId);
 
@@ -265,12 +260,11 @@ function App() {
 
       setGameState('MAIN_MENU');
     };
-    run();
+
+    seedAndFetch();
   }, [isAuthReady, db, userId, appId]);
 
-  // ---------------------------------------------------
-  // SEED DEFAULT DATASET
-  // ---------------------------------------------------
+  // --- Dataset Seeder ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
@@ -278,6 +272,7 @@ function App() {
     try {
       const docSnap = await getDoc(datasetRef);
       if (docSnap.exists()) {
+        console.log("Default dataset already exists.");
         return;
       }
 
@@ -309,7 +304,7 @@ function App() {
         { name: "Mia 'Showtime' Evans", stats: { brawling: 65, speed: 85, technical: 80, charisma: 90 }, disposition: 'Face', gimmick: 'Teen Idol', morale: 75 },
         { name: "Victoria 'The Queen' Black", stats: { brawling: 75, speed: 70, technical: 85, charisma: 95 }, disposition: 'Heel', gimmick: 'Rich Snob', alternateNames: ['Vicky Black'], morale: 75 },
         { name: "Leo 'Lionheart' Cruz", stats: { brawling: 85, speed: 80, technical: 75, charisma: 85 }, disposition: 'Face', gimmick: 'Hero', morale: 75 },
-        { name: "Silas 'The Serpent' Retch", stats: { brawling: 80, speed: 70, technical: 80 }, disposition: 'Heel', gimmick: 'Evil', morale: 75 },
+        { name: "Silas 'The Serpent' Retch", stats: { brawling: 80, speed: 70, technical: 80, charisma: 85 }, disposition: 'Heel', gimmick: 'Evil', morale: 75 },
         { name: "Eliza 'High-Flyer' Hayes", stats: { brawling: 50, speed: 95, technical: 80, charisma: 75 }, disposition: 'Face', gimmick: 'Daredevil', morale: 75 },
         { name: "Goliath", stats: { brawling: 90, speed: 50, technical: 50, charisma: 60 }, disposition: 'Heel', gimmick: 'Monster', morale: 75 },
         { name: "Johnny Spade", stats: { brawling: 70, speed: 70, technical: 70, charisma: 70 }, disposition: 'Tweener', gimmick: 'No Gimmick Needed', morale: 75 }
@@ -333,7 +328,7 @@ function App() {
         datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
       });
 
-      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       for (let i = 0; i < months.length; i++) {
         let tier = "Monthly_Event";
         let name = `${months[i]} Mayhem`;
@@ -368,15 +363,13 @@ function App() {
       });
 
       await batch.commit();
+      console.log("Default dataset created successfully.");
     } catch (error) {
       console.error("Error seeding dataset: ", error);
       setLoadingMessage("Error creating default data. Please refresh.");
     }
   };
 
-  // ---------------------------------------------------
-  // FETCH HELPERS
-  // ---------------------------------------------------
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
@@ -400,9 +393,7 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // NEW GAME
-  // ---------------------------------------------------
+  // --- New Game ---
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
 
@@ -418,6 +409,7 @@ function App() {
         currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')),
         playerCompanyId: null
       };
+
       const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
       const newSaveId = newSaveRef.id;
 
@@ -425,6 +417,7 @@ function App() {
       const idMap = new Map();
       let playerCompanyId = null;
 
+      setLoadingMessage('Copying core data...');
       for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
@@ -448,8 +441,8 @@ function App() {
         }
       }
 
+      setLoadingMessage('Linking relationships and shows...');
       const remainingCollections = DATASET_COLLECTIONS.filter(col => !ID_MAPPED_COLLECTIONS.includes(col));
-
       for (const datasetCollectionName of remainingCollections) {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
@@ -490,6 +483,7 @@ function App() {
       }
 
       await batch.commit();
+
       await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
 
       await handleLoadGame(newSaveId);
@@ -501,9 +495,7 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // LOAD GAME
-  // ---------------------------------------------------
+  // --- Load Game ---
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
 
@@ -527,16 +519,26 @@ function App() {
       for (const collectionName of SAVE_COLLECTION_NAMES) {
         const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
         const querySnapshot = await getDocs(q);
+
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         loadedGameData[collectionName] = collectionData;
 
         if (collectionName === 'save_messages') {
-          unreadCount = collectionData.filter(msg => !msg.isRead && msg.senderRole !== 'Booker').length;
+          unreadCount = collectionData.filter(msg => !msg.isRead).length;
         }
       }
 
       setGameData(loadedGameData);
       setUnreadMessages(unreadCount);
+
+      // pick first contact if any
+      const contacts = buildMessageContacts(loadedGameData.save_messages || [], loadedGameData.save_wrestlers || []);
+      if (contacts.length > 0) {
+        setSelectedContactId(contacts[0].id);
+      } else {
+        setSelectedContactId(null);
+      }
+
       setGameState('IN_GAME');
 
     } catch (error) {
@@ -546,9 +548,14 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // NEXT DAY
-  // ---------------------------------------------------
+  const handleExitGame = () => {
+    setActiveSave(null);
+    setGameData({});
+    setGameState('MAIN_MENU');
+    fetchPlayerSaves(db, userId, appId);
+  };
+
+  // --- Next Day / Sim ---
   const handleNextDay = async () => {
     if (!activeSave) return;
 
@@ -568,89 +575,87 @@ function App() {
         lastPlayed: Timestamp.now()
       }, { merge: true });
 
-      setActiveSave(prev => ({ ...prev, currentDate: newTimestamp }));
+      setActiveSave(prevSave => ({ ...prevSave, currentDate: newTimestamp }));
+
       setGameState('IN_GAME');
+
     } catch (error) {
       console.error("Error advancing day: ", error);
       setLoadingMessage("Error saving progress. Please refresh.");
     }
   };
 
-  const handleExitGame = () => {
-    setActiveSave(null);
-    setGameData({});
-    setGameState('MAIN_MENU');
-    fetchPlayerSaves(db, userId, appId);
-  };
-
-  // ---------------------------------------------------
-  // SIM ENGINE (DAILY)
-  // ---------------------------------------------------
+  // --- AI: daily simulation -> messages ---
   const runSimulationAndEvents = async (saveId) => {
+    console.log("Sim Engine: Running daily simulation...");
+
     const wrestlers = gameData.save_wrestlers;
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
+      console.log("Sim Engine: Event triggered!");
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
-      const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_renewal'];
+      const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_renewal', 'creative_pitch'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
       await generateAndSaveMessage(saveId, randomWrestler, randomTopic);
     }
   };
 
-  // ---------------------------------------------------
-  // AI MESSAGE GENERATION (WRESTLER → BOOKER)
-  // ---------------------------------------------------
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
+    console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
     try {
-      const resp = await fetch('/api/ai', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'wrestler-message',
-          wrestler,
+          wrestler: {
+            id: wrestler.id,
+            name: wrestler.name,
+            disposition: wrestler.disposition,
+            gimmick: wrestler.gimmick,
+            morale: wrestler.morale
+          },
           topic
         })
       });
 
-      if (!resp.ok) throw new Error('AI route failed');
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status}`);
+      }
 
-      const data = await resp.json();
-      const messageText = data.message || "Hey, wanted to talk about my spot.";
-      const replyOptions = Array.isArray(data.replyOptions) ? data.replyOptions.slice(0, 3) : [];
+      const result = await response.json();
+      const messageText = result.message;
+      const replyOptions = result.replyOptions || [];
 
       const messageData = {
         senderId: wrestler.id,
         senderName: wrestler.name,
-        senderRole: 'Wrestler',
+        recipientId: 'booker', // so we can isolate convo
         body: messageText,
-        timestamp: activeSave?.currentDate || Timestamp.now(),
+        timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
         type: 'Text',
         isRead: false,
-        topic: topic || 'general',
         replyOptions: replyOptions
       };
 
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
       const newDocRef = await addDoc(messagesRef, messageData);
 
-      const newMsg = { id: newDocRef.id, ...messageData };
-      setGameData(prev => ({
-        ...prev,
-        save_messages: [...(prev.save_messages || []), newMsg]
+      const newMessage = { id: newDocRef.id, ...messageData };
+      setGameData(prevData => ({
+        ...prevData,
+        save_messages: [...(prevData.save_messages || []), newMessage]
       }));
       setUnreadMessages(prev => prev + 1);
-
     } catch (error) {
       console.error("Error generating AI message: ", error);
     }
   };
 
-  // ---------------------------------------------------
-  // AI ASSISTANT
-  // ---------------------------------------------------
+  // --- AI Assistant ---
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
@@ -662,7 +667,7 @@ function App() {
     )).join('\n');
 
     try {
-      const resp = await fetch('/api/ai', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -672,10 +677,12 @@ function App() {
         })
       });
 
-      if (!resp.ok) throw new Error('AI assistant call failed');
+      if (!response.ok) {
+        throw new Error("AI assistant request failed.");
+      }
 
-      const data = await resp.json();
-      setAssistantResponse(data.text || "The assistant couldn't come up with a response.");
+      const data = await response.json();
+      setAssistantResponse(data.text || "The AI assistant couldn't come up with a response. Try rephrasing your question.");
     } catch (error) {
       console.error("Error getting AI advice: ", error);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
@@ -684,168 +691,7 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // MESSAGE HELPERS (THREADS)
-  // ---------------------------------------------------
-  const getConversationThreads = () => {
-    const allMessages = gameData.save_messages || [];
-    const bySender = new Map();
-
-    for (const msg of allMessages) {
-      // don't show the player as a contact
-      if (msg.senderRole === 'Booker') continue;
-
-      const key = msg.senderId || msg.senderName || 'unknown';
-      if (!bySender.has(key)) {
-        bySender.set(key, {
-          contactId: key,
-          contactName: msg.senderName || 'Unknown',
-          messages: []
-        });
-      }
-      bySender.get(key).messages.push(msg);
-    }
-
-    const threads = Array.from(bySender.values()).map(thread => {
-      thread.messages.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
-      thread.lastTimestamp = thread.messages[thread.messages.length - 1]?.timestamp || null;
-      return thread;
-    });
-
-    threads.sort((a, b) => {
-      if (!a.lastTimestamp) return 1;
-      if (!b.lastTimestamp) return -1;
-      return b.lastTimestamp.toMillis() - a.lastTimestamp.toMillis();
-    });
-
-    return threads;
-  };
-
-  const getMessagesForConversation = (conversationId) => {
-    const allMessages = gameData.save_messages || [];
-    return allMessages
-      .filter(msg => {
-        const key = msg.senderId || msg.senderName || 'unknown';
-        return key === conversationId || msg.senderRole === 'Booker';
-      })
-      .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
-  };
-
-  // ---------------------------------------------------
-  // SEND REPLY (PLAYER → WRESTLER)
-  // ---------------------------------------------------
-  const handleSendReply = async () => {
-    if (!replyDraft.trim() || !activeSave || !selectedConversationId) return;
-
-    // find the wrestler name from the thread
-    const threads = getConversationThreads();
-    const thisThread = threads.find(t => t.contactId === selectedConversationId);
-    const wrestlerName = thisThread ? thisThread.contactName : 'Unknown Talent';
-
-    // create player message
-    const playerMessage = {
-      senderId: 'booker',
-      senderName: 'Booker',
-      senderRole: 'Booker',
-      body: replyDraft.trim(),
-      timestamp: activeSave.currentDate || Timestamp.now(),
-      type: 'Text',
-      isRead: true,
-      topic: null
-    };
-
-    // add to local state immediately so it shows in the thread
-    setGameData(prev => ({
-      ...prev,
-      save_messages: [...(prev.save_messages || []), playerMessage]
-    }));
-
-    setReplyDraft('');
-    setLockedReply(null);
-    setHoveredReply(null);
-
-    // save it to Firestore
-    try {
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      await addDoc(messagesRef, playerMessage);
-    } catch (err) {
-      console.error("Error saving player reply:", err);
-    }
-
-    // now trigger wrestler follow-up based on tone
-    let tone = 'neutral';
-    if (lockedReply && lockedReply.__tone) {
-      tone = lockedReply.__tone;
-    }
-
-    // get context from last wrestler message in this thread
-    const convMessages = getMessagesForConversation(selectedConversationId);
-    const lastWrestlerMessage = [...convMessages].reverse().find(m => m.senderRole === 'Wrestler');
-
-    await generateWrestlerFollowupAfterReply(selectedConversationId, wrestlerName, lastWrestlerMessage, tone);
-  };
-
-  // ---------------------------------------------------
-  // WRESTLER FOLLOW-UP (LOCAL FALLBACK)
-  // ---------------------------------------------------
-  const generateWrestlerFollowupAfterReply = async (conversationId, wrestlerName, originalMsg, tone) => {
-    // if we want to do it via API later, we can branch here
-    // for now we'll do it locally but make it tone-aware
-    let followupText = "";
-
-    const baseFrustrated = [
-      "Alright, I hear you. Still stings a bit, but I get it.",
-      "Okay… not what I was hoping for, but I'll keep doing my part.",
-      "That's disappointing, but I'll stay professional about it."
-    ];
-    const baseHappy = [
-      "Perfect — appreciate you making that happen.",
-      "That's what I was hoping to hear. I won't let you down.",
-      "Awesome. I'll be ready when you pull the trigger."
-    ];
-    const baseMaybe = [
-      "Got it. I’ll push hard these next few weeks.",
-      "Fair enough. I’ll give you something you can’t say no to.",
-      "Okay, I can work with that timeline."
-    ];
-
-    if (tone === 'positive') {
-      followupText = baseHappy[Math.floor(Math.random() * baseHappy.length)];
-    } else if (tone === 'negative') {
-      followupText = baseFrustrated[Math.floor(Math.random() * baseFrustrated.length)];
-    } else {
-      followupText = baseMaybe[Math.floor(Math.random() * baseMaybe.length)];
-    }
-
-    const followupMsg = {
-      senderId: conversationId,
-      senderName: wrestlerName,
-      senderRole: 'Wrestler',
-      body: followupText,
-      timestamp: activeSave?.currentDate || Timestamp.now(),
-      type: 'Text',
-      isRead: false
-    };
-
-    // save locally
-    setGameData(prev => ({
-      ...prev,
-      save_messages: [...(prev.save_messages || []), followupMsg]
-    }));
-    setUnreadMessages(prev => prev + 1);
-
-    // write to firestore
-    try {
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      await addDoc(messagesRef, followupMsg);
-    } catch (err) {
-      console.error("Error saving follow-up message:", err);
-    }
-  };
-
-  // ---------------------------------------------------
-  // BOOKING SCREEN LOGIC (same as before)
-  // ---------------------------------------------------
+  // --- Booking helpers ---
   const handleStartBookingShow = (show) => {
     setCurrentShow(show);
     setCurrentSegments(Array(10).fill(null));
@@ -873,6 +719,7 @@ function App() {
 
   const calculateSegmentRating = (segment, allWrestlers) => {
     if (!segment || segment.participants.length === 0) return 0;
+
     let totalCharisma = 0;
     let totalWorkrate = 0;
     const participants = [];
@@ -887,6 +734,7 @@ function App() {
 
     const numParticipants = participants.length;
     if (numParticipants === 0) return 0;
+
     const avgCharisma = totalCharisma / numParticipants;
 
     if (segment.type === 'Angle') {
@@ -898,6 +746,7 @@ function App() {
         totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
       }
       const avgWorkrate = totalWorkrate / numParticipants;
+
       const rating = (avgCharisma * 0.6) + (avgWorkrate * 0.4);
       return Math.min(100, Math.floor(rating));
     }
@@ -954,13 +803,16 @@ function App() {
       const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
       setShowRecap(recapText);
 
+      setLoadingMessage('Saving show results...');
       const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
+
       const showUpdateData = {
         status: "Complete",
         segments: ratedSegments,
         rating: finalShowRating,
         recap: recapText
       };
+
       await setDoc(showRef, showUpdateData, { merge: true });
 
       setGameData(prevData => ({
@@ -981,36 +833,60 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // AI SHOW RECAP
-  // ---------------------------------------------------
   const generateShowRecap = async (show, ratedSegments, rating) => {
+    console.log(`AI Engine: Generating recap for ${show.eventName}`);
+    setLoadingMessage(`Generating show recap for ${show.eventName}...`);
+
+    const cardForAI = ratedSegments
+      .filter(s => s)
+      .map((s, index) => {
+        const participants = s.participants.map(p => p.name).join(' vs. ');
+        const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
+        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
+        const ratingContext = `(Rating: ${s.rating}/100)`;
+
+        if (s.type === 'Match') {
+          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
+          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
+          return `${index + 1}. Match${storylineContext}: ${participants}${result} ${ratingContext}`;
+        } else {
+          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
+        }
+      }).join('\n');
+
+    const payload = {
+      type: 'show-recap',
+      showName: show.eventName,
+      overallRating: rating,
+      segments: ratedSegments.map(s => s ? {
+        ...s,
+        participants: s.participants.map(p => ({ id: p.id, name: p.name }))
+      } : null)
+    };
+
     try {
-      const resp = await fetch('/api/ai', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'show-recap',
-          showName: show.eventName,
-          overallRating: rating,
-          segments: ratedSegments
-        })
+        body: JSON.stringify(payload)
       });
 
-      if (!resp.ok) throw new Error("recap failed");
-      const data = await resp.json();
-      return data.text || "Recap unavailable.";
-    } catch (err) {
-      console.error("Error generating AI recap:", err);
+      if (!response.ok) {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.text || "An error occurred while generating the show recap. The show is still saved.";
+    } catch (error) {
+      console.error("Error generating AI recap: ", error);
       return "An error occurred while generating the show recap. The show is still saved.";
     }
   };
 
-  // ---------------------------------------------------
-  // POST-SHOW SIM + CAREER EVENTS (unchanged)
-  // ---------------------------------------------------
   const runShowSimulation = async (ratedSegments, show) => {
+    console.log("Sim Engine v2: Running post-show simulation...");
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
+      console.warn("Sim Engine v2: Missing required data, skipping simulation.");
       return;
     }
 
@@ -1023,7 +899,9 @@ function App() {
     const allStorylines = gameData.save_storylines;
 
     const getWrestler = (id) => {
-      if (wrestlerUpdates.has(id)) return wrestlerUpdates.get(id);
+      if (wrestlerUpdates.has(id)) {
+        return wrestlerUpdates.get(id);
+      }
       return allWrestlers.find(w => w.id === id);
     };
 
@@ -1035,15 +913,21 @@ function App() {
     };
 
     const getStoryline = (id) => {
-      if (storylineUpdates.has(id)) return storylineUpdates.get(id);
+      if (storylineUpdates.has(id)) {
+        return storylineUpdates.get(id);
+      }
       return allStorylines.find(s => s.id === id);
     };
 
     const getMoraleMultiplier = (tier) => {
       switch (tier) {
-        case 'Flagship_Event': return 2.0;
-        case 'Major_Event': return 1.5;
-        default: return 1.0;
+        case 'Flagship_Event':
+          return 2.0;
+        case 'Major_Event':
+          return 1.5;
+        case 'Monthly_Event':
+        default:
+          return 1.0;
       }
     };
 
@@ -1067,9 +951,12 @@ function App() {
             const baseHeat = storylineUpdates.has(storyline.id)
               ? storylineUpdates.get(storyline.id).heat
               : storyline.heat;
+
             const heatChange = getHeatChange(segmentRating);
             const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
+
             storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
+            console.log(`Sim Update: Storyline '${storyline.name}' heat ${baseHeat} -> ${finalHeat} (Segment Rating: ${segmentRating})`);
           }
         }
 
@@ -1108,6 +995,7 @@ function App() {
             if (moraleChange !== 0) {
               const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
               wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
+              console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale} (Multiplier: ${moraleMultiplier}x)`);
             }
           }
         }
@@ -1133,17 +1021,25 @@ function App() {
 
       if (updatesMade) {
         await batch.commit();
+
         setGameData(prevData => ({
           ...prevData,
           save_wrestlers: prevData.save_wrestlers.map(w => {
-            if (wrestlerUpdates.has(w.id)) return wrestlerUpdates.get(w.id);
+            if (wrestlerUpdates.has(w.id)) {
+              return wrestlerUpdates.get(w.id);
+            }
             return w;
           }),
           save_storylines: prevData.save_storylines.map(s => {
-            if (storylineUpdates.has(s.id)) return storylineUpdates.get(s.id);
+            if (storylineUpdates.has(s.id)) {
+              return storylineUpdates.get(s.id);
+            }
             return s;
           })
         }));
+        console.log("Sim Engine v2: Morale and Storyline updates saved and local state updated.");
+      } else {
+        console.log("Sim Engine v2: No morale or storyline changes to apply.");
       }
 
     } catch (error) {
@@ -1152,6 +1048,7 @@ function App() {
   };
 
   const logCareerEvents = async (ratedSegments, showRating) => {
+    console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
 
     try {
@@ -1165,8 +1062,14 @@ function App() {
         if (!segment) continue;
 
         for (const participant of segment.participants) {
-          const opponentIds = segment.participants.filter(p => p.id !== participant.id).map(p => p.id);
-          const opponentNames = segment.participants.filter(p => p.id !== participant.id).map(p => p.name).join(', ');
+          const opponentIds = segment.participants
+            .filter(p => p.id !== participant.id)
+            .map(p => p.id);
+
+          const opponentNames = segment.participants
+            .filter(p => p.id !== participant.id)
+            .map(p => p.name)
+            .join(', ');
 
           let eventType = "Angle";
           let notes = `Participated in an angle with ${opponentNames || 'others'}`;
@@ -1207,6 +1110,7 @@ function App() {
       }
 
       await batch.commit();
+      console.log("Career events successfully logged to memory.");
 
       setGameData(prevData => ({
         ...prevData,
@@ -1221,194 +1125,224 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // MESSAGES MODAL (IPHONE STYLE)
-  // ---------------------------------------------------
-  const renderMessagesModal = () => {
-    if (!showMessagesModal) return null;
+  // --- Participant search in booking ---
+  const handleParticipantSearch = (query) => {
+    setParticipantSearch(query);
+    if (query.length < 1) {
+      setParticipantResults([]);
+      return;
+    }
 
-    const threads = getConversationThreads();
-    const activeConversationId = selectedConversationId || (threads[0]?.contactId ?? null);
-    const conversationMessages = activeConversationId ? getMessagesForConversation(activeConversationId) : [];
+    const results = gameData.save_wrestlers
+      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
 
-    const showNameFromMsg = (msg) => {
-      if (msg.senderRole === 'Booker') return 'You';
-      return msg.senderName || 'Unknown';
-    };
-
-    const effectiveDraft = hoveredReply ? hoveredReply : replyDraft;
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowMessagesModal(false)}
-      >
-        <div
-          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] flex"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* LEFT: conversations list */}
-          <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-xl font-bold text-white flex items-center">
-                <MessageIcon />
-                Messages
-              </h2>
-              <button
-                onClick={() => {
-                  setShowMessagesModal(false);
-                  // mark all as read
-                  handleMarkMessagesRead();
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            {threads.length === 0 ? (
-              <p className="text-gray-400 p-4">No messages.</p>
-            ) : (
-              threads.map(thread => (
-                <button
-                  key={thread.contactId}
-                  onClick={() => {
-                    setSelectedConversationId(thread.contactId);
-                    setReplyDraft('');
-                    setHoveredReply(null);
-                    setLockedReply(null);
-                    setCurrentReplyOptions(
-                      thread.messages[thread.messages.length - 1]?.replyOptions || []
-                    );
-                  }}
-                  className={`w-full text-left px-4 py-3 flex flex-col border-b border-gray-800 hover:bg-gray-800 transition ${
-                    thread.contactId === activeConversationId ? 'bg-gray-800' : ''
-                  }`}
-                >
-                  <span className="text-white font-semibold">{thread.contactName}</span>
-                  <span className="text-xs text-gray-400">
-                    {thread.messages[thread.messages.length - 1]?.body?.slice(0, 50) || ''}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-
-          {/* RIGHT: conversation */}
-          <div className="w-2/3 flex flex-col">
-            {/* header */}
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-semibold text-white">
-                  {threads.find(t => t.contactId === activeConversationId)?.contactName || 'Select a conversation'}
-                </h3>
-                <p className="text-xs text-gray-400">Backstage messages (shoot)</p>
-              </div>
-            </div>
-
-            {/* messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {conversationMessages.length === 0 ? (
-                <p className="text-gray-500">No messages in this thread.</p>
-              ) : (
-                conversationMessages.map(msg => (
-                  <div
-                    key={`${msg.senderName}-${msg.timestamp?.seconds || Math.random()}`}
-                    className={`flex ${msg.senderRole === 'Booker' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                        msg.senderRole === 'Booker'
-                          ? 'bg-indigo-600 text-white rounded-br-none'
-                          : 'bg-gray-700 text-white rounded-bl-none'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
-                      <p className="text-[10px] text-gray-200 mt-1 text-right">
-                        {msg.timestamp?.toDate
-                          ? msg.timestamp.toDate().toLocaleString()
-                          : ''}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* composer */}
-            <div className="border-t border-gray-700 p-4 bg-gray-800">
-              <div className="flex space-x-2 mb-2">
-                {['Yes', 'No', 'Maybe'].map((label, idx) => {
-                  const option = currentReplyOptions[idx] || "";
-                  const tone =
-                    idx === 0 ? 'positive' :
-                    idx === 1 ? 'negative' : 'neutral';
-                  return (
-                    <button
-                      key={label}
-                      onMouseEnter={() => {
-                        if (option) setHoveredReply(option);
-                      }}
-                      onMouseLeave={() => {
-                        setHoveredReply(null);
-                      }}
-                      onClick={() => {
-                        if (option) {
-                          setReplyDraft(option);
-                          setLockedReply({ text: option, __tone: tone });
-                          setHoveredReply(null);
-                        }
-                      }}
-                      className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-sm font-semibold rounded"
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex space-x-2">
-                <textarea
-                  value={effectiveDraft}
-                  onChange={(e) => {
-                    setReplyDraft(e.target.value);
-                    setLockedReply(null); // user is now free typing
-                  }}
-                  rows={2}
-                  className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Type your reply..."
-                />
-                <button
-                  onClick={handleSendReply}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg"
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    );
+    setParticipantResults(results.slice(0, 5));
   };
 
-  // ---------------------------------------------------
-  // MARK MESSAGES READ
-  // ---------------------------------------------------
-  const handleMarkMessagesRead = async () => {
+  const handleAddParticipant = (wrestler) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
+    }));
+    setParticipantSearch("");
+    setParticipantResults([]);
+  };
+
+  const handleRemoveParticipant = (wrestlerId) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(p => p.id !== wrestlerId),
+      winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
+    }));
+  };
+
+  const handleWinnerSelect = (e) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      winnerId: e.target.value || null
+    }));
+  };
+
+  const handleSegmentTypeChange = (e) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      type: e.target.value,
+      winnerId: e.target.value === 'Angle' ? null : prev.winnerId
+    }));
+  };
+
+  const handleStorylineSelect = (e) => {
+    setSegmentFormData(prev => ({
+      ...prev,
+      storylineId: e.target.value || null
+    }));
+  };
+
+  // --- Storylines ---
+  const handleOpenCreateStorylineModal = () => {
+    setStorylineFormData({ name: '', participants: [] });
+    setStorylineParticipantSearch("");
+    setStorylineParticipantResults([]);
+    setShowStorylineModal(true);
+  };
+
+  const handleStorylineParticipantSearch = (query) => {
+    setStorylineParticipantSearch(query);
+    if (query.length < 1) {
+      setStorylineParticipantResults([]);
+      return;
+    }
+    const results = gameData.save_wrestlers
+      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
+    setStorylineParticipantResults(results.slice(0, 5));
+  };
+
+  const handleAddStorylineParticipant = (wrestler) => {
+    setStorylineFormData(prev => ({
+      ...prev,
+      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
+    }));
+    setStorylineParticipantSearch("");
+    setStorylineParticipantResults([]);
+  };
+
+  const handleRemoveStorylineParticipant = (wrestlerId) => {
+    setStorylineFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(p => p.id !== wrestlerId)
+    }));
+  };
+
+  const handleCreateStoryline = async () => {
+    if (!storylineFormData.name || storylineFormData.participants.length < 2) {
+      console.error("Storyline must have a name and at least 2 participants.");
+      return;
+    }
+
+    setLoadingMessage('Creating storyline...');
+    setGameState('BUSY');
+
+    try {
+      const newStorylineData = {
+        ...storylineFormData,
+        companyId: activeSave.playerCompanyId,
+        heat: 10,
+        status: "Active",
+        beats: []
+      };
+
+      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+
+      const newStoryline = { id: docRef.id, ...newStorylineData };
+
+      setGameData(prevData => ({
+        ...prevData,
+        save_storylines: [...(prevData.save_storylines || []), newStoryline]
+      }));
+
+      setShowStorylineModal(false);
+      setGameState('STORYLINE_SCREEN');
+
+    } catch (error) {
+      console.error("Error creating storyline:", error);
+      setLoadingMessage("Failed to create storyline. Please try again.");
+      setGameState('STORYLINE_SCREEN');
+    }
+  };
+
+  // --- Career History ---
+  const handleViewCareerHistory = (wrestler) => {
+    setViewingWrestler(wrestler);
+    setGameState('CAREER_HISTORY_SCREEN');
+  };
+
+  const handleViewRelationships = (wrestler) => {
+    setViewingWrestler(wrestler);
+    setGameState('RELATIONSHIPS_SCREEN');
+  };
+
+  // --- Messages Helpers: build contacts from messages ---
+  const buildMessageContacts = (messages, wrestlers) => {
+    if (!messages) return [];
+    const contactsMap = new Map();
+
+    for (const msg of messages) {
+      // determine "other person" in this message
+      // if player is 'booker', then other is senderId (if senderId !== 'booker') else recipientId
+      let otherId = null;
+      let otherName = null;
+
+      if (msg.senderId && msg.senderId !== 'booker') {
+        otherId = msg.senderId;
+      } else if (msg.recipientId && msg.recipientId !== 'booker') {
+        otherId = msg.recipientId;
+      }
+
+      if (!otherId) continue; // don't list the booker
+
+      // try to get wrestler name
+      const wrestler = wrestlers.find(w => w.id === otherId);
+      otherName = wrestler ? wrestler.name : (msg.senderName || 'Unknown');
+
+      if (!contactsMap.has(otherId)) {
+        contactsMap.set(otherId, {
+          id: otherId,
+          name: otherName,
+          latestTimestamp: msg.timestamp,
+          latestSnippet: msg.body
+        });
+      } else {
+        // update latest if this msg is newer
+        const existing = contactsMap.get(otherId);
+        if (msg.timestamp && existing.latestTimestamp && msg.timestamp.toMillis() > existing.latestTimestamp.toMillis()) {
+          contactsMap.set(otherId, {
+            ...existing,
+            latestTimestamp: msg.timestamp,
+            latestSnippet: msg.body
+          });
+        }
+      }
+    }
+
+    // sort by latestTimestamp desc
+    const contacts = Array.from(contactsMap.values()).sort((a, b) => {
+      if (!a.latestTimestamp || !b.latestTimestamp) return 0;
+      return b.latestTimestamp.toMillis() - a.latestTimestamp.toMillis();
+    });
+
+    return contacts;
+  };
+
+  const handleOpenMessages = () => {
+    setShowMessagesModal(true);
+    const contacts = buildMessageContacts(gameData.save_messages || [], gameData.save_wrestlers || []);
+    if (contacts.length > 0 && !selectedContactId) {
+      setSelectedContactId(contacts[0].id);
+    }
+  };
+
+  const handleCloseMessages = async () => {
+    setShowMessagesModal(false);
+    setHoverReply(null);
+    setLockedReply(null);
+    setReplyDraft("");
+
     if (!activeSave || unreadMessages === 0) return;
 
     setUnreadMessages(0);
 
     setGameData(prevData => ({
       ...prevData,
-      save_messages: (prevData.save_messages || []).map(msg => ({ ...msg, isRead: true }))
+      save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
     }));
 
     try {
       const batch = writeBatch(db);
       const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
 
-      (gameData.save_messages || []).forEach(msg => {
+      gameData.save_messages.forEach(msg => {
         if (!msg.isRead) {
           const docRef = doc(messagesRef, msg.id);
           batch.update(docRef, { isRead: true });
@@ -1421,9 +1355,181 @@ function App() {
     }
   };
 
-  // ---------------------------------------------------
-  // UI RENDERERS (MAIN MENU, DASHBOARD, ETC)
-  // ---------------------------------------------------
+  const getSelectedConversationMessages = () => {
+    if (!selectedContactId) return [];
+
+    const allMsgs = gameData.save_messages || [];
+    return allMsgs
+      .filter(msg => {
+        // messages in this convo if:
+        // 1) msg.senderId === selectedContactId
+        // 2) msg.recipientId === selectedContactId
+        // 3) backward compatibility: old messages that only have senderId and that sender is the selected contact
+        if (msg.senderId === selectedContactId) return true;
+        if (msg.recipientId === selectedContactId) return true;
+        // old messages: if senderId is selected and recipientId missing
+        if (msg.senderId === selectedContactId && !msg.recipientId) return true;
+        return false;
+      })
+      .sort((a, b) => {
+        const aTime = a.timestamp ? a.timestamp.toMillis() : 0;
+        const bTime = b.timestamp ? b.timestamp.toMillis() : 0;
+        return aTime - bTime;
+      });
+  };
+
+  const handleContactClick = (contactId) => {
+    setSelectedContactId(contactId);
+    setReplyDraft("");
+    setHoverReply(null);
+    setLockedReply(null);
+  };
+
+  const getSelectedContact = () => {
+    if (!selectedContactId) return null;
+    const wrestlers = gameData.save_wrestlers || [];
+    const wrestler = wrestlers.find(w => w.id === selectedContactId);
+    if (wrestler) return wrestler;
+    return { id: selectedContactId, name: "Unknown Talent" };
+  };
+
+  const formatGameTimestamp = (ts) => {
+    // we store new messages with activeSave.currentDate
+    if (!ts) return '';
+    const d = ts.toDate();
+    return d.toLocaleString(); // good enough for now
+  };
+
+  const handleReplyHover = (text) => {
+    setHoverReply(text);
+  };
+
+  const handleReplyHoverLeave = () => {
+    // only clear hover, not locked
+    setHoverReply(null);
+  };
+
+  const handleReplyClick = (text) => {
+    // clicking a button should lock it into the text box
+    setLockedReply(text);
+    setReplyDraft(text);
+  };
+
+  const handleReplyDraftChange = (e) => {
+    setReplyDraft(e.target.value);
+    setLockedReply(null); // user is typing their own
+  };
+
+  const handleSendReply = async () => {
+    if (!replyDraft.trim() || !selectedContactId) return;
+    if (!activeSave || !db || !appId) return;
+
+    const contact = getSelectedContact();
+    const nowTs = activeSave.currentDate ? activeSave.currentDate : Timestamp.now();
+
+    // 1) Save player's message to Firestore targeted to THIS contact only
+    const playerMessage = {
+      senderId: 'booker',
+      senderName: 'Booker',
+      recipientId: selectedContactId,
+      body: replyDraft.trim(),
+      timestamp: nowTs,
+      type: 'Text',
+      isRead: true
+    };
+
+    try {
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      const newMsgRef = await addDoc(messagesRef, playerMessage);
+      const playerMsgWithId = { id: newMsgRef.id, ...playerMessage };
+
+      // update local state so it only shows in this thread
+      setGameData(prevData => ({
+        ...prevData,
+        save_messages: [...(prevData.save_messages || []), playerMsgWithId]
+      }));
+
+      // 2) Ask AI to generate follow-up based on tone
+      const tone = detectToneFromReply(replyDraft.trim());
+      const wrestler = contact;
+      const followup = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'wrestler-message',
+          wrestler: {
+            id: wrestler.id,
+            name: wrestler.name,
+            disposition: wrestler.disposition,
+            gimmick: wrestler.gimmick,
+            morale: wrestler.morale
+          },
+          topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
+        })
+      });
+
+      let followupData = null;
+      if (followup.ok) {
+        const json = await followup.json();
+        followupData = json;
+      }
+
+      // 3) Save AI/wrestler follow-up to Firestore, still in this convo
+      if (followupData && followupData.message) {
+        const followMessage = {
+          senderId: wrestler.id,
+          senderName: wrestler.name,
+          recipientId: 'booker',
+          body: rewriteFollowupForTone(followupData.message, tone),
+          timestamp: nowTs,
+          type: 'Text',
+          isRead: false,
+          replyOptions: followupData.replyOptions || []
+        };
+
+        const followMsgRef = await addDoc(messagesRef, followMessage);
+        const followMsgWithId = { id: followMsgRef.id, ...followMessage };
+
+        setGameData(prevData => ({
+          ...prevData,
+          save_messages: [...(prevData.save_messages || []), followMsgWithId]
+        }));
+
+        setUnreadMessages(prev => prev + 1);
+      }
+
+      // clear draft
+      setReplyDraft("");
+      setHoverReply(null);
+      setLockedReply(null);
+    } catch (error) {
+      console.error("Error sending reply:", error);
+    }
+  };
+
+  const detectToneFromReply = (text) => {
+    const lower = text.toLowerCase();
+    if (lower.includes("yes") || lower.includes("ok") || lower.includes("sounds good") || lower.includes("i can") || lower.includes("let's do it")) {
+      return 'positive';
+    }
+    if (lower.includes("no") || lower.includes("can't") || lower.includes("won't") || lower.includes("not right now") || lower.includes("doesn't fit")) {
+      return 'negative';
+    }
+    return 'neutral';
+  };
+
+  const rewriteFollowupForTone = (aiMessage, tone) => {
+    // this is a simple guard to push the AI message toward the correct emotional response
+    if (tone === 'negative') {
+      return `...okay, I get it. ${aiMessage} I was hoping for more, but I'll keep doing my part.`;
+    }
+    if (tone === 'positive') {
+      return `Awesome, appreciate that. ${aiMessage}`;
+    }
+    return aiMessage;
+  };
+
+  // --- Render Functions ---
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1468,21 +1574,23 @@ function App() {
             <p className="text-gray-400">No save games found.</p>
           ) : (
             <div className="space-y-3">
-              {playerSaves.sort((a, b) => b.lastPlayed.toMillis() - a.lastPlayed.toMillis()).map(save => (
-                <button
-                  key={save.id}
-                  onClick={() => handleLoadGame(save.id)}
-                  className="w-full text-left p-4 bg-gray-700 rounded-lg hover:bg-gray-600 shadow-md transition-all duration-200"
-                >
-                  <h3 className="text-lg font-bold text-white">{save.saveName}</h3>
-                  <p className="text-gray-300 text-sm">
-                    In-Game Date: {save.currentDate.toDate().toLocaleDateString()}
-                  </p>
-                  <p className="text-gray-400 text-xs">
-                    Last Played: {save.lastPlayed.toDate().toLocaleString()}
-                  </p>
-                </button>
-              ))}
+              {playerSaves
+                .sort((a, b) => b.lastPlayed.toMillis() - a.lastPlayed.toMillis())
+                .map(save => (
+                  <button
+                    key={save.id}
+                    onClick={() => handleLoadGame(save.id)}
+                    className="w-full text-left p-4 bg-gray-700 rounded-lg hover:bg-gray-600 shadow-md transition-all duration-200"
+                  >
+                    <h3 className="text-lg font-bold text-white">{save.saveName}</h3>
+                    <p className="text-gray-300 text-sm">
+                      In-Game Date: {save.currentDate.toDate().toLocaleDateString()}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Last Played: {save.lastPlayed.toDate().toLocaleString()}
+                    </p>
+                  </button>
+                ))}
             </div>
           )}
         </div>
@@ -1508,8 +1616,14 @@ function App() {
             <p className="text-indigo-300">{activeSave.saveName}</p>
           </div>
           <div className="text-center md:text-right mt-4 md:mt-0">
-            <h2 className="text-xl font-semibold">{activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h2>
-            <p className="text-gray-400">Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}</p>
+            <h2 className="text-xl font-semibold">
+              {activeSave.currentDate.toDate().toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              })}
+            </h2>
+            <p className="text-gray-400">
+              Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}
+            </p>
           </div>
         </div>
 
@@ -1549,12 +1663,7 @@ function App() {
           <div className="md:col-span-1 space-y-4">
             <button
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
-              onClick={() => {
-                setShowMessagesModal(true);
-                setSelectedConversationId(null);
-                setHoveredReply(null);
-                setLockedReply(null);
-              }}
+              onClick={handleOpenMessages}
             >
               <span className="flex items-center">
                 <MessageIcon />
@@ -1589,12 +1698,18 @@ function App() {
               <RosterIcon />
               Roster
             </button>
+            <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
+              Staff
+            </button>
             <button
               onClick={() => setGameState('STORYLINE_SCREEN')}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
               <FireIcon />
               Storyline Planner
+            </button>
+            <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
+              Finances
             </button>
             <button
               onClick={handleExitGame}
@@ -1608,7 +1723,151 @@ function App() {
     );
   };
 
-  // Assistant modal
+  const renderMessagesModal = () => {
+    if (!showMessagesModal) return null;
+
+    const messages = gameData.save_messages || [];
+    const wrestlers = gameData.save_wrestlers || [];
+
+    const contacts = buildMessageContacts(messages, wrestlers);
+    const selectedContact = getSelectedContact();
+    const convoMessages = getSelectedConversationMessages();
+
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+        onClick={handleCloseMessages}
+      >
+        <div
+          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col md:flex-row overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Left pane: contacts */}
+          <div className="w-full md:w-1/3 bg-gray-800 border-r border-gray-700 flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
+              <h2 className="text-xl font-bold text-white flex items-center">
+                <MessageIcon />
+                Inbox
+              </h2>
+              <button
+                onClick={handleCloseMessages}
+                className="text-gray-400 hover:text-white"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {contacts.length === 0 ? (
+                <p className="text-gray-400 p-4">No messages yet.</p>
+              ) : (
+                contacts.map(contact => (
+                  <button
+                    key={contact.id}
+                    onClick={() => handleContactClick(contact.id)}
+                    className={`w-full text-left px-4 py-3 flex flex-col border-b border-gray-700 hover:bg-gray-700 transition ${
+                      contact.id === selectedContactId ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    <span className="text-white font-semibold">{contact.name}</span>
+                    <span className="text-xs text-gray-400 truncate">{contact.latestSnippet}</span>
+                    {contact.latestTimestamp && (
+                      <span className="text-[10px] text-gray-500">
+                        {contact.latestTimestamp.toDate().toLocaleString()}
+                      </span>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Right pane: conversation */}
+          <div className="w-full md:w-2/3 bg-gray-900 flex flex-col">
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  {selectedContact ? selectedContact.name : 'Select a person'}
+                </h3>
+                <p className="text-xs text-gray-400">Backstage messages (shoot)</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              {convoMessages.length === 0 ? (
+                <p className="text-gray-500 text-center mt-4">No messages with this person yet.</p>
+              ) : (
+                convoMessages.map(msg => {
+                  const isBooker = msg.senderId === 'booker';
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex ${isBooker ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                          isBooker ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-gray-700 text-white rounded-bl-none'
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
+                        <p className="text-[10px] text-gray-200 mt-1 text-right">
+                          {msg.timestamp ? msg.timestamp.toDate().toLocaleString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Reply area */}
+            {selectedContact && (
+              <div className="p-4 border-t border-gray-800 bg-gray-900">
+                <div className="flex space-x-2 mb-3">
+                  {/* we try to grab the latest replyOptions for this convo */}
+                  {(() => {
+                    const latestFromContact = [...convoMessages].reverse().find(m => m.senderId === selectedContact.id && Array.isArray(m.replyOptions));
+                    const replyOptions = latestFromContact ? latestFromContact.replyOptions : [];
+                    const labels = ["Yes", "No", "Maybe"];
+                    return labels.map((label, idx) => {
+                      const hoverText = replyOptions[idx] || '';
+                      return (
+                        <button
+                          key={label}
+                          className="px-3 py-1 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600"
+                          onMouseEnter={() => handleReplyHover(hoverText)}
+                          onMouseLeave={handleReplyHoverLeave}
+                          onClick={() => handleReplyClick(hoverText || label)}
+                        >
+                          {label}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={hoverReply !== null && !lockedReply ? hoverReply : replyDraft}
+                    onChange={handleReplyDraftChange}
+                    placeholder="Type your reply..."
+                    className="flex-grow bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={handleSendReply}
+                    className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition"
+                  >
+                    Send
+                  </button>
+                </div>
+                {/* (we removed the system: acknowledged line per your request) */}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderAssistantModal = () => {
     if (!showAssistantModal) return null;
 
@@ -1680,100 +1939,6 @@ function App() {
     );
   };
 
-  // Roster screen
-  const renderRosterScreen = () => {
-    const wrestlers = gameData.save_wrestlers || [];
-
-    const getDispositionClass = (disposition) => {
-      switch (disposition) {
-        case 'Face': return 'text-green-400';
-        case 'Heel': return 'text-red-400';
-        case 'Tweener': return 'text-yellow-400';
-        default: return 'text-gray-400';
-      }
-    };
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <RosterIcon />
-            Your Roster
-          </h1>
-          <button
-            onClick={() => setGameState('IN_GAME')}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {wrestlers.length === 0 && (
-            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
-          )}
-          {wrestlers.sort((a,b) => a.name.localeCompare(b.name)).map(wrestler => (
-            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
-
-              <div className="flex justify-between text-sm mb-3">
-                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
-                  {wrestler.disposition}
-                </span>
-                <span className="text-gray-300">
-                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
-                </span>
-              </div>
-
-              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
-                <div>
-                  <span className="text-gray-400">BRAWL</span>
-                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">SPEED</span>
-                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">TECH</span>
-                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">CHAR</span>
-                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    setViewingWrestler(wrestler);
-                    setGameState('CAREER_HISTORY_SCREEN');
-                  }}
-                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
-                >
-                  <HistoryIcon />
-                  History
-                </button>
-                <button
-                  onClick={() => {
-                    setViewingWrestler(wrestler);
-                    setGameState('RELATIONSHIPS_SCREEN');
-                  }}
-                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
-                >
-                  <RelationshipsIcon />
-                  Relations
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const renderBookingScreen = () => {
     if (!currentShow) return null;
 
@@ -1783,7 +1948,9 @@ function App() {
           <div>
             <h1 className="text-2xl font-bold text-white">Book Show: {currentShow.eventName}</h1>
             <p className="text-indigo-300">
-              {activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {activeSave.currentDate.toDate().toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              })}
               <span className="ml-4 font-semibold text-yellow-400">(Tier: {currentShow.eventTier})</span>
             </p>
           </div>
@@ -1838,6 +2005,93 @@ function App() {
     );
   };
 
+  const renderRosterScreen = () => {
+    const wrestlers = gameData.save_wrestlers || [];
+
+    const getDispositionClass = (disposition) => {
+      switch (disposition) {
+        case 'Face': return 'text-green-400';
+        case 'Heel': return 'text-red-400';
+        case 'Tweener': return 'text-yellow-400';
+        default: return 'text-gray-400';
+      }
+    };
+
+    return (
+      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <RosterIcon />
+            Your Roster
+          </h1>
+          <button
+            onClick={() => setGameState('IN_GAME')}
+            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {wrestlers.length === 0 && (
+            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
+          )}
+          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(wrestler => (
+            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
+              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
+
+              <div className="flex justify-between text-sm mb-3">
+                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
+                  {wrestler.disposition}
+                </span>
+                <span className="text-gray-300">
+                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
+                </span>
+              </div>
+
+              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
+                <div>
+                  <span className="text-gray-400">BRAWL</span>
+                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">SPEED</span>
+                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">TECH</span>
+                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">CHAR</span>
+                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleViewCareerHistory(wrestler)}
+                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
+                >
+                  <HistoryIcon />
+                  History
+                </button>
+                <button
+                  onClick={() => handleViewRelationships(wrestler)}
+                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
+                >
+                  <RelationshipsIcon />
+                  Relations
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -1852,7 +2106,7 @@ function App() {
             <div className="text-right">
               <p className="text-sm text-gray-400">Overall Rating</p>
               <p className="text-4xl font-bold text-yellow-400 flex items-center">
-                <StarIcon />
+                <StarIcon className="w-8 h-8 mr-1" />
                 {showRating}
               </p>
             </div>
@@ -1897,12 +2151,7 @@ function App() {
           </h1>
           <div className="flex space-x-2">
             <button
-              onClick={() => {
-                setStorylineFormData({ name: '', participants: [] });
-                setStorylineParticipantSearch("");
-                setStorylineParticipantResults([]);
-                setShowStorylineModal(true);
-              }}
+              onClick={() => handleOpenCreateStorylineModal()}
               className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
             >
               <PlusIcon />
@@ -1936,159 +2185,6 @@ function App() {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderCreateStorylineModal = () => {
-    if (!showStorylineModal) return null;
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowStorylineModal(false)}
-      >
-        <div
-          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white">Create New Storyline</h2>
-            <button
-              onClick={() => setShowStorylineModal(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Storyline Name</label>
-              <input
-                type="text"
-                name="name"
-                value={storylineFormData.name}
-                onChange={(e) => setStorylineFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Main Event Title Feud"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Participants (min. 2)
-              </label>
-              <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
-                {storylineFormData.participants.map(p => (
-                  <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
-                    {p.name}
-                    <button
-                      onClick={() => setStorylineFormData(prev => ({
-                        ...prev,
-                        participants: prev.participants.filter(x => x.id !== p.id)
-                      }))}
-                      className="ml-2 text-indigo-100 hover:text-white"
-                    >
-                      <XCircleIcon />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Add Participant
-              </label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={storylineParticipantSearch}
-                  onChange={(e) => {
-                    const qStr = e.target.value;
-                    setStorylineParticipantSearch(qStr);
-                    if (qStr.length < 1) {
-                      setStorylineParticipantResults([]);
-                      return;
-                    }
-                    const results = (gameData.save_wrestlers || [])
-                      .filter(w => w.name.toLowerCase().includes(qStr.toLowerCase()))
-                      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
-                    setStorylineParticipantResults(results.slice(0, 5));
-                  }}
-                  placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              {storylineParticipantResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {storylineParticipantResults.map(w => (
-                    <button
-                      key={w.id}
-                      onClick={() => {
-                        setStorylineFormData(prev => ({
-                          ...prev,
-                          participants: [...prev.participants, { id: w.id, name: w.name }]
-                        }));
-                        setStorylineParticipantSearch("");
-                        setStorylineParticipantResults([]);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
-                    >
-                      {w.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="p-4 bg-gray-700 border-t border-gray-600 flex justify-end space-x-3">
-            <button
-              onClick={() => setShowStorylineModal(false)}
-              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={async () => {
-                if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-                  console.error("Storyline must have a name and at least 2 participants.");
-                  return;
-                }
-
-                try {
-                  const newStorylineData = {
-                    ...storylineFormData,
-                    companyId: activeSave.playerCompanyId,
-                    heat: 10,
-                    status: "Active",
-                    beats: []
-                  };
-
-                  const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
-                  const newStoryline = { id: docRef.id, ...newStorylineData };
-
-                  setGameData(prevData => ({
-                    ...prevData,
-                    save_storylines: [...(prevData.save_storylines || []), newStoryline]
-                  }));
-
-                  setShowStorylineModal(false);
-                  setGameState('STORYLINE_SCREEN');
-                } catch (error) {
-                  console.error("Error creating storyline:", error);
-                  setLoadingMessage("Failed to create storyline. Please try again.");
-                  setGameState('STORYLINE_SCREEN');
-                }
-              }}
-              className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-            >
-              Create Storyline
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -2134,15 +2230,9 @@ function App() {
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Event Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Notes
-                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -2224,18 +2314,10 @@ function App() {
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead className="bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Person
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Notes
-                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Person</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -2276,9 +2358,6 @@ function App() {
     );
   };
 
-  // ---------------------------------------------------
-  // SEGMENT MODAL
-  // ---------------------------------------------------
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
 
@@ -2309,11 +2388,7 @@ function App() {
               <select
                 name="type"
                 value={segmentFormData.type}
-                onChange={(e) => setSegmentFormData(prev => ({
-                  ...prev,
-                  type: e.target.value,
-                  winnerId: e.target.value === 'Angle' ? null : prev.winnerId
-                }))}
+                onChange={handleSegmentTypeChange}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="Match">Match</option>
@@ -2326,10 +2401,7 @@ function App() {
               <select
                 name="storylineId"
                 value={segmentFormData.storylineId || ""}
-                onChange={(e) => setSegmentFormData(prev => ({
-                  ...prev,
-                  storylineId: e.target.value || null
-                }))}
+                onChange={handleStorylineSelect}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">-- None --</option>
@@ -2348,11 +2420,7 @@ function App() {
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
                     {p.name}
                     <button
-                      onClick={() => setSegmentFormData(prev => ({
-                        ...prev,
-                        participants: prev.participants.filter(x => x.id !== p.id),
-                        winnerId: prev.winnerId === p.id ? null : prev.winnerId
-                      }))}
+                      onClick={() => handleRemoveParticipant(p.id)}
                       className="ml-2 text-indigo-100 hover:text-white"
                     >
                       <XCircleIcon />
@@ -2366,37 +2434,21 @@ function App() {
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Add Participant
               </label>
-              <input
-                type="text"
-                value={participantSearch}
-                onChange={(e) => {
-                  const qStr = e.target.value;
-                  setParticipantSearch(qStr);
-                  if (qStr.length < 1) {
-                    setParticipantResults([]);
-                    return;
-                  }
-                  const results = (gameData.save_wrestlers || [])
-                    .filter(w => w.name.toLowerCase().includes(qStr.toLowerCase()))
-                    .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
-                  setParticipantResults(results.slice(0, 5));
-                }}
-                placeholder="Search roster..."
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-3 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={participantSearch}
+                  onChange={(e) => handleParticipantSearch(e.target.value)}
+                  placeholder="Search roster..."
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
               {participantResults.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {participantResults.map(w => (
                     <button
                       key={w.id}
-                      onClick={() => {
-                        setSegmentFormData(prev => ({
-                          ...prev,
-                          participants: [...prev.participants, { id: w.id, name: w.name }]
-                        }));
-                        setParticipantSearch("");
-                        setParticipantResults([]);
-                      }}
+                      onClick={() => handleAddParticipant(w)}
                       className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
                     >
                       {w.name}
@@ -2414,10 +2466,7 @@ function App() {
                 <select
                   name="winnerId"
                   value={segmentFormData.winnerId || ""}
-                  onChange={(e) => setSegmentFormData(prev => ({
-                    ...prev,
-                    winnerId: e.target.value || null
-                  }))}
+                  onChange={handleWinnerSelect}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={segmentFormData.participants.length === 0}
                 >
@@ -2449,9 +2498,109 @@ function App() {
     );
   };
 
-  // ---------------------------------------------------
-  // MAIN RETURN
-  // ---------------------------------------------------
+  const renderCreateStorylineModal = () => {
+    if (!showStorylineModal) return null;
+
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+        onClick={() => setShowStorylineModal(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center p-4 border-b border-gray-700">
+            <h2 className="text-2xl font-bold text-white">Create New Storyline</h2>
+            <button
+              onClick={() => setShowStorylineModal(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Storyline Name</label>
+              <input
+                type="text"
+                name="name"
+                value={storylineFormData.name}
+                onChange={(e) => setStorylineFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Main Event Title Feud"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Participants (min. 2)
+              </label>
+              <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
+                {storylineFormData.participants.map(p => (
+                  <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
+                    {p.name}
+                    <button
+                      onClick={() => handleRemoveStorylineParticipant(p.id)}
+                      className="ml-2 text-indigo-100 hover:text-white"
+                    >
+                      <XCircleIcon />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Add Participant
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={storylineParticipantSearch}
+                  onChange={(e) => handleStorylineParticipantSearch(e.target.value)}
+                  placeholder="Search roster..."
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              {storylineParticipantResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {storylineParticipantResults.map(w => (
+                    <button
+                      key={w.id}
+                      onClick={() => handleAddStorylineParticipant(w)}
+                      className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
+                    >
+                      {w.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-700 border-t border-gray-600 flex justify-end space-x-3">
+            <button
+              onClick={() => setShowStorylineModal(false)}
+              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateStoryline}
+              className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
+            >
+              Create Storyline
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- Main Render ---
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
@@ -2476,7 +2625,7 @@ function App() {
           case 'RELATIONSHIPS_SCREEN':
             return renderRelationshipsScreen();
           default:
-            return <p>An unexpected error occurred. Please refresh.</p>;
+            return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
         }
       })()}
       {renderMessagesModal()}
