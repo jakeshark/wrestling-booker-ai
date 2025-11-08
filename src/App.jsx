@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -21,7 +20,9 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 
-// --- Icon Components ---
+// ---------------------------------------------------
+// ICONS
+// ---------------------------------------------------
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -36,85 +37,75 @@ const GameIcon = () => (
 );
 
 const MessageIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408s4.262.139 6.337.408c.922.12 1.631.94 1.631 1.876v13.066c0 .936-.709 1.756-1.631 1.876-2.075.27-4.19.408-6.337.408s-4.262-.139-6.337-.408c-.922-.12-1.631-.94-1.631-1.876V4.534c0-.936.709-1.756 1.631-1.876ZM7.5 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" />
   </svg>
 );
 
 const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
     <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
   </svg>
 );
 
 const AssistantIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.861 2.861l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.861 2.861l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.861-2.861l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.385 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM13.5 18a.75.75 0 0 1 .721.544l.27 1.256a2.25 2.25 0 0 0 1.715 1.715l1.256.27a.75.75 0 0 1 0 1.442l-1.256.27a2.25 2.25 0 0 0-1.715 1.715l-.27 1.256a.75.75 0 0 1-1.442 0l-.27-1.256a2.25 2.25 0 0 0-1.715-1.715l-1.256-.27a.75.75 0 0 1 0-1.442l1.256.27a2.25 2.25 0 0 0 1.715-1.715l.27-1.256a.75.75 0 0 1 .721-.544Z" clipRule="evenodd" />
   </svg>
 );
 
-const BookingIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
-    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
-  </svg>
-);
-
 const PlusIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-5 h-5 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
     <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
   </svg>
 );
 
 const RosterIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM21 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM9.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM7.06 12.236a.75.75 0 0 0-1.06 0l-.03.03a.75.75 0 0 0 1.06 1.06l.03-.03a.75.75 0 0 0 0-1.06Zm10.97 0a.75.75 0 0 0 0 1.06l.03.03a.75.75 0 0 0 1.06-1.06l-.03-.03a.75.75 0 0 0-1.06 0ZM7.5 15a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Zm3.375-1.5a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.75 0a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.375 1.5a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Z" clipRule="evenodd" />
     <path d="M4.5 19.5a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-5.63l-3.03-3.03a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 0-1.06 0L4.5 13.87V19.5Z" />
   </svg>
 );
 
-const UserPlusIcon = ({ className = "w-5 h-5" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" className={className}>
-    <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM1.646 13.107a.75.75 0 0 1 .862.088c.854.63 1.91.955 3.028.955s2.174-.325 3.028-.955a.75.75 0 1 1 .95 1.169A4.502 4.502 0 0 0 8.5 15.5c-1.318 0-2.55-.42-3.53-1.134a.75.75 0 0 1 .088-.95l-.002-.002ZM15 9.75a.75.75 0 0 1 .75.75v2.25h2.25a.75.75 0 0 1 0 1.5H15.75v2.25a.75.75 0 0 1-1.5 0v-2.25H12a.75.75 0 0 1 0-1.5h2.25V10.5a.75.75 0 0 1 .75-.75Z" />
-  </svg>
-);
-
-const XCircleIcon = ({ className = "w-5 h-5" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" className={className}>
+const XCircleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
     <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.707-11.707a1 1 0 0 0-1.414-1.414L10 8.586 7.707 6.293a1 1 0 0 0-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 1 0 1.414 1.414L10 11.414l2.293 2.293a1 1 0 0 0 1.414-1.414L11.414 10l2.293-2.293Z" clipRule="evenodd" />
   </svg>
 );
 
-const StarIcon = ({ className = "w-5 h-5 text-yellow-400" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" className={className}>
+const StarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400">
     <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
   </svg>
 );
 
-const FireIcon = ({ className = "w-6 h-6 mr-2" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className={className}>
+const FireIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071 1.05 9.75 9.75 0 0 1 1.332 10.065c-.537.42-1.166.738-1.85.966.347.858.52 1.77.52 2.714 0 2.21-1.79 4.019-3.999 4.019S6 21.29 6 19.079c0-.944.173-1.856.52-2.714-.683-.228-1.313-.546-1.85-.966a9.75 9.75 0 0 1 1.332-10.065.75.75 0 0 0-1.071-1.05C2.983 4.25 1.5 6.735 1.5 9.67c0 3.089 1.78 5.765 4.312 6.945.305.138.638.39.998.741.436.422.955.986 1.408 1.626.435.613.75 1.32.75 2.097 0 1.057.86 1.919 1.918 1.919s1.919-.862 1.919-1.919c0-.777.315-1.484.75-2.097.453-.64.972-1.204 1.408-1.626.36-.351.693-.603.998-.741C20.72 15.435 22.5 12.76 22.5 9.67c0-2.935-1.483-5.42-3.86-6.333Z" clipRule="evenodd" />
   </svg>
 );
 
-const HistoryIcon = ({ className = "w-6 h-6 mr-2" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className={className}>
+const HistoryIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V3a9 9 0 0 0-9 9 .75.75 0 0 1-1.5 0 10.5 10.5 0 0 1 10.5-10.5ZM10.5 10.038a5.25 5.25 0 1 0 4.93 4.93.75.75 0 0 1 1.437.426A6.75 6.75 0 1 1 9.006 8.35a.75.75 0 0 1 1.493 1.688Z" clipRule="evenodd" />
     <path d="M7.163 15.962c.311.23.638.448.977.652A.75.75 0 0 1 7.8 17.8a9 9 0 1 1 8.4 0 .75.75 0 0 1-1.34.614c.339-.204.666-.423.977-.652a.75.75 0 1 1 .9 1.399A10.499 10.499 0 0 1 12 20.25a10.5 10.5 0 1 1 0-21 10.5 10.5 0 0 1 4.937 1.189.75.75 0 1 1-.9 1.4A9 9 0 0 0 12 3.75a9 9 0 0 0-4.837 1.513.75.75 0 0 1-.9-1.4A10.5 10.5 0 0 1 12 1.5a10.5 10.5 0 0 1 10.5 10.5 10.5 10.5 0 0 1-1.189 4.937.75.75 0 1 1-1.4-.9Z" />
   </svg>
 );
 
-const RelationshipsIcon = ({ className = "w-6 h-6 mr-2" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className={className}>
+const RelationshipsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
     <path d="M4.5 6.375a.75.75 0 0 1 .75-.75h13.5a.75.75 0 0 1 .75.75v11.25a.75.75 0 0 1-.75.75H5.25a.75.75 0 0 1-.75-.75V6.375Z" />
     <path fillRule="evenodd" d="M5.057 2.376A.75.75 0 0 1 5.25 2.25H18.75a.75.75 0 0 1 .193.021l3.75 1.5a.75.75 0 0 1 .307.601v13.064a.75.75 0 0 1-.307.601l-3.75 1.5A.75.75 0 0 1 18.75 20h-13.5a.75.75 0 0 1-.193-.021l-3.75-1.5a.75.75 0 0 1-.307-.601V4.5a.75.75 0 0 1 .307-.601l3.75-1.5ZM6 3.75l-3 1.2v12.75l3 1.2h12l3-1.2V4.95l-3-1.2H6Z" clipRule="evenodd" />
     <path d="M12 8.25a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Z" />
     <path d="M12 15a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V15.75a.75.75 0 0 1 .75-.75Z" />
     <path d="M8.25 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
-    <path d="M13.5 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 1 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
+    <path d="M13.5 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
   </svg>
 );
 
-// --- Firebase Config ---
+// ---------------------------------------------------
+// FIREBASE CONFIG
+// ---------------------------------------------------
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
   authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -124,6 +115,9 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID
 };
 
+// ---------------------------------------------------
+// MAIN APP
+// ---------------------------------------------------
 function App() {
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
@@ -138,23 +132,22 @@ function App() {
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
 
-  // messages UI
+  // Messaging UI state
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [selectedMessageSenderId, setSelectedMessageSenderId] = useState(null);
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [replyDraft, setReplyDraft] = useState('');
-  const [isReplyDirty, setIsReplyDirty] = useState(false);
-  const [hoveredReplyText, setHoveredReplyText] = useState('');
-  const [activeMessageForReply, setActiveMessageForReply] = useState(null);
-  const [lastSelectedReplyTone, setLastSelectedReplyTone] = useState(null);
+  const [hoveredReply, setHoveredReply] = useState(null);
+  const [lockedReply, setLockedReply] = useState(null);
+  const [currentReplyOptions, setCurrentReplyOptions] = useState([]);
 
-  // assistant
+  // AI Assistant
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // booking
+  // Booking state
   const [currentShow, setCurrentShow] = useState(null);
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
@@ -163,19 +156,18 @@ function App() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [participantResults, setParticipantResults] = useState([]);
 
-  // show recap
+  // Show results
   const [showRecap, setShowRecap] = useState("");
   const [showRating, setShowRating] = useState(0);
 
-  // storylines
+  // Storylines
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
-
-  // detail screens
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
+  // Constants
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -218,20 +210,20 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
+  // ---------------------------------------------------
+  // INITIALIZE FIREBASE
+  // ---------------------------------------------------
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
         setLoadingMessage("Firebase config is missing. Please add it to your Vercel Environment Variables.");
-        console.error("Firebase config is missing.");
         return;
       }
 
       setAppId(firebaseConfig.appId);
-
       const app = initializeApp(firebaseConfig);
       const authInstance = getAuth(app);
       const dbInstance = getFirestore(app);
-
       setLogLevel('debug');
       setDb(dbInstance);
       setAuth(authInstance);
@@ -245,21 +237,19 @@ function App() {
             await signInAnonymously(authInstance);
           } catch (error) {
             console.error("Error signing in anonymously:", error);
-            if (error.code === 'auth/internal-error' || error.code === 'auth/operation-not-allowed') {
-              setLoadingMessage("Authentication Error: Anonymous Sign-In is disabled in your Firebase project. Please enable it in the Firebase Console.");
-            } else {
-              setLoadingMessage("Authentication failed. Please refresh.");
-            }
+            setLoadingMessage("Authentication failed. Please refresh.");
           }
         }
       });
-
     } catch (error) {
       console.error("Error initializing Firebase:", error);
       setLoadingMessage("Failed to initialize game data. Please refresh.");
     }
   }, []);
 
+  // ---------------------------------------------------
+  // SEED + FETCH
+  // ---------------------------------------------------
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
@@ -275,17 +265,21 @@ function App() {
 
       setGameState('MAIN_MENU');
     };
-
     run();
   }, [isAuthReady, db, userId, appId]);
 
+  // ---------------------------------------------------
+  // SEED DEFAULT DATASET
+  // ---------------------------------------------------
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
     const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
 
     try {
       const docSnap = await getDoc(datasetRef);
-      if (docSnap.exists()) return;
+      if (docSnap.exists()) {
+        return;
+      }
 
       setLoadingMessage('Creating default dataset...');
       const batch = writeBatch(db);
@@ -315,7 +309,7 @@ function App() {
         { name: "Mia 'Showtime' Evans", stats: { brawling: 65, speed: 85, technical: 80, charisma: 90 }, disposition: 'Face', gimmick: 'Teen Idol', morale: 75 },
         { name: "Victoria 'The Queen' Black", stats: { brawling: 75, speed: 70, technical: 85, charisma: 95 }, disposition: 'Heel', gimmick: 'Rich Snob', alternateNames: ['Vicky Black'], morale: 75 },
         { name: "Leo 'Lionheart' Cruz", stats: { brawling: 85, speed: 80, technical: 75, charisma: 85 }, disposition: 'Face', gimmick: 'Hero', morale: 75 },
-        { name: "Silas 'The Serpent' Retch", stats: { brawling: 80, speed: 70, technical: 80, charisma: 85 }, disposition: 'Heel', gimmick: 'Evil', morale: 75 },
+        { name: "Silas 'The Serpent' Retch", stats: { brawling: 80, speed: 70, technical: 80 }, disposition: 'Heel', gimmick: 'Evil', morale: 75 },
         { name: "Eliza 'High-Flyer' Hayes", stats: { brawling: 50, speed: 95, technical: 80, charisma: 75 }, disposition: 'Face', gimmick: 'Daredevil', morale: 75 },
         { name: "Goliath", stats: { brawling: 90, speed: 50, technical: 50, charisma: 60 }, disposition: 'Heel', gimmick: 'Monster', morale: 75 },
         { name: "Johnny Spade", stats: { brawling: 70, speed: 70, technical: 70, charisma: 70 }, disposition: 'Tweener', gimmick: 'No Gimmick Needed', morale: 75 }
@@ -323,33 +317,20 @@ function App() {
 
       const wrestlerRefs = {};
       for (const wrestler of wrestlers) {
-        const wRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
-        wrestlerRefs[wrestler.name] = wRef.id;
-        batch.set(wRef, { ...wrestler, datasetId });
+        const wrestlerRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
+        wrestlerRefs[wrestler.name] = wrestlerRef.id;
+        batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
       }
 
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
-        datasetId,
-        companyId,
-        titleName: "FX World Championship",
-        prestige: 80,
-        isTagTeam: false,
-        initialHolderId: null
+        datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
       });
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
-        datasetId,
-        companyId,
-        titleName: "FX Women's Championship",
-        prestige: 70,
-        isTagTeam: false,
-        initialHolderId: null
+        datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
       });
 
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_tv_shows`)), {
-        datasetId,
-        companyId,
-        showName: "FX Voltage",
-        dayOfWeek: "Monday"
+        datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
       });
 
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -361,8 +342,8 @@ function App() {
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
 
         batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_events`)), {
-          datasetId,
-          companyId,
+          datasetId: datasetId,
+          companyId: companyId,
           month: i + 1,
           eventName: name,
           eventTier: tier,
@@ -370,7 +351,7 @@ function App() {
       }
 
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
-        datasetId,
+        datasetId: datasetId,
         personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
         personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
         relationshipType: 'Rivalry',
@@ -378,7 +359,7 @@ function App() {
         notes: "Real-life rivalry from their training days."
       });
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
-        datasetId,
+        datasetId: datasetId,
         personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
         personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
         relationshipType: 'Friendship',
@@ -387,20 +368,23 @@ function App() {
       });
 
       await batch.commit();
-
-    } catch (err) {
-      console.error("Error seeding dataset: ", err);
+    } catch (error) {
+      console.error("Error seeding dataset: ", error);
       setLoadingMessage("Error creating default data. Please refresh.");
     }
   };
 
+  // ---------------------------------------------------
+  // FETCH HELPERS
+  // ---------------------------------------------------
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
-      const snap = await getDocs(q);
-      setDatasets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (err) {
-      console.error("Error fetching datasets:", err);
+      const querySnapshot = await getDocs(q);
+      const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setDatasets(datasetsData);
+    } catch (error) {
+      console.error("Error fetching datasets: ", error);
     }
   };
 
@@ -408,140 +392,166 @@ function App() {
     if (!userId) return;
     try {
       const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`));
-      const snap = await getDocs(q);
-      setPlayerSaves(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (err) {
-      console.error("Error fetching player saves:", err);
+      const querySnapshot = await getDocs(q);
+      const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPlayerSaves(savesData);
+    } catch (error) {
+      console.error("Error fetching player saves: ", error);
     }
   };
 
+  // ---------------------------------------------------
+  // NEW GAME
+  // ---------------------------------------------------
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
+
     setGameState('BUSY');
-    setLoadingMessage('Starting your new game...');
+    setLoadingMessage('Starting your new game... This may take a moment.');
 
     try {
       const newSaveData = {
-        userId,
-        datasetId,
+        userId: userId,
+        datasetId: datasetId,
         saveName: `New Game (${new Date().toLocaleDateString()})`,
         lastPlayed: Timestamp.now(),
         currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')),
         playerCompanyId: null
       };
-
-      const saveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
-      const saveId = saveRef.id;
+      const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
+      const newSaveId = newSaveRef.id;
 
       const batch = writeBatch(db);
       const idMap = new Map();
       let playerCompanyId = null;
 
-      for (const col of ID_MAPPED_COLLECTIONS) {
-        const saveCol = SAVE_COLLECTIONS_MAP[col];
-        if (!saveCol) continue;
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${col}`), where("datasetId", "==", datasetId));
-        const snap = await getDocs(q);
-        for (const docSnap of snap.docs) {
-          const oldId = docSnap.id;
-          const data = docSnap.data();
-          const newRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${saveCol}`));
-          idMap.set(oldId, newRef.id);
-          batch.set(newRef, data);
-          if (col === 'dataset_companies' && !playerCompanyId) {
-            playerCompanyId = newRef.id;
+      for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
+        const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
+        if (!saveCollectionName) continue;
+
+        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const querySnapshot = await getDocs(q);
+
+        for (const docSnap of querySnapshot.docs) {
+          const oldDocId = docSnap.id;
+          const docData = docSnap.data();
+
+          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          const newDocId = newDocRef.id;
+
+          idMap.set(oldDocId, newDocId);
+          batch.set(newDocRef, docData);
+
+          if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
+            playerCompanyId = newDocId;
           }
         }
       }
 
-      const remaining = DATASET_COLLECTIONS.filter(c => !ID_MAPPED_COLLECTIONS.includes(c));
-      for (const col of remaining) {
-        const saveCol = SAVE_COLLECTIONS_MAP[col];
-        if (!saveCol) continue;
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${col}`), where("datasetId", "==", datasetId));
-        const snap = await getDocs(q);
-        for (const docSnap of snap.docs) {
-          const data = docSnap.data();
-          let newData = { ...data };
+      const remainingCollections = DATASET_COLLECTIONS.filter(col => !ID_MAPPED_COLLECTIONS.includes(col));
 
-          if (col === 'dataset_events') {
-            newData.status = "Planned";
-            const showDate = (data.month === 1)
-              ? new Date(2025, data.month - 1, 7, 18, 0, 0)
-              : new Date(2025, data.month - 1, 28, 18, 0, 0);
-            newData.date = Timestamp.fromDate(showDate);
-            newData.companyId = idMap.get(data.companyId) || data.companyId;
+      for (const datasetCollectionName of remainingCollections) {
+        const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
+        if (!saveCollectionName) continue;
+
+        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const querySnapshot = await getDocs(q);
+
+        for (const docSnap of querySnapshot.docs) {
+          const docData = docSnap.data();
+          let newDocData = { ...docData };
+
+          if (datasetCollectionName === 'dataset_events') {
+            newDocData.status = "Planned";
+            const showDate = (docData.month === 1)
+              ? new Date(2025, docData.month - 1, 7, 18, 0, 0)
+              : new Date(2025, docData.month - 1, 28, 18, 0, 0);
+            newDocData.date = Timestamp.fromDate(showDate);
+            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
 
-          if (col === 'dataset_relationships') {
-            newData.personA_Id = idMap.get(data.personA_Id) || data.personA_Id;
-            newData.personB_Id = idMap.get(data.personB_Id) || data.personB_Id;
+          if (datasetCollectionName === 'dataset_relationships') {
+            newDocData.personA_Id = idMap.get(docData.personA_Id) || docData.personA_Id;
+            newDocData.personB_Id = idMap.get(docData.personB_Id) || docData.personB_Id;
           }
 
-          if (col === 'dataset_titles') {
-            newData.companyId = idMap.get(data.companyId) || data.companyId;
-            newData.initialHolderId = idMap.get(data.initialHolderId) || null;
+          if (datasetCollectionName === 'dataset_titles') {
+            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
+            newDocData.initialHolderId = idMap.get(docData.initialHolderId) || null;
           }
 
-          if (col === 'dataset_tv_shows') {
-            newData.companyId = idMap.get(data.companyId) || data.companyId;
+          if (datasetCollectionName === 'dataset_tv_shows') {
+            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
 
-          const newRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${saveCol}`));
-          batch.set(newRef, newData);
+          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          batch.set(newDocRef, newDocData);
         }
       }
 
       await batch.commit();
-      await setDoc(saveRef, { playerCompanyId }, { merge: true });
+      await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
 
-      await handleLoadGame(saveId);
+      await handleLoadGame(newSaveId);
 
-    } catch (err) {
-      console.error("Error creating new game:", err);
+    } catch (error) {
+      console.error("Error creating new game: ", error);
       setLoadingMessage("Failed to create new game. Please try again.");
       setGameState('MAIN_MENU');
     }
   };
 
+  // ---------------------------------------------------
+  // LOAD GAME
+  // ---------------------------------------------------
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
+
     setGameState('BUSY');
     setLoadingMessage('Loading your save game...');
 
     try {
       const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, saveId);
-      const snap = await getDoc(saveRef);
-      if (!snap.exists()) throw new Error("Save not found.");
-      const saveData = { id: snap.id, ...snap.data() };
+      const saveSnap = await getDoc(saveRef);
+
+      if (!saveSnap.exists()) {
+        throw new Error("Save game not found.");
+      }
+
+      const saveData = { id: saveSnap.id, ...saveSnap.data() };
       setActiveSave(saveData);
 
-      let loaded = {};
+      let loadedGameData = {};
       let unreadCount = 0;
 
-      for (const col of SAVE_COLLECTION_NAMES) {
-        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${col}`));
-        const colSnap = await getDocs(q);
-        const arr = colSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        loaded[col] = arr;
-        if (col === 'save_messages') {
-          unreadCount = arr.filter(m => !m.isRead).length;
+      for (const collectionName of SAVE_COLLECTION_NAMES) {
+        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
+        const querySnapshot = await getDocs(q);
+        const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        loadedGameData[collectionName] = collectionData;
+
+        if (collectionName === 'save_messages') {
+          unreadCount = collectionData.filter(msg => !msg.isRead && msg.senderRole !== 'Booker').length;
         }
       }
 
-      setGameData(loaded);
+      setGameData(loadedGameData);
       setUnreadMessages(unreadCount);
       setGameState('IN_GAME');
 
-    } catch (err) {
-      console.error("Error loading save:", err);
-      setLoadingMessage("Failed to load game.");
+    } catch (error) {
+      console.error("Error loading game: ", error);
+      setLoadingMessage("Failed to load game. Please try again.");
       setGameState('MAIN_MENU');
     }
   };
 
+  // ---------------------------------------------------
+  // NEXT DAY
+  // ---------------------------------------------------
   const handleNextDay = async () => {
     if (!activeSave) return;
+
     setGameState('BUSY');
     setLoadingMessage('Simulating next day...');
 
@@ -550,16 +560,19 @@ function App() {
 
       const currentDate = activeSave.currentDate.toDate();
       const nextDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
-      const newTs = Timestamp.fromDate(nextDate);
+      const newTimestamp = Timestamp.fromDate(nextDate);
 
       const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, activeSave.id);
-      await setDoc(saveRef, { currentDate: newTs, lastPlayed: Timestamp.now() }, { merge: true });
+      await setDoc(saveRef, {
+        currentDate: newTimestamp,
+        lastPlayed: Timestamp.now()
+      }, { merge: true });
 
-      setActiveSave(prev => ({ ...prev, currentDate: newTs }));
+      setActiveSave(prev => ({ ...prev, currentDate: newTimestamp }));
       setGameState('IN_GAME');
-    } catch (err) {
-      console.error("Error advancing day:", err);
-      setLoadingMessage("Error advancing day.");
+    } catch (error) {
+      console.error("Error advancing day: ", error);
+      setLoadingMessage("Error saving progress. Please refresh.");
     }
   };
 
@@ -570,24 +583,27 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
+  // ---------------------------------------------------
+  // SIM ENGINE (DAILY)
+  // ---------------------------------------------------
   const runSimulationAndEvents = async (saveId) => {
     const wrestlers = gameData.save_wrestlers;
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
-      const randomW = wrestlers[Math.floor(Math.random() * wrestlers.length)];
-      const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_negotiation'];
+      const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
+      const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_renewal'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-      await generateAndSaveMessage(saveId, randomW, randomTopic);
+      await generateAndSaveMessage(saveId, randomWrestler, randomTopic);
     }
   };
 
-  const getCurrentGameTimestamp = () => {
-    if (activeSave && activeSave.currentDate) return activeSave.currentDate;
-    return Timestamp.now();
-  };
-
+  // ---------------------------------------------------
+  // AI MESSAGE GENERATION (WRESTLER → BOOKER)
+  // ---------------------------------------------------
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
+    setLoadingMessage(`Generating event for ${wrestler.name}...`);
+
     try {
       const resp = await fetch('/api/ai', {
         method: 'POST',
@@ -599,41 +615,42 @@ function App() {
         })
       });
 
-      if (!resp.ok) {
-        console.error("wrestler-message AI failed:", await resp.text());
-        return;
-      }
+      if (!resp.ok) throw new Error('AI route failed');
 
       const data = await resp.json();
-      const messageText = data.message;
+      const messageText = data.message || "Hey, wanted to talk about my spot.";
       const replyOptions = Array.isArray(data.replyOptions) ? data.replyOptions.slice(0, 3) : [];
 
-      if (messageText) {
-        const messageData = {
-          senderId: wrestler.id,
-          senderName: wrestler.name,
-          body: messageText,
-          timestamp: getCurrentGameTimestamp(),
-          type: 'Text',
-          isRead: false,
-          topic: topic,
-          replyOptions: replyOptions
-        };
+      const messageData = {
+        senderId: wrestler.id,
+        senderName: wrestler.name,
+        senderRole: 'Wrestler',
+        body: messageText,
+        timestamp: activeSave?.currentDate || Timestamp.now(),
+        type: 'Text',
+        isRead: false,
+        topic: topic || 'general',
+        replyOptions: replyOptions
+      };
 
-        const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
-        const newRef = await addDoc(messagesRef, messageData);
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
+      const newDocRef = await addDoc(messagesRef, messageData);
 
-        setGameData(prev => ({
-          ...prev,
-          save_messages: [...(prev.save_messages || []), { id: newRef.id, ...messageData }]
-        }));
-        setUnreadMessages(prev => prev + 1);
-      }
-    } catch (err) {
-      console.error("Error generating message:", err);
+      const newMsg = { id: newDocRef.id, ...messageData };
+      setGameData(prev => ({
+        ...prev,
+        save_messages: [...(prev.save_messages || []), newMsg]
+      }));
+      setUnreadMessages(prev => prev + 1);
+
+    } catch (error) {
+      console.error("Error generating AI message: ", error);
     }
   };
 
+  // ---------------------------------------------------
+  // AI ASSISTANT
+  // ---------------------------------------------------
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
@@ -655,41 +672,203 @@ function App() {
         })
       });
 
-      if (!resp.ok) {
-        throw new Error(`assistant call failed: ${resp.status}`);
-      }
+      if (!resp.ok) throw new Error('AI assistant call failed');
 
       const data = await resp.json();
-      setAssistantResponse(data.text || "Couldn't generate response.");
-    } catch (err) {
-      console.error("Error in assistant:", err);
+      setAssistantResponse(data.text || "The assistant couldn't come up with a response.");
+    } catch (error) {
+      console.error("Error getting AI advice: ", error);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
     } finally {
       setIsAssistantLoading(false);
     }
   };
 
-  const handleMarkMessagesRead = async () => {
-    if (!activeSave || unreadMessages === 0) return;
-    setUnreadMessages(0);
+  // ---------------------------------------------------
+  // MESSAGE HELPERS (THREADS)
+  // ---------------------------------------------------
+  const getConversationThreads = () => {
+    const allMessages = gameData.save_messages || [];
+    const bySender = new Map();
 
+    for (const msg of allMessages) {
+      // don't show the player as a contact
+      if (msg.senderRole === 'Booker') continue;
+
+      const key = msg.senderId || msg.senderName || 'unknown';
+      if (!bySender.has(key)) {
+        bySender.set(key, {
+          contactId: key,
+          contactName: msg.senderName || 'Unknown',
+          messages: []
+        });
+      }
+      bySender.get(key).messages.push(msg);
+    }
+
+    const threads = Array.from(bySender.values()).map(thread => {
+      thread.messages.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+      thread.lastTimestamp = thread.messages[thread.messages.length - 1]?.timestamp || null;
+      return thread;
+    });
+
+    threads.sort((a, b) => {
+      if (!a.lastTimestamp) return 1;
+      if (!b.lastTimestamp) return -1;
+      return b.lastTimestamp.toMillis() - a.lastTimestamp.toMillis();
+    });
+
+    return threads;
+  };
+
+  const getMessagesForConversation = (conversationId) => {
+    const allMessages = gameData.save_messages || [];
+    return allMessages
+      .filter(msg => {
+        const key = msg.senderId || msg.senderName || 'unknown';
+        return key === conversationId || msg.senderRole === 'Booker';
+      })
+      .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+  };
+
+  // ---------------------------------------------------
+  // SEND REPLY (PLAYER → WRESTLER)
+  // ---------------------------------------------------
+  const handleSendReply = async () => {
+    if (!replyDraft.trim() || !activeSave || !selectedConversationId) return;
+
+    // find the wrestler name from the thread
+    const threads = getConversationThreads();
+    const thisThread = threads.find(t => t.contactId === selectedConversationId);
+    const wrestlerName = thisThread ? thisThread.contactName : 'Unknown Talent';
+
+    // create player message
+    const playerMessage = {
+      senderId: 'booker',
+      senderName: 'Booker',
+      senderRole: 'Booker',
+      body: replyDraft.trim(),
+      timestamp: activeSave.currentDate || Timestamp.now(),
+      type: 'Text',
+      isRead: true,
+      topic: null
+    };
+
+    // add to local state immediately so it shows in the thread
     setGameData(prev => ({
       ...prev,
-      save_messages: (prev.save_messages || []).map(m => ({ ...m, isRead: true }))
+      save_messages: [...(prev.save_messages || []), playerMessage]
     }));
 
+    setReplyDraft('');
+    setLockedReply(null);
+    setHoveredReply(null);
+
+    // save it to Firestore
     try {
-      const batch = writeBatch(db);
-      const ref = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      (gameData.save_messages || []).forEach(m => {
-        if (!m.isRead) {
-          batch.update(doc(ref, m.id), { isRead: true });
-        }
-      });
-      await batch.commit();
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      await addDoc(messagesRef, playerMessage);
     } catch (err) {
-      console.error("Error marking read:", err);
+      console.error("Error saving player reply:", err);
     }
+
+    // now trigger wrestler follow-up based on tone
+    let tone = 'neutral';
+    if (lockedReply && lockedReply.__tone) {
+      tone = lockedReply.__tone;
+    }
+
+    // get context from last wrestler message in this thread
+    const convMessages = getMessagesForConversation(selectedConversationId);
+    const lastWrestlerMessage = [...convMessages].reverse().find(m => m.senderRole === 'Wrestler');
+
+    await generateWrestlerFollowupAfterReply(selectedConversationId, wrestlerName, lastWrestlerMessage, tone);
+  };
+
+  // ---------------------------------------------------
+  // WRESTLER FOLLOW-UP (LOCAL FALLBACK)
+  // ---------------------------------------------------
+  const generateWrestlerFollowupAfterReply = async (conversationId, wrestlerName, originalMsg, tone) => {
+    // if we want to do it via API later, we can branch here
+    // for now we'll do it locally but make it tone-aware
+    let followupText = "";
+
+    const baseFrustrated = [
+      "Alright, I hear you. Still stings a bit, but I get it.",
+      "Okay… not what I was hoping for, but I'll keep doing my part.",
+      "That's disappointing, but I'll stay professional about it."
+    ];
+    const baseHappy = [
+      "Perfect — appreciate you making that happen.",
+      "That's what I was hoping to hear. I won't let you down.",
+      "Awesome. I'll be ready when you pull the trigger."
+    ];
+    const baseMaybe = [
+      "Got it. I’ll push hard these next few weeks.",
+      "Fair enough. I’ll give you something you can’t say no to.",
+      "Okay, I can work with that timeline."
+    ];
+
+    if (tone === 'positive') {
+      followupText = baseHappy[Math.floor(Math.random() * baseHappy.length)];
+    } else if (tone === 'negative') {
+      followupText = baseFrustrated[Math.floor(Math.random() * baseFrustrated.length)];
+    } else {
+      followupText = baseMaybe[Math.floor(Math.random() * baseMaybe.length)];
+    }
+
+    const followupMsg = {
+      senderId: conversationId,
+      senderName: wrestlerName,
+      senderRole: 'Wrestler',
+      body: followupText,
+      timestamp: activeSave?.currentDate || Timestamp.now(),
+      type: 'Text',
+      isRead: false
+    };
+
+    // save locally
+    setGameData(prev => ({
+      ...prev,
+      save_messages: [...(prev.save_messages || []), followupMsg]
+    }));
+    setUnreadMessages(prev => prev + 1);
+
+    // write to firestore
+    try {
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      await addDoc(messagesRef, followupMsg);
+    } catch (err) {
+      console.error("Error saving follow-up message:", err);
+    }
+  };
+
+  // ---------------------------------------------------
+  // BOOKING SCREEN LOGIC (same as before)
+  // ---------------------------------------------------
+  const handleStartBookingShow = (show) => {
+    setCurrentShow(show);
+    setCurrentSegments(Array(10).fill(null));
+    setGameState('BOOKING_SHOW');
+  };
+
+  const handleOpenSegmentModal = (index) => {
+    setEditingSegmentIndex(index);
+    const existingSegment = currentSegments[index];
+    setSegmentFormData(existingSegment || { type: 'Match', participants: [], winnerId: null, storylineId: null });
+    setParticipantSearch("");
+    setParticipantResults([]);
+    setShowSegmentModal(true);
+  };
+
+  const handleSaveSegment = () => {
+    const newSegments = [...currentSegments];
+    newSegments[editingSegmentIndex] = segmentFormData;
+    setCurrentSegments(newSegments);
+
+    setShowSegmentModal(false);
+    setEditingSegmentIndex(null);
+    setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
   };
 
   const calculateSegmentRating = (segment, allWrestlers) => {
@@ -699,26 +878,26 @@ function App() {
     const participants = [];
 
     for (const p of segment.participants) {
-      const w = allWrestlers.find(x => x.id === p.id);
-      if (w) {
-        participants.push(w);
-        totalCharisma += w.stats.charisma;
+      const wrestler = allWrestlers.find(w => w.id === p.id);
+      if (wrestler) {
+        participants.push(wrestler);
+        totalCharisma += wrestler.stats.charisma;
       }
     }
 
-    const count = participants.length;
-    if (count === 0) return 0;
-    const avgCharisma = totalCharisma / count;
+    const numParticipants = participants.length;
+    if (numParticipants === 0) return 0;
+    const avgCharisma = totalCharisma / numParticipants;
 
     if (segment.type === 'Angle') {
       return Math.min(100, Math.floor(avgCharisma));
     }
 
     if (segment.type === 'Match') {
-      for (const w of participants) {
-        totalWorkrate += (w.stats.brawling + w.stats.speed + w.stats.technical) / 3;
+      for (const wrestler of participants) {
+        totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
       }
-      const avgWorkrate = totalWorkrate / count;
+      const avgWorkrate = totalWorkrate / numParticipants;
       const rating = (avgCharisma * 0.6) + (avgWorkrate * 0.4);
       return Math.min(100, Math.floor(rating));
     }
@@ -726,134 +905,110 @@ function App() {
     return 0;
   };
 
-  const handleStartBookingShow = (show) => {
-    setCurrentShow(show);
-    setCurrentSegments(Array(10).fill(null));
-    setGameState('BOOKING_SHOW');
-  };
-
-  const handleOpenSegmentModal = (idx) => {
-    setEditingSegmentIndex(idx);
-    const existing = currentSegments[idx];
-    setSegmentFormData(existing || { type: 'Match', participants: [], winnerId: null, storylineId: null });
-    setParticipantSearch("");
-    setParticipantResults([]);
-    setShowSegmentModal(true);
-  };
-
-  const handleSaveSegment = () => {
-    const newSegs = [...currentSegments];
-    newSegs[editingSegmentIndex] = segmentFormData;
-    setCurrentSegments(newSegs);
-    setShowSegmentModal(false);
-    setEditingSegmentIndex(null);
-    setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
-  };
-
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
 
     try {
-      let rated = [];
-      let totalWeighted = 0;
+      let ratedSegments = [];
+      let totalWeightedRating = 0;
       let totalWeight = 0;
 
-      let lastIndex = -1;
+      let lastNonNullSegmentIndex = -1;
       for (let i = currentSegments.length - 1; i >= 0; i--) {
         if (currentSegments[i]) {
-          lastIndex = i;
+          lastNonNullSegmentIndex = i;
           break;
         }
       }
 
       for (let i = 0; i < currentSegments.length; i++) {
-        const seg = currentSegments[i];
-        if (!seg) {
-          rated.push(null);
+        const segment = currentSegments[i];
+        if (!segment) {
+          ratedSegments.push(null);
           continue;
         }
-        const rating = calculateSegmentRating(seg, gameData.save_wrestlers);
-        const rSeg = { ...seg, rating };
-        rated.push(rSeg);
+
+        const rating = calculateSegmentRating(segment, gameData.save_wrestlers);
+        const ratedSegment = { ...segment, rating: rating };
+        ratedSegments.push(ratedSegment);
+
         let weight = 1.0;
         if (i === 0) weight = 1.2;
-        if (i === lastIndex) weight = 2.0;
-        totalWeighted += rating * weight;
+        if (i === lastNonNullSegmentIndex) weight = 2.0;
+
+        totalWeightedRating += rating * weight;
         totalWeight += weight;
       }
 
-      const finalRating = totalWeight > 0 ? Math.floor(totalWeighted / totalWeight) : 0;
-      setShowRating(finalRating);
+      const finalShowRating = totalWeight > 0 ? Math.floor(totalWeightedRating / totalWeight) : 0;
+      setShowRating(finalShowRating);
 
       setLoadingMessage('Logging career events...');
-      await logCareerEvents(rated, finalRating);
+      await logCareerEvents(ratedSegments, finalShowRating);
 
       setLoadingMessage('Simulating backstage changes...');
-      await runShowSimulation(rated, currentShow);
+      await runShowSimulation(ratedSegments, currentShow);
 
       setLoadingMessage('Generating show recap...');
-      const recap = await generateShowRecap(currentShow, rated, finalRating);
-      setShowRecap(recap);
-
-      setLoadingMessage('Saving show results...');
+      const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
+      setShowRecap(recapText);
 
       const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
-      const updateData = {
+      const showUpdateData = {
         status: "Complete",
-        segments: rated,
-        rating: finalRating,
-        recap
+        segments: ratedSegments,
+        rating: finalShowRating,
+        recap: recapText
       };
-      await setDoc(showRef, updateData, { merge: true });
+      await setDoc(showRef, showUpdateData, { merge: true });
 
-      setGameData(prev => ({
-        ...prev,
-        save_shows: prev.save_shows.map(s => s.id === currentShow.id ? { ...s, ...updateData } : s)
+      setGameData(prevData => ({
+        ...prevData,
+        save_shows: prevData.save_shows.map(show =>
+          show.id === currentShow.id
+            ? { ...show, ...showUpdateData }
+            : show
+        )
       }));
 
       setGameState('SHOW_RESULTS');
 
-    } catch (err) {
-      console.error("Error running show:", err);
-      setLoadingMessage("Error running show.");
+    } catch (error) {
+      console.error("Error running show:", error);
+      setLoadingMessage("Error saving show. Please try again.");
       setGameState('BOOKING_SHOW');
     }
   };
 
+  // ---------------------------------------------------
+  // AI SHOW RECAP
+  // ---------------------------------------------------
   const generateShowRecap = async (show, ratedSegments, rating) => {
-    const payload = {
-      type: 'show-recap',
-      showName: show.eventName,
-      overallRating: rating,
-      segments: ratedSegments.map(seg => {
-        if (!seg) return null;
-        return {
-          type: seg.type,
-          participants: seg.participants,
-          rating: seg.rating,
-          storylineId: seg.storylineId || null
-        };
-      })
-    };
-
     try {
       const resp = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          type: 'show-recap',
+          showName: show.eventName,
+          overallRating: rating,
+          segments: ratedSegments
+        })
       });
 
-      if (!resp.ok) throw new Error(`recap failed: ${resp.status}`);
-
+      if (!resp.ok) throw new Error("recap failed");
       const data = await resp.json();
       return data.text || "Recap unavailable.";
     } catch (err) {
-      console.error("Error generating recap:", err);
-      return "Recap unavailable.";
+      console.error("Error generating AI recap:", err);
+      return "An error occurred while generating the show recap. The show is still saved.";
     }
   };
 
+  // ---------------------------------------------------
+  // POST-SHOW SIM + CAREER EVENTS (unchanged)
+  // ---------------------------------------------------
   const runShowSimulation = async (ratedSegments, show) => {
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
       return;
@@ -863,28 +1018,28 @@ function App() {
     const wrestlerUpdates = new Map();
     const storylineUpdates = new Map();
 
-    const allW = gameData.save_wrestlers;
-    const allR = gameData.save_relationships;
-    const allS = gameData.save_storylines;
+    const allWrestlers = gameData.save_wrestlers;
+    const allRelationships = gameData.save_relationships;
+    const allStorylines = gameData.save_storylines;
 
     const getWrestler = (id) => {
       if (wrestlerUpdates.has(id)) return wrestlerUpdates.get(id);
-      return allW.find(w => w.id === id);
+      return allWrestlers.find(w => w.id === id);
     };
 
-    const getRelationship = (a, b) => {
-      return allR.find(rel =>
-        (rel.personA_Id === a && rel.personB_Id === b) ||
-        (rel.personA_Id === b && rel.personB_Id === a)
+    const getRelationship = (id1, id2) => {
+      return allRelationships.find(rel =>
+        (rel.personA_Id === id1 && rel.personB_Id === id2) ||
+        (rel.personA_Id === id2 && rel.personB_Id === id1)
       );
     };
 
     const getStoryline = (id) => {
       if (storylineUpdates.has(id)) return storylineUpdates.get(id);
-      return allS.find(s => s.id === id);
+      return allStorylines.find(s => s.id === id);
     };
 
-    const moraleMult = (tier) => {
+    const getMoraleMultiplier = (tier) => {
       switch (tier) {
         case 'Flagship_Event': return 2.0;
         case 'Major_Event': return 1.5;
@@ -892,93 +1047,107 @@ function App() {
       }
     };
 
-    const heatDelta = (r) => {
-      if (r >= 75) return 5;
-      if (r >= 50) return 2;
+    const getHeatChange = (segmentRating) => {
+      if (segmentRating >= 75) return 5;
+      if (segmentRating >= 50) return 2;
       return -3;
     };
 
     try {
-      const mMult = moraleMult(show.eventTier);
+      const moraleMultiplier = getMoraleMultiplier(show.eventTier);
 
-      for (const seg of ratedSegments) {
-        if (!seg) continue;
+      for (const segment of ratedSegments) {
+        if (!segment) continue;
 
-        const segRating = seg.rating || 50;
+        const segmentRating = segment.rating || 50;
 
-        if (seg.storylineId) {
-          const st = getStoryline(seg.storylineId);
-          if (st) {
-            const baseHeat = storylineUpdates.has(st.id) ? storylineUpdates.get(st.id).heat : st.heat;
-            const newHeat = Math.max(0, Math.min(100, baseHeat + heatDelta(segRating)));
-            storylineUpdates.set(st.id, { ...st, heat: newHeat });
+        if (segment.storylineId) {
+          const storyline = getStoryline(segment.storylineId);
+          if (storyline) {
+            const baseHeat = storylineUpdates.has(storyline.id)
+              ? storylineUpdates.get(storyline.id).heat
+              : storyline.heat;
+            const heatChange = getHeatChange(segmentRating);
+            const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
+            storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
           }
         }
 
-        if (seg.type === 'Match') {
-          const ids = seg.participants.map(p => p.id);
+        if (segment.type === 'Match') {
+          const participantIds = segment.participants.map(p => p.id);
 
-          for (const p of seg.participants) {
-            const w = getWrestler(p.id);
-            if (!w) continue;
+          for (const participant of segment.participants) {
+            const wrestler = getWrestler(participant.id);
+            if (!wrestler) continue;
 
-            const baseMorale = wrestlerUpdates.has(p.id) ? wrestlerUpdates.get(p.id).morale : w.morale;
             let moraleChange = 0;
+            const baseMorale = wrestlerUpdates.has(participant.id)
+              ? wrestlerUpdates.get(participant.id).morale
+              : wrestler.morale;
 
-            if (seg.storylineId) {
-              if (seg.winnerId === p.id) {
+            if (segment.storylineId) {
+              if (segment.winnerId === participant.id) {
                 moraleChange += 10;
-              } else if (seg.winnerId) {
+              } else if (segment.winnerId) {
                 moraleChange -= 5;
               }
             }
 
-            const opps = ids.filter(id => id !== p.id);
-            for (const oppId of opps) {
-              const rel = getRelationship(p.id, oppId);
-              if (rel) {
-                if (rel.status.includes('Friend')) moraleChange += 3;
-                else if (rel.status.includes('Dislike') || rel.status.includes('Hate')) moraleChange -= 3;
+            const opponentIds = participantIds.filter(id => id !== participant.id);
+            for (const oppId of opponentIds) {
+              const relationship = getRelationship(participant.id, oppId);
+              if (relationship) {
+                if (relationship.status.includes('Friend')) {
+                  moraleChange += 3;
+                } else if (relationship.status.includes('Dislike') || relationship.status.includes('Hate')) {
+                  moraleChange -= 3;
+                }
               }
             }
 
             if (moraleChange !== 0) {
-              const finalMorale = Math.max(0, Math.min(100, baseMorale + moraleChange * mMult));
-              wrestlerUpdates.set(p.id, { ...w, morale: finalMorale });
+              const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
+              wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
             }
           }
         }
       }
 
-      let updates = false;
+      let updatesMade = false;
+
       if (wrestlerUpdates.size > 0) {
-        wrestlerUpdates.forEach((w, id) => {
-          const wRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
-          batch.update(wRef, { morale: w.morale });
+        wrestlerUpdates.forEach((wrestler, id) => {
+          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
+          batch.update(docRef, { morale: wrestler.morale });
         });
-        updates = true;
+        updatesMade = true;
       }
 
       if (storylineUpdates.size > 0) {
-        storylineUpdates.forEach((s, id) => {
-          const sRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
-          batch.update(sRef, { heat: s.heat });
+        storylineUpdates.forEach((storyline, id) => {
+          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
+          batch.update(docRef, { heat: storyline.heat });
         });
-        updates = true;
+        updatesMade = true;
       }
 
-      if (updates) {
+      if (updatesMade) {
         await batch.commit();
-
-        setGameData(prev => ({
-          ...prev,
-          save_wrestlers: prev.save_wrestlers.map(w => wrestlerUpdates.has(w.id) ? wrestlerUpdates.get(w.id) : w),
-          save_storylines: prev.save_storylines.map(s => storylineUpdates.has(s.id) ? storylineUpdates.get(s.id) : s)
+        setGameData(prevData => ({
+          ...prevData,
+          save_wrestlers: prevData.save_wrestlers.map(w => {
+            if (wrestlerUpdates.has(w.id)) return wrestlerUpdates.get(w.id);
+            return w;
+          }),
+          save_storylines: prevData.save_storylines.map(s => {
+            if (storylineUpdates.has(s.id)) return storylineUpdates.get(s.id);
+            return s;
+          })
         }));
       }
 
-    } catch (err) {
-      console.error("Error in show sim:", err);
+    } catch (error) {
+      console.error("Error during post-show simulation: ", error);
     }
   };
 
@@ -990,424 +1159,271 @@ function App() {
       const company = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
       const companySize = company ? company.size : "Unknown";
 
-      let newEvents = [];
+      let newCareerEvents = [];
 
-      for (const seg of ratedSegments) {
-        if (!seg) continue;
+      for (const segment of ratedSegments) {
+        if (!segment) continue;
 
-        for (const p of seg.participants) {
-          const oppIds = seg.participants.filter(x => x.id !== p.id).map(x => x.id);
-          const oppNames = seg.participants.filter(x => x.id !== p.id).map(x => x.name).join(', ');
+        for (const participant of segment.participants) {
+          const opponentIds = segment.participants.filter(p => p.id !== participant.id).map(p => p.id);
+          const opponentNames = segment.participants.filter(p => p.id !== participant.id).map(p => p.name).join(', ');
 
           let eventType = "Angle";
-          let notes = `Participated in an angle with ${oppNames || 'others'}`;
+          let notes = `Participated in an angle with ${opponentNames || 'others'}`;
 
-          if (seg.type === 'Match') {
-            if (seg.winnerId === p.id) {
+          if (segment.type === 'Match') {
+            if (segment.winnerId === participant.id) {
               eventType = "Match Win";
-              notes = `Won match against ${oppNames || 'opponent(s)'}`;
-            } else if (seg.winnerId) {
+              notes = `Won match against ${opponentNames || 'opponent(s)'}`;
+            } else if (segment.winnerId) {
               eventType = "Match Loss";
-              const winnerName = seg.participants.find(x => x.id === seg.winnerId)?.name;
+              const winnerName = segment.participants.find(p => p.id === segment.winnerId)?.name;
               notes = `Lost match to ${winnerName || 'opponent(s)'}`;
             } else {
               eventType = "Match Draw/NC";
-              notes = `Match with ${oppNames || 'opponent(s)'} ended in a draw/no contest.`;
+              notes = `Match with ${opponentNames || 'opponent(s)'} ended in a draw/no contest.`;
             }
           }
 
-          const ev = {
+          const careerEventData = {
             playerSaveId: activeSave.id,
-            wrestlerId: p.id,
+            wrestlerId: participant.id,
             date: activeSave.currentDate,
-            eventType,
+            eventType: eventType,
             companyId: activeSave.playerCompanyId,
-            companySize,
-            segmentRating: seg.rating || showRating,
-            opponentIds: oppIds,
-            notes,
-            storylineId: seg.storylineId || null,
+            companySize: companySize,
+            segmentRating: segment.rating || showRating,
+            opponentIds: opponentIds,
+            notes: notes,
+            storylineId: segment.storylineId || null,
             showId: currentShow.id
           };
 
-          const evRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
-          batch.set(evRef, ev);
-          newEvents.push({ id: evRef.id, ...ev });
+          const newEventRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
+          batch.set(newEventRef, careerEventData);
+
+          newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
         }
       }
 
       await batch.commit();
 
-      setGameData(prev => ({
-        ...prev,
+      setGameData(prevData => ({
+        ...prevData,
         save_career_events: [
-          ...(prev.save_career_events || []),
-          ...newEvents
+          ...(prevData.save_career_events || []),
+          ...newCareerEvents
         ]
       }));
-    } catch (err) {
-      console.error("Error logging career events:", err);
+
+    } catch (error) {
+      console.error("Error logging career events:", error);
     }
   };
 
-  const handleParticipantSearch = (text) => {
-    setParticipantSearch(text);
-    if (text.length < 1) {
-      setParticipantResults([]);
-      return;
-    }
-    const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(text.toLowerCase()))
-      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
-    setParticipantResults(results.slice(0, 5));
-  };
+  // ---------------------------------------------------
+  // MESSAGES MODAL (IPHONE STYLE)
+  // ---------------------------------------------------
+  const renderMessagesModal = () => {
+    if (!showMessagesModal) return null;
 
-  const handleAddParticipant = (w) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      participants: [...prev.participants, { id: w.id, name: w.name }]
-    }));
-    setParticipantSearch("");
-    setParticipantResults([]);
-  };
-
-  const handleRemoveParticipant = (id) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(p => p.id !== id),
-      winnerId: prev.winnerId === id ? null : prev.winnerId
-    }));
-  };
-
-  const handleWinnerSelect = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      winnerId: e.target.value || null
-    }));
-  };
-
-  const handleSegmentTypeChange = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      type: e.target.value,
-      winnerId: e.target.value === 'Angle' ? null : prev.winnerId
-    }));
-  };
-
-  const handleStorylineSelect = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      storylineId: e.target.value || null
-    }));
-  };
-
-  const handleOpenCreateStorylineModal = () => {
-    setStorylineFormData({ name: '', participants: [] });
-    setStorylineParticipantSearch("");
-    setStorylineParticipantResults([]);
-    setShowStorylineModal(true);
-  };
-
-  const handleStorylineParticipantSearch = (text) => {
-    setStorylineParticipantSearch(text);
-    if (text.length < 1) {
-      setStorylineParticipantResults([]);
-      return;
-    }
-    const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(text.toLowerCase()))
-      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
-    setStorylineParticipantResults(results.slice(0, 5));
-  };
-
-  const handleAddStorylineParticipant = (w) => {
-    setStorylineFormData(prev => ({
-      ...prev,
-      participants: [...prev.participants, { id: w.id, name: w.name }]
-    }));
-    setStorylineParticipantSearch("");
-    setStorylineParticipantResults([]);
-  };
-
-  const handleRemoveStorylineParticipant = (id) => {
-    setStorylineFormData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(p => p.id !== id)
-    }));
-  };
-
-  const handleCreateStoryline = async () => {
-    if (!storylineFormData.name || storylineFormData.participants.length < 2) return;
-    setLoadingMessage('Creating storyline...');
-    setGameState('BUSY');
-
-    try {
-      const newData = {
-        ...storylineFormData,
-        companyId: activeSave.playerCompanyId,
-        heat: 10,
-        status: "Active",
-        beats: []
-      };
-
-      const sRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newData);
-      const storyline = { id: sRef.id, ...newData };
-
-      setGameData(prev => ({
-        ...prev,
-        save_storylines: [...(prev.save_storylines || []), storyline]
-      }));
-
-      setShowStorylineModal(false);
-      setGameState('STORYLINE_SCREEN');
-    } catch (err) {
-      console.error("Error creating storyline:", err);
-      setLoadingMessage("Failed to create storyline.");
-      setGameState('STORYLINE_SCREEN');
-    }
-  };
-
-  const handleViewCareerHistory = (w) => {
-    setViewingWrestler(w);
-    setGameState('CAREER_HISTORY_SCREEN');
-  };
-
-  const handleViewRelationships = (w) => {
-    setViewingWrestler(w);
-    setGameState('RELATIONSHIPS_SCREEN');
-  };
-
-  // --- Messages helpers ---
-  const getAllMessages = () => gameData.save_messages || [];
-
-  const getConversationThreads = () => {
-    const all = getAllMessages();
-    const map = new Map();
-
-    all.forEach(msg => {
-      // ignore system messages entirely
-      if (msg.type === 'System') return;
-      if (typeof msg.body === 'string' && msg.body.startsWith("System:")) return;
-
-      const senderId = msg.senderId || 'unknown';
-      const senderName = msg.senderName || '';
-
-      // filter out the booker in every possible shape
-      const isFromBooker = msg.isFromBooker === true;
-      const isBookerId = senderId.toLowerCase() === 'booker';
-      const isBookerName = senderName.toLowerCase() === 'booker';
-      if (isFromBooker || isBookerId || isBookerName) {
-        return;
-      }
-
-      if (!map.has(senderId)) {
-        map.set(senderId, []);
-      }
-      map.get(senderId).push(msg);
-    });
-
-    const threads = [];
-    map.forEach((msgs, senderId) => {
-      msgs.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
-      const lastMsg = msgs[msgs.length - 1];
-      threads.push({
-        senderId,
-        senderName: lastMsg?.senderName || 'Unknown',
-        lastMessage: lastMsg,
-        messages: msgs
-      });
-    });
-
-    threads.sort((a, b) => b.lastMessage.timestamp.toMillis() - a.lastMessage.timestamp.toMillis());
-    return threads;
-  };
-
-  const formatGameTimestamp = (ts) => {
-    if (!ts) return '';
-    try {
-      const d = ts.toDate();
-      return d.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      });
-    } catch {
-      return '';
-    }
-  };
-
-  const handleOpenMessagesModal = () => {
-    setShowMessagesModal(true);
     const threads = getConversationThreads();
-    if (threads.length > 0) {
-      setSelectedMessageSenderId(threads[0].senderId);
-      setActiveMessageForReply(threads[0].messages[threads[0].messages.length - 1]);
-    } else {
-      setSelectedMessageSenderId(null);
-      setActiveMessageForReply(null);
-    }
-    setReplyDraft('');
-    setIsReplyDirty(false);
-    setHoveredReplyText('');
-    setLastSelectedReplyTone(null);
-  };
+    const activeConversationId = selectedConversationId || (threads[0]?.contactId ?? null);
+    const conversationMessages = activeConversationId ? getMessagesForConversation(activeConversationId) : [];
 
-  // make "no" spikier, no matter morale
-  const generateLocalFollowUp = (tone, originalMsg, wrestlerObj) => {
-    const topic = originalMsg?.topic || 'general';
-    const senderName = originalMsg?.senderName || 'Talent';
-
-    if (tone === 'yes') {
-      switch (topic) {
-        case 'request_time_off':
-          return `${senderName}: Appreciate you giving me the time. I’ll come back ready to go.`;
-        case 'contract_negotiation':
-          return `${senderName}: Thanks for working with me on that. I’ll make sure I justify it.`;
-        case 'unhappy_booking':
-          return `${senderName}: That’s good to hear. I’ll keep proving I belong higher.`;
-        default:
-          return `${senderName}: Perfect — thanks for backing me on this.`;
-      }
-    }
-
-    if (tone === 'no') {
-      // Always disappointed or annoyed for a no
-      switch (topic) {
-        case 'request_time_off':
-          return `${senderName}: That’s rough. I was hoping for some flexibility there. I’ll keep it professional, but I’m not thrilled.`;
-        case 'contract_negotiation':
-          return `${senderName}: Okay, but that’s not what I was looking for. I may have to see what else is out there if this doesn’t move.`;
-        case 'unhappy_booking':
-          return `${senderName}: So we’re staying where we are. I’ll do business, but I want it on record that I’m not happy with the spot.`;
-        case 'excited_push':
-          return `${senderName}: Alright. I thought there was momentum, but if the timing’s not there, I guess I wait.`;
-        default:
-          return `${senderName}: Got it. Not the answer I wanted, but I heard you.`;
-      }
-    }
-
-    if (tone === 'maybe') {
-      switch (topic) {
-        case 'request_time_off':
-          return `${senderName}: Fair enough — keep me in the loop on dates and I’ll work around it.`;
-        case 'contract_negotiation':
-          return `${senderName}: Okay, let’s revisit after the next run. I still think I’m worth more.`;
-        case 'unhappy_booking':
-          return `${senderName}: Alright. If I keep getting reactions, I’ll bring it back to you.`;
-        default:
-          return `${senderName}: That works — we can circle back when it makes sense.`;
-      }
-    }
-
-    return `${senderName}: Okay.`;
-  };
-
-  const getMoraleDeltaForTone = (tone) => {
-    if (tone === 'yes') return +5;
-    if (tone === 'no') return -5;
-    if (tone === 'maybe') return 0;
-    return 0;
-  };
-
-  const handleSendReply = async () => {
-    if (!activeMessageForReply || !replyDraft.trim()) return;
-    if (!activeSave || !db || !userId || !appId) return;
-
-    const senderId = activeMessageForReply.senderId;
-    const senderName = activeMessageForReply.senderName;
-
-    const bookerMsg = {
-      senderId: 'booker',
-      senderName: 'Booker',
-      body: replyDraft.trim(),
-      timestamp: getCurrentGameTimestamp(),
-      type: 'Text',
-      isRead: true,
-      isFromBooker: true,
-      inReplyTo: activeMessageForReply.id
+    const showNameFromMsg = (msg) => {
+      if (msg.senderRole === 'Booker') return 'You';
+      return msg.senderName || 'Unknown';
     };
 
-    let usedTone = lastSelectedReplyTone || 'maybe';
-    if (!lastSelectedReplyTone) {
-      const lower = replyDraft.toLowerCase();
-      if (lower.startsWith("yes") || lower.includes("we can do that")) usedTone = 'yes';
-      else if (lower.startsWith("no") || lower.includes("not right now") || lower.includes("can’t") || lower.includes("cant") || lower.includes("won’t")) usedTone = 'no';
-      else if (lower.includes("if") || lower.includes("revisit") || lower.includes("let's see") || lower.includes("lets see")) usedTone = 'maybe';
-    }
+    const effectiveDraft = hoveredReply ? hoveredReply : replyDraft;
 
-    const wrestlerObj = gameData.save_wrestlers?.find(w => w.id === senderId);
-    const followUpText = generateLocalFollowUp(usedTone, activeMessageForReply, wrestlerObj);
-    const moraleDelta = getMoraleDeltaForTone(usedTone);
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+        onClick={() => setShowMessagesModal(false)}
+      >
+        <div
+          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] flex"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* LEFT: conversations list */}
+          <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 className="text-xl font-bold text-white flex items-center">
+                <MessageIcon />
+                Messages
+              </h2>
+              <button
+                onClick={() => {
+                  setShowMessagesModal(false);
+                  // mark all as read
+                  handleMarkMessagesRead();
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            {threads.length === 0 ? (
+              <p className="text-gray-400 p-4">No messages.</p>
+            ) : (
+              threads.map(thread => (
+                <button
+                  key={thread.contactId}
+                  onClick={() => {
+                    setSelectedConversationId(thread.contactId);
+                    setReplyDraft('');
+                    setHoveredReply(null);
+                    setLockedReply(null);
+                    setCurrentReplyOptions(
+                      thread.messages[thread.messages.length - 1]?.replyOptions || []
+                    );
+                  }}
+                  className={`w-full text-left px-4 py-3 flex flex-col border-b border-gray-800 hover:bg-gray-800 transition ${
+                    thread.contactId === activeConversationId ? 'bg-gray-800' : ''
+                  }`}
+                >
+                  <span className="text-white font-semibold">{thread.contactName}</span>
+                  <span className="text-xs text-gray-400">
+                    {thread.messages[thread.messages.length - 1]?.body?.slice(0, 50) || ''}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
 
-    const talentReply = {
-      senderId,
-      senderName,
-      body: followUpText,
-      timestamp: getCurrentGameTimestamp(),
-      type: 'Text',
-      isRead: false,
-      isFollowUp: true
-    };
+          {/* RIGHT: conversation */}
+          <div className="w-2/3 flex flex-col">
+            {/* header */}
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-white">
+                  {threads.find(t => t.contactId === activeConversationId)?.contactName || 'Select a conversation'}
+                </h3>
+                <p className="text-xs text-gray-400">Backstage messages (shoot)</p>
+              </div>
+            </div>
 
-    const msgRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-    const bookerDoc = await addDoc(msgRef, bookerMsg);
-    const talentDoc = await addDoc(msgRef, talentReply);
+            {/* messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {conversationMessages.length === 0 ? (
+                <p className="text-gray-500">No messages in this thread.</p>
+              ) : (
+                conversationMessages.map(msg => (
+                  <div
+                    key={`${msg.senderName}-${msg.timestamp?.seconds || Math.random()}`}
+                    className={`flex ${msg.senderRole === 'Booker' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                        msg.senderRole === 'Booker'
+                          ? 'bg-indigo-600 text-white rounded-br-none'
+                          : 'bg-gray-700 text-white rounded-bl-none'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
+                      <p className="text-[10px] text-gray-200 mt-1 text-right">
+                        {msg.timestamp?.toDate
+                          ? msg.timestamp.toDate().toLocaleString()
+                          : ''}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
-    let updatedWrestlers = gameData.save_wrestlers;
-    if (senderId && gameData.save_wrestlers) {
-      const target = gameData.save_wrestlers.find(w => w.id === senderId);
-      if (target) {
-        const newMorale = Math.max(0, Math.min(100, (target.morale ?? 75) + moraleDelta));
-        const wRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, senderId);
-        await setDoc(wRef, { morale: newMorale }, { merge: true });
-        updatedWrestlers = gameData.save_wrestlers.map(w => w.id === senderId ? { ...w, morale: newMorale } : w);
-      }
-    }
+            {/* composer */}
+            <div className="border-t border-gray-700 p-4 bg-gray-800">
+              <div className="flex space-x-2 mb-2">
+                {['Yes', 'No', 'Maybe'].map((label, idx) => {
+                  const option = currentReplyOptions[idx] || "";
+                  const tone =
+                    idx === 0 ? 'positive' :
+                    idx === 1 ? 'negative' : 'neutral';
+                  return (
+                    <button
+                      key={label}
+                      onMouseEnter={() => {
+                        if (option) setHoveredReply(option);
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredReply(null);
+                      }}
+                      onClick={() => {
+                        if (option) {
+                          setReplyDraft(option);
+                          setLockedReply({ text: option, __tone: tone });
+                          setHoveredReply(null);
+                        }
+                      }}
+                      className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-sm font-semibold rounded"
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex space-x-2">
+                <textarea
+                  value={effectiveDraft}
+                  onChange={(e) => {
+                    setReplyDraft(e.target.value);
+                    setLockedReply(null); // user is now free typing
+                  }}
+                  rows={2}
+                  className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Type your reply..."
+                />
+                <button
+                  onClick={handleSendReply}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
 
-    setGameData(prev => ({
-      ...prev,
-      save_messages: [
-        ...(prev.save_messages || []),
-        { id: bookerDoc.id, ...bookerMsg },
-        { id: talentDoc.id, ...talentReply }
-      ],
-      save_wrestlers: updatedWrestlers
+        </div>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------
+  // MARK MESSAGES READ
+  // ---------------------------------------------------
+  const handleMarkMessagesRead = async () => {
+    if (!activeSave || unreadMessages === 0) return;
+
+    setUnreadMessages(0);
+
+    setGameData(prevData => ({
+      ...prevData,
+      save_messages: (prevData.save_messages || []).map(msg => ({ ...msg, isRead: true }))
     }));
 
-    setReplyDraft('');
-    setIsReplyDirty(false);
-    setHoveredReplyText('');
-    setLastSelectedReplyTone(null);
+    try {
+      const batch = writeBatch(db);
+      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+
+      (gameData.save_messages || []).forEach(msg => {
+        if (!msg.isRead) {
+          const docRef = doc(messagesRef, msg.id);
+          batch.update(docRef, { isRead: true });
+        }
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error("Error marking messages as read: ", error);
+    }
   };
 
-  const handleReplyHover = (text) => {
-    if (!text) return;
-    setHoveredReplyText(text);
-    if (!isReplyDirty) setReplyDraft(text);
-  };
-
-  const handleReplyHoverLeave = () => {
-    setHoveredReplyText('');
-    if (!isReplyDirty) setReplyDraft('');
-  };
-
-  const handleReplyDraftChange = (e) => {
-    setReplyDraft(e.target.value);
-    setIsReplyDirty(true);
-    setLastSelectedReplyTone(null);
-  };
-
-  const handleReplyButtonClick = (text, tone) => {
-    if (!text) return;
-    setReplyDraft(text);
-    setIsReplyDirty(true);
-    setHoveredReplyText('');
-    setLastSelectedReplyTone(tone);
-  };
-
-  // --- renderers ---
+  // ---------------------------------------------------
+  // UI RENDERERS (MAIN MENU, DASHBOARD, ETC)
+  // ---------------------------------------------------
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1476,6 +1492,7 @@ function App() {
 
   const renderGameDashboard = () => {
     if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
+
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
 
     const currentDateStr = activeSave.currentDate.toDate().toISOString().split('T')[0];
@@ -1491,9 +1508,7 @@ function App() {
             <p className="text-indigo-300">{activeSave.saveName}</p>
           </div>
           <div className="text-center md:text-right mt-4 md:mt-0">
-            <h2 className="text-xl font-semibold">
-              {activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </h2>
+            <h2 className="text-xl font-semibold">{activeSave.currentDate.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h2>
             <p className="text-gray-400">Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}</p>
           </div>
         </div>
@@ -1502,10 +1517,11 @@ function App() {
           <div className="md:col-span-3">
             <div className="bg-gray-800 p-6 rounded-lg shadow-lg min-h-[400px]">
               <h3 className="text-xl font-semibold mb-4">Today's Actions</h3>
+
               {plannedShow ? (
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-bold text-yellow-300">IT'S SHOW DAY!</h4>
-                  <p className="text-lg mt-2">Time to book {plannedShow.eventName}!</p>
+                  <p className="text-lg mt-2">Time to book <strong>{plannedShow.eventName}</strong>!</p>
                   <p className="text-sm text-gray-400">(Tier: {plannedShow.eventTier})</p>
                   <button
                     onClick={() => handleStartBookingShow(plannedShow)}
@@ -1526,13 +1542,19 @@ function App() {
                   </button>
                 </div>
               )}
+
             </div>
           </div>
 
           <div className="md:col-span-1 space-y-4">
             <button
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
-              onClick={handleOpenMessagesModal}
+              onClick={() => {
+                setShowMessagesModal(true);
+                setSelectedConversationId(null);
+                setHoveredReply(null);
+                setLockedReply(null);
+              }}
             >
               <span className="flex items-center">
                 <MessageIcon />
@@ -1586,150 +1608,10 @@ function App() {
     );
   };
 
-  const renderMessagesModal = () => {
-    if (!showMessagesModal) return null;
-    const threads = getConversationThreads();
-    const selectedThread = threads.find(t => t.senderId === selectedMessageSenderId);
-    const messagesForThread = selectedThread ? selectedThread.messages : [];
-    const activeMessageReplyOptions = activeMessageForReply?.replyOptions || [];
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => {
-          setShowMessagesModal(false);
-          handleMarkMessagesRead();
-        }}
-      >
-        <div
-          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] flex"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* left */}
-          <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-xl font-bold text-white">Inbox</h2>
-              <button
-                onClick={() => {
-                  setShowMessagesModal(false);
-                  handleMarkMessagesRead();
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            <div>
-              {threads.length === 0 && (
-                <p className="text-gray-400 p-4 text-sm">Your inbox is empty.</p>
-              )}
-              {threads.map(thread => (
-                <button
-                  key={thread.senderId}
-                  onClick={() => {
-                    setSelectedMessageSenderId(thread.senderId);
-                    setActiveMessageForReply(thread.messages[thread.messages.length - 1]);
-                    setReplyDraft('');
-                    setIsReplyDirty(false);
-                    setHoveredReplyText('');
-                    setLastSelectedReplyTone(null);
-                  }}
-                  className={`w-full flex flex-col items-start px-4 py-3 text-left hover:bg-gray-800 transition-all ${thread.senderId === selectedMessageSenderId ? 'bg-gray-800' : ''}`}
-                >
-                  <div className="flex items-center w-full justify-between">
-                    <span className="text-white font-semibold">{thread.senderName}</span>
-                    <span className="text-xs text-gray-400">{formatGameTimestamp(thread.lastMessage.timestamp)}</span>
-                  </div>
-                  <p className="text-xs text-gray-400 truncate w-full">{thread.lastMessage.body}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* right */}
-          <div className="w-2/3 flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <div>
-                <h3 className="text-lg font-bold text-white">{selectedThread ? selectedThread.senderName : 'Select a conversation'}</h3>
-                <p className="text-xs text-gray-400">All messages are shoot/backstage.</p>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messagesForThread.length === 0 ? (
-                <p className="text-gray-400 text-sm">No messages in this conversation yet.</p>
-              ) : (
-                messagesForThread.map(msg => {
-                  // already filtered system above, but double guard
-                  if (msg.type === 'System' || (typeof msg.body === 'string' && msg.body.startsWith("System:"))) {
-                    return null;
-                  }
-                  return (
-                    <div key={msg.id} className={`flex ${msg.isFromBooker ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] rounded-lg px-4 py-2 ${msg.isFromBooker ? 'bg-indigo-600 text-white' : msg.isFollowUp ? 'bg-gray-700 text-gray-100' : 'bg-gray-800 text-white'}`}>
-                        <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
-                        <p className="text-[0.6rem] text-gray-300 mt-1 text-right">{formatGameTimestamp(msg.timestamp)}</p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {selectedThread && (
-              <div className="p-4 border-t border-gray-700 bg-gray-900">
-                <div className="flex space-x-2 mb-3">
-                  <button
-                    onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[0] || '')}
-                    onMouseLeave={handleReplyHoverLeave}
-                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[0] || '', 'yes')}
-                    className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[1] || '')}
-                    onMouseLeave={handleReplyHoverLeave}
-                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[1] || '', 'no')}
-                    className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
-                  >
-                    No
-                  </button>
-                  <button
-                    onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[2] || '')}
-                    onMouseLeave={handleReplyHoverLeave}
-                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[2] || '', 'maybe')}
-                    className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
-                  >
-                    Maybe
-                  </button>
-                </div>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={replyDraft}
-                    onChange={handleReplyDraftChange}
-                    placeholder="Type a response to this talent..."
-                    className="flex-grow bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <button
-                    onClick={handleSendReply}
-                    disabled={!replyDraft.trim()}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 disabled:bg-gray-600"
-                  >
-                    Send
-                  </button>
-                </div>
-                <p className="text-[0.65rem] text-gray-500 mt-2">Hover to preview. Click to lock. Send to finalize.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
+  // Assistant modal
   const renderAssistantModal = () => {
     if (!showAssistantModal) return null;
+
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -1798,8 +1680,103 @@ function App() {
     );
   };
 
+  // Roster screen
+  const renderRosterScreen = () => {
+    const wrestlers = gameData.save_wrestlers || [];
+
+    const getDispositionClass = (disposition) => {
+      switch (disposition) {
+        case 'Face': return 'text-green-400';
+        case 'Heel': return 'text-red-400';
+        case 'Tweener': return 'text-yellow-400';
+        default: return 'text-gray-400';
+      }
+    };
+
+    return (
+      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <RosterIcon />
+            Your Roster
+          </h1>
+          <button
+            onClick={() => setGameState('IN_GAME')}
+            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {wrestlers.length === 0 && (
+            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
+          )}
+          {wrestlers.sort((a,b) => a.name.localeCompare(b.name)).map(wrestler => (
+            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
+              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
+
+              <div className="flex justify-between text-sm mb-3">
+                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
+                  {wrestler.disposition}
+                </span>
+                <span className="text-gray-300">
+                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
+                </span>
+              </div>
+
+              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
+                <div>
+                  <span className="text-gray-400">BRAWL</span>
+                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">SPEED</span>
+                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">TECH</span>
+                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">CHAR</span>
+                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setViewingWrestler(wrestler);
+                    setGameState('CAREER_HISTORY_SCREEN');
+                  }}
+                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
+                >
+                  <HistoryIcon />
+                  History
+                </button>
+                <button
+                  onClick={() => {
+                    setViewingWrestler(wrestler);
+                    setGameState('RELATIONSHIPS_SCREEN');
+                  }}
+                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
+                >
+                  <RelationshipsIcon />
+                  Relations
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderBookingScreen = () => {
     if (!currentShow) return null;
+
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1827,24 +1804,24 @@ function App() {
         </div>
 
         <div className="mt-6 space-y-3">
-          {currentSegments.map((seg, idx) => (
+          {currentSegments.map((segment, index) => (
             <button
-              key={idx}
-              onClick={() => handleOpenSegmentModal(idx)}
+              key={index}
+              onClick={() => handleOpenSegmentModal(index)}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
-              <span className="text-lg font-bold text-gray-400 w-12">{idx + 1}.</span>
-              {seg ? (
+              <span className="text-lg font-bold text-gray-400 w-12">{index + 1}.</span>
+              {segment ? (
                 <div>
-                  <span className={`text-sm font-bold px-2 py-0.5 rounded ${seg.type === 'Match' ? 'bg-blue-600' : 'bg-purple-600'}`}>
-                    {seg.type}
+                  <span className={`text-sm font-bold px-2 py-0.5 rounded ${segment.type === 'Match' ? 'bg-blue-600' : 'bg-purple-600'}`}>
+                    {segment.type}
                   </span>
                   <span className="ml-3 text-lg text-white">
-                    {seg.participants.map(p => p.name).join(' vs. ')}
+                    {segment.participants.map(p => p.name).join(' vs. ')}
                   </span>
-                  {seg.winnerId && (
+                  {segment.winnerId && (
                     <p className="ml-16 text-sm text-yellow-400">
-                      Winner: {seg.participants.find(p => p.id === seg.winnerId)?.name || 'N/A'}
+                      Winner: {segment.participants.find(p => p.id === segment.winnerId)?.name || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -1861,135 +1838,56 @@ function App() {
     );
   };
 
-  const renderRosterScreen = () => {
-    const wrestlers = gameData.save_wrestlers || [];
-    const dispClass = (d) => {
-      switch (d) {
-        case 'Face': return 'text-green-400';
-        case 'Heel': return 'text-red-400';
-        case 'Tweener': return 'text-yellow-400';
-        default: return 'text-gray-400';
-      }
-    };
-
+  const renderShowResultsScreen = () => {
     return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <RosterIcon />
-            Your Roster
-          </h1>
-          <button
-            onClick={() => setGameState('IN_GAME')}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Dashboard
-          </button>
+      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+        <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
+              <p className="text-indigo-300">
+                {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Overall Rating</p>
+              <p className="text-4xl font-bold text-yellow-400 flex items-center">
+                <StarIcon />
+                {showRating}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {wrestlers.length === 0 && (
-            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found.</p>
-          )}
-          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(w => (
-            <div key={w.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{w.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{w.gimmick}</span></p>
-
-              <div className="flex justify-between text-sm mb-3">
-                <span className={`font-bold ${dispClass(w.disposition)}`}>{w.disposition}</span>
-                <span className="text-gray-300">Morale: <span className="font-semibold text-white">{w.morale}</span></span>
-              </div>
-
-              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
-                <div>
-                  <span className="text-gray-400">BRAWL</span>
-                  <p className="text-lg font-bold">{w.stats.brawling}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">SPEED</span>
-                  <p className="text-lg font-bold">{w.stats.speed}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">TECH</span>
-                  <p className="text-lg font-bold">{w.stats.technical}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">CHAR</span>
-                  <p className="text-lg font-bold">{w.stats.charisma}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleViewCareerHistory(w)}
-                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
-                >
-                  <HistoryIcon />
-                  History
-                </button>
-                <button
-                  onClick={() => handleViewRelationships(w)}
-                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
-                >
-                  <RelationshipsIcon />
-                  Relations
-                </button>
-              </div>
+        <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
+          <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
+          {showRecap ? (
+            <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+              {showRecap}
+            </p>
+          ) : (
+            <div className="flex items-center justify-center p-8">
+              <LoadingIcon />
+              <span className="ml-3 text-lg">Generating AI recap...</span>
             </div>
-          ))}
+          )}
+        </div>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={handleNextDay}
+            className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
+          >
+            Continue (Next Day)
+          </button>
         </div>
       </div>
     );
   };
 
-  const renderShowResultsScreen = () => (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
-      <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
-            <p className="text-indigo-300">
-              {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-400">Overall Rating</p>
-            <p className="text-4xl font-bold text-yellow-400 flex items-center">
-              <StarIcon className="w-8 h-8 mr-1" />
-              {showRating}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
-        <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
-        {showRecap ? (
-          <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
-            {showRecap}
-          </p>
-        ) : (
-          <div className="flex items-center justify-center p-8">
-            <LoadingIcon />
-            <span className="ml-3 text-lg">Generating AI recap...</span>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6 text-center">
-        <button
-          onClick={handleNextDay}
-          className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-        >
-          Continue (Next Day)
-        </button>
-      </div>
-    </div>
-  );
-
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
+
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1999,7 +1897,12 @@ function App() {
           </h1>
           <div className="flex space-x-2">
             <button
-              onClick={handleOpenCreateStorylineModal}
+              onClick={() => {
+                setStorylineFormData({ name: '', participants: [] });
+                setStorylineParticipantSearch("");
+                setStorylineParticipantResults([]);
+                setShowStorylineModal(true);
+              }}
               className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
             >
               <PlusIcon />
@@ -2016,16 +1919,16 @@ function App() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {storylines.length === 0 && (
-            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines.</p>
+            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines. Go create one!</p>
           )}
-          {storylines.filter(s => s.status === 'Active').map(s => (
-            <div key={s.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{s.name}</h3>
+          {storylines.filter(s => s.status === 'Active').map(storyline => (
+            <div key={storyline.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white">{storyline.name}</h3>
               <p className="text-sm text-gray-400 mb-2">
-                Heat: <span className="font-semibold text-red-400">{s.heat}</span>
+                Heat: <span className="font-semibold text-red-400">{storyline.heat}</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {s.participants.map(p => (
+                {storyline.participants.map(p => (
                   <span key={p.id} className="bg-gray-700 text-sm px-3 py-1 rounded-full">
                     {p.name}
                   </span>
@@ -2038,302 +1941,9 @@ function App() {
     );
   };
 
-  const renderCareerHistoryScreen = () => {
-    if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
-    const events = (gameData.save_career_events || [])
-      .filter(e => e.wrestlerId === viewingWrestler.id)
-      .sort((a, b) => b.date.toMillis() - a.date.toMillis());
-
-    const color = (t) => {
-      if (t === 'Match Win') return 'text-green-400';
-      if (t === 'Match Loss') return 'text-red-400';
-      if (t.includes('Draw')) return 'text-yellow-400';
-      return 'text-gray-300';
-    };
-
-    return (
-      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <HistoryIcon />
-            Career History: {viewingWrestler.name}
-          </h1>
-          <button
-            onClick={() => {
-              setGameState('ROSTER_SCREEN');
-              setViewingWrestler(null);
-            }}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Roster
-          </button>
-        </div>
-
-        <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-              <div className="shadow overflow-hidden border-b border-gray-700">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event Type</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {events.length === 0 ? (
-                      <tr>
-                        <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
-                          No career events found for this wrestler.
-                        </td>
-                      </tr>
-                    ) : (
-                      events.map(e => (
-                        <tr key={e.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                            {e.date.toDate().toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span className={`font-semibold ${color(e.eventType)}`}>{e.eventType}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                            {e.notes}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderRelationshipsScreen = () => {
-    if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
-    const rels = (gameData.save_relationships || [])
-      .filter(r => r.personA_Id === viewingWrestler.id || r.personB_Id === viewingWrestler.id);
-
-    const otherName = (r) => {
-      const otherId = r.personA_Id === viewingWrestler.id ? r.personB_Id : r.personA_Id;
-      const other = gameData.save_wrestlers.find(w => w.id === otherId);
-      return other ? other.name : 'Unknown Person';
-    };
-
-    const statusColor = (s) => {
-      if (s.includes('Friend') || s.includes('Like')) return 'text-green-400';
-      if (s.includes('Dislike') || s.includes('Hate')) return 'text-red-400';
-      return 'text-gray-300';
-    };
-
-    return (
-      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <RelationshipsIcon />
-            Relationships: {viewingWrestler.name}
-          </h1>
-          <button
-            onClick={() => {
-              setGameState('ROSTER_SCREEN');
-              setViewingWrestler(null);
-            }}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Roster
-          </button>
-        </div>
-
-        <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-              <div className="shadow overflow-hidden border-b border-gray-700">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Person</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {rels.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
-                          No relationships found.
-                        </td>
-                      </tr>
-                    ) : (
-                      rels.map(r => (
-                        <tr key={r.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
-                            {otherName(r)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {r.relationshipType}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span className={`font-semibold ${statusColor(r.status)}`}>
-                              {r.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                            {r.notes}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderSegmentModal = () => {
-    if (!showSegmentModal) return null;
-    const storylines = gameData.save_storylines || [];
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowSegmentModal(false)}
-      >
-        <div
-          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white">Edit Segment {editingSegmentIndex + 1}</h2>
-            <button
-              onClick={() => setShowSegmentModal(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Segment Type</label>
-              <select
-                name="type"
-                value={segmentFormData.type}
-                onChange={handleSegmentTypeChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="Match">Match</option>
-                <option value="Angle">Angle</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Assign to Storyline (Optional)</label>
-              <select
-                name="storylineId"
-                value={segmentFormData.storylineId || ""}
-                onChange={handleStorylineSelect}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">-- None --</option>
-                {storylines.filter(s => s.status === 'Active').map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Participants</label>
-              <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
-                {segmentFormData.participants.map(p => (
-                  <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
-                    {p.name}
-                    <button
-                      onClick={() => handleRemoveParticipant(p.id)}
-                      className="ml-2 text-indigo-100 hover:text-white"
-                    >
-                      <XCircleIcon />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Add Participant</label>
-              <div className="flex items-center">
-                <UserPlusIcon className="absolute left-3 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={participantSearch}
-                  onChange={(e) => handleParticipantSearch(e.target.value)}
-                  placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              {participantResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {participantResults.map(w => (
-                    <button
-                      key={w.id}
-                      onClick={() => handleAddParticipant(w)}
-                      className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
-                    >
-                      {w.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {segmentFormData.type === 'Match' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Winner (Optional)</label>
-                <select
-                  name="winnerId"
-                  value={segmentFormData.winnerId || ""}
-                  onChange={handleWinnerSelect}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  disabled={segmentFormData.participants.length === 0}
-                >
-                  <option value="">-- Select a Winner --</option>
-                  {segmentFormData.participants.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 bg-gray-700 border-t border-gray-600 flex justify-end space-x-3">
-            <button
-              onClick={() => setShowSegmentModal(false)}
-              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveSegment}
-              className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-            >
-              Save Segment
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
+
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -2367,13 +1977,18 @@ function App() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Participants (min. 2)</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Participants (min. 2)
+              </label>
               <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
                 {storylineFormData.participants.map(p => (
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
                     {p.name}
                     <button
-                      onClick={() => handleRemoveStorylineParticipant(p.id)}
+                      onClick={() => setStorylineFormData(prev => ({
+                        ...prev,
+                        participants: prev.participants.filter(x => x.id !== p.id)
+                      }))}
                       className="ml-2 text-indigo-100 hover:text-white"
                     >
                       <XCircleIcon />
@@ -2384,15 +1999,27 @@ function App() {
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">Add Participant</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Add Participant
+              </label>
               <div className="flex items-center">
-                <UserPlusIcon className="absolute left-3 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={storylineParticipantSearch}
-                  onChange={(e) => handleStorylineParticipantSearch(e.target.value)}
+                  onChange={(e) => {
+                    const qStr = e.target.value;
+                    setStorylineParticipantSearch(qStr);
+                    if (qStr.length < 1) {
+                      setStorylineParticipantResults([]);
+                      return;
+                    }
+                    const results = (gameData.save_wrestlers || [])
+                      .filter(w => w.name.toLowerCase().includes(qStr.toLowerCase()))
+                      .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
+                    setStorylineParticipantResults(results.slice(0, 5));
+                  }}
                   placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               {storylineParticipantResults.length > 0 && (
@@ -2400,7 +2027,14 @@ function App() {
                   {storylineParticipantResults.map(w => (
                     <button
                       key={w.id}
-                      onClick={() => handleAddStorylineParticipant(w)}
+                      onClick={() => {
+                        setStorylineFormData(prev => ({
+                          ...prev,
+                          participants: [...prev.participants, { id: w.id, name: w.name }]
+                        }));
+                        setStorylineParticipantSearch("");
+                        setStorylineParticipantResults([]);
+                      }}
                       className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
                     >
                       {w.name}
@@ -2419,7 +2053,37 @@ function App() {
               Cancel
             </button>
             <button
-              onClick={handleCreateStoryline}
+              onClick={async () => {
+                if (!storylineFormData.name || storylineFormData.participants.length < 2) {
+                  console.error("Storyline must have a name and at least 2 participants.");
+                  return;
+                }
+
+                try {
+                  const newStorylineData = {
+                    ...storylineFormData,
+                    companyId: activeSave.playerCompanyId,
+                    heat: 10,
+                    status: "Active",
+                    beats: []
+                  };
+
+                  const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+                  const newStoryline = { id: docRef.id, ...newStorylineData };
+
+                  setGameData(prevData => ({
+                    ...prevData,
+                    save_storylines: [...(prevData.save_storylines || []), newStoryline]
+                  }));
+
+                  setShowStorylineModal(false);
+                  setGameState('STORYLINE_SCREEN');
+                } catch (error) {
+                  console.error("Error creating storyline:", error);
+                  setLoadingMessage("Failed to create storyline. Please try again.");
+                  setGameState('STORYLINE_SCREEN');
+                }
+              }}
               className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
             >
               Create Storyline
@@ -2430,6 +2094,364 @@ function App() {
     );
   };
 
+  const renderCareerHistoryScreen = () => {
+    if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
+
+    const events = (gameData.save_career_events || [])
+      .filter(event => event.wrestlerId === viewingWrestler.id)
+      .sort((a, b) => b.date.toMillis() - a.date.toMillis());
+
+    const getEventColor = (type) => {
+      if (type === 'Match Win') return 'text-green-400';
+      if (type === 'Match Loss') return 'text-red-400';
+      if (type.includes('Draw')) return 'text-yellow-400';
+      return 'text-gray-300';
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <HistoryIcon />
+            Career History: {viewingWrestler.name}
+          </h1>
+          <button
+            onClick={() => {
+              setGameState('ROSTER_SCREEN');
+              setViewingWrestler(null);
+            }}
+            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+          >
+            Back to Roster
+          </button>
+        </div>
+
+        <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="flex flex-col">
+            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div className="shadow overflow-hidden border-b border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Event Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {events.length === 0 ? (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
+                            No career events found for this wrestler.
+                          </td>
+                        </tr>
+                      ) : (
+                        events.map(event => (
+                          <tr key={event.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                              {event.date.toDate().toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`font-semibold ${getEventColor(event.eventType)}`}>
+                                {event.eventType}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                              {event.notes}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRelationshipsScreen = () => {
+    if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
+
+    const relationships = (gameData.save_relationships || [])
+      .filter(rel => rel.personA_Id === viewingWrestler.id || rel.personB_Id === viewingWrestler.id);
+
+    const getOtherPersonName = (rel) => {
+      const otherId = rel.personA_Id === viewingWrestler.id ? rel.personB_Id : rel.personA_Id;
+      const otherPerson = gameData.save_wrestlers.find(w => w.id === otherId);
+      return otherPerson ? otherPerson.name : 'Unknown Person';
+    };
+
+    const getStatusColor = (status) => {
+      if (status.includes('Friend') || status.includes('Like')) return 'text-green-400';
+      if (status.includes('Dislike') || status.includes('Hate')) return 'text-red-400';
+      return 'text-gray-300';
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-white flex items-center">
+            <RelationshipsIcon />
+            Relationships: {viewingWrestler.name}
+          </h1>
+          <button
+            onClick={() => {
+              setGameState('ROSTER_SCREEN');
+              setViewingWrestler(null);
+            }}
+            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+          >
+            Back to Roster
+          </button>
+        </div>
+
+        <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="flex flex-col">
+            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div className="shadow overflow-hidden border-b border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Person
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {relationships.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                            No relationships found for this wrestler.
+                          </td>
+                        </tr>
+                      ) : (
+                        relationships.map(rel => (
+                          <tr key={rel.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                              {getOtherPersonName(rel)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {rel.relationshipType}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`font-semibold ${getStatusColor(rel.status)}`}>
+                                {rel.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                              {rel.notes}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------
+  // SEGMENT MODAL
+  // ---------------------------------------------------
+  const renderSegmentModal = () => {
+    if (!showSegmentModal) return null;
+
+    const storylines = gameData.save_storylines || [];
+
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+        onClick={() => setShowSegmentModal(false)}
+      >
+        <div
+          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center p-4 border-b border-gray-700">
+            <h2 className="text-2xl font-bold text-white">Edit Segment {editingSegmentIndex + 1}</h2>
+            <button
+              onClick={() => setShowSegmentModal(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Segment Type</label>
+              <select
+                name="type"
+                value={segmentFormData.type}
+                onChange={(e) => setSegmentFormData(prev => ({
+                  ...prev,
+                  type: e.target.value,
+                  winnerId: e.target.value === 'Angle' ? null : prev.winnerId
+                }))}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Match">Match</option>
+                <option value="Angle">Angle</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Assign to Storyline (Optional)</label>
+              <select
+                name="storylineId"
+                value={segmentFormData.storylineId || ""}
+                onChange={(e) => setSegmentFormData(prev => ({
+                  ...prev,
+                  storylineId: e.target.value || null
+                }))}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">-- None --</option>
+                {storylines.filter(s => s.status === 'Active').map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Participants
+              </label>
+              <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
+                {segmentFormData.participants.map(p => (
+                  <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
+                    {p.name}
+                    <button
+                      onClick={() => setSegmentFormData(prev => ({
+                        ...prev,
+                        participants: prev.participants.filter(x => x.id !== p.id),
+                        winnerId: prev.winnerId === p.id ? null : prev.winnerId
+                      }))}
+                      className="ml-2 text-indigo-100 hover:text-white"
+                    >
+                      <XCircleIcon />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Add Participant
+              </label>
+              <input
+                type="text"
+                value={participantSearch}
+                onChange={(e) => {
+                  const qStr = e.target.value;
+                  setParticipantSearch(qStr);
+                  if (qStr.length < 1) {
+                    setParticipantResults([]);
+                    return;
+                  }
+                  const results = (gameData.save_wrestlers || [])
+                    .filter(w => w.name.toLowerCase().includes(qStr.toLowerCase()))
+                    .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
+                  setParticipantResults(results.slice(0, 5));
+                }}
+                placeholder="Search roster..."
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-3 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              {participantResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {participantResults.map(w => (
+                    <button
+                      key={w.id}
+                      onClick={() => {
+                        setSegmentFormData(prev => ({
+                          ...prev,
+                          participants: [...prev.participants, { id: w.id, name: w.name }]
+                        }));
+                        setParticipantSearch("");
+                        setParticipantResults([]);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
+                    >
+                      {w.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {segmentFormData.type === 'Match' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Winner (Optional)
+                </label>
+                <select
+                  name="winnerId"
+                  value={segmentFormData.winnerId || ""}
+                  onChange={(e) => setSegmentFormData(prev => ({
+                    ...prev,
+                    winnerId: e.target.value || null
+                  }))}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={segmentFormData.participants.length === 0}
+                >
+                  <option value="">-- Select a Winner --</option>
+                  {segmentFormData.participants.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 bg-gray-700 border-t border-gray-600 flex justify-end space-x-3">
+            <button
+              onClick={() => setShowSegmentModal(false)}
+              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveSegment}
+              className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
+            >
+              Save Segment
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------
+  // MAIN RETURN
+  // ---------------------------------------------------
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
@@ -2454,7 +2476,7 @@ function App() {
           case 'RELATIONSHIPS_SCREEN':
             return renderRelationshipsScreen();
           default:
-            return <p className="text-white p-4">An unexpected error occurred. Please refresh.</p>;
+            return <p>An unexpected error occurred. Please refresh.</p>;
         }
       })()}
       {renderMessagesModal()}
