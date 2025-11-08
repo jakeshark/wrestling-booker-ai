@@ -1,5 +1,4 @@
-// src/App.jsx (full expanded version with iPhone-style messages + reply workflow + click-to-lock replies + spikier no/maybe followups)
-
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -22,7 +21,7 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 
-// --- Icon Components (Simple SVGs) ---
+// --- Icon Components ---
 const LoadingIcon = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -37,81 +36,81 @@ const GameIcon = () => (
 );
 
 const MessageIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
     <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408s4.262.139 6.337.408c.922.12 1.631.94 1.631 1.876v13.066c0 .936-.709 1.756-1.631 1.876-2.075.27-4.19.408-6.337.408s-4.262-.139-6.337-.408c-.922-.12-1.631-.94-1.631-1.876V4.534c0-.936.709-1.756 1.631-1.876ZM7.5 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" />
   </svg>
 );
 
 const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6">
     <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
   </svg>
 );
 
 const AssistantIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.861 2.861l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.861 2.861l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.861-2.861l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.385 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM13.5 18a.75.75 0 0 1 .721.544l.27 1.256a2.25 2.25 0 0 0 1.715 1.715l1.256.27a.75.75 0 0 1 0 1.442l-1.256.27a2.25 2.25 0 0 0-1.715 1.715l-.27 1.256a.75.75 0 0 1-1.442 0l-.27-1.256a2.25 2.25 0 0 0-1.715-1.715l-1.256-.27a.75.75 0 0 1 0-1.442l1.256.27a2.25 2.25 0 0 0 1.715-1.715l.27-1.256a.75.75 0 0 1 .721-.544Z" clipRule="evenodd" />
   </svg>
 );
 
 const BookingIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
   </svg>
 );
 
 const PlusIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-5 h-5 mr-2">
     <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
   </svg>
 );
 
 const RosterIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 mr-2">
     <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM21 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM9.75 9.75a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75ZM7.06 12.236a.75.75 0 0 0-1.06 0l-.03.03a.75.75 0 0 0 1.06 1.06l.03-.03a.75.75 0 0 0 0-1.06Zm10.97 0a.75.75 0 0 0 0 1.06l.03.03a.75.75 0 0 0 1.06-1.06l-.03-.03a.75.75 0 0 0-1.06 0ZM7.5 15a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Zm3.375-1.5a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.75 0a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Zm3.375 1.5a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 0 1.5 0v-.75Z" clipRule="evenodd" />
     <path d="M4.5 19.5a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-5.63l-3.03-3.03a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 0-1.06 0L4.5 13.87V19.5Z" />
   </svg>
 );
 
-const UserPlusIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+const UserPlusIcon = ({ className = "w-5 h-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" className={className}>
     <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM1.646 13.107a.75.75 0 0 1 .862.088c.854.63 1.91.955 3.028.955s2.174-.325 3.028-.955a.75.75 0 1 1 .95 1.169A4.502 4.502 0 0 0 8.5 15.5c-1.318 0-2.55-.42-3.53-1.134a.75.75 0 0 1 .088-.95l-.002-.002ZM15 9.75a.75.75 0 0 1 .75.75v2.25h2.25a.75.75 0 0 1 0 1.5H15.75v2.25a.75.75 0 0 1-1.5 0v-2.25H12a.75.75 0 0 1 0-1.5h2.25V10.5a.75.75 0 0 1 .75-.75Z" />
   </svg>
 );
 
-const XCircleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+const XCircleIcon = ({ className = "w-5 h-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" className={className}>
     <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.707-11.707a1 1 0 0 0-1.414-1.414L10 8.586 7.707 6.293a1 1 0 0 0-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 1 0 1.414 1.414L10 11.414l2.293 2.293a1 1 0 0 0 1.414-1.414L11.414 10l2.293-2.293Z" clipRule="evenodd" />
   </svg>
 );
 
 const StarIcon = ({ className = "w-5 h-5 text-yellow-400" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" className={className}>
     <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
   </svg>
 );
 
-const FireIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+const FireIcon = ({ className = "w-6 h-6 mr-2" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className={className}>
     <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071 1.05 9.75 9.75 0 0 1 1.332 10.065c-.537.42-1.166.738-1.85.966.347.858.52 1.77.52 2.714 0 2.21-1.79 4.019-3.999 4.019S6 21.29 6 19.079c0-.944.173-1.856.52-2.714-.683-.228-1.313-.546-1.85-.966a9.75 9.75 0 0 1 1.332-10.065.75.75 0 0 0-1.071-1.05C2.983 4.25 1.5 6.735 1.5 9.67c0 3.089 1.78 5.765 4.312 6.945.305.138.638.39.998.741.436.422.955.986 1.408 1.626.435.613.75 1.32.75 2.097 0 1.057.86 1.919 1.918 1.919s1.919-.862 1.919-1.919c0-.777.315-1.484.75-2.097.453-.64.972-1.204 1.408-1.626.36-.351.693-.603.998-.741C20.72 15.435 22.5 12.76 22.5 9.67c0-2.935-1.483-5.42-3.86-6.333Z" clipRule="evenodd" />
   </svg>
 );
 
-const HistoryIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+const HistoryIcon = ({ className = "w-6 h-6 mr-2" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className={className}>
     <path fillRule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V3a9 9 0 0 0-9 9 .75.75 0 0 1-1.5 0 10.5 10.5 0 0 1 10.5-10.5ZM10.5 10.038a5.25 5.25 0 1 0 4.93 4.93.75.75 0 0 1 1.437.426A6.75 6.75 0 1 1 9.006 8.35a.75.75 0 0 1 1.493 1.688Z" clipRule="evenodd" />
     <path d="M7.163 15.962c.311.23.638.448.977.652A.75.75 0 0 1 7.8 17.8a9 9 0 1 1 8.4 0 .75.75 0 0 1-1.34.614c.339-.204.666-.423.977-.652a.75.75 0 1 1 .9 1.399A10.499 10.499 0 0 1 12 20.25a10.5 10.5 0 1 1 0-21 10.5 10.5 0 0 1 4.937 1.189.75.75 0 1 1-.9 1.4A9 9 0 0 0 12 3.75a9 9 0 0 0-4.837 1.513.75.75 0 0 1-.9-1.4A10.5 10.5 0 0 1 12 1.5a10.5 10.5 0 0 1 10.5 10.5 10.5 10.5 0 0 1-1.189 4.937.75.75 0 1 1-1.4-.9Z" />
   </svg>
 );
 
-const RelationshipsIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+const RelationshipsIcon = ({ className = "w-6 h-6 mr-2" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className={className}>
     <path d="M4.5 6.375a.75.75 0 0 1 .75-.75h13.5a.75.75 0 0 1 .75.75v11.25a.75.75 0 0 1-.75.75H5.25a.75.75 0 0 1-.75-.75V6.375Z" />
     <path fillRule="evenodd" d="M5.057 2.376A.75.75 0 0 1 5.25 2.25H18.75a.75.75 0 0 1 .193.021l3.75 1.5a.75.75 0 0 1 .307.601v13.064a.75.75 0 0 1-.307.601l-3.75 1.5A.75.75 0 0 1 18.75 20h-13.5a.75.75 0 0 1-.193-.021l-3.75-1.5a.75.75 0 0 1-.307-.601V4.5a.75.75 0 0 1 .307-.601l3.75-1.5ZM6 3.75l-3 1.2v12.75l3 1.2h12l3-1.2V4.95l-3-1.2H6Z" clipRule="evenodd" />
     <path d="M12 8.25a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Z" />
     <path d="M12 15a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V15.75a.75.75 0 0 1 .75-.75Z" />
     <path d="M8.25 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
-    <path d="M13.5 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
+    <path d="M13.5 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 1 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Z" />
   </svg>
 );
 
@@ -126,14 +125,12 @@ const firebaseConfig = {
 };
 
 function App() {
-  // Firebase & auth
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [appId, setAppId] = useState(null);
 
-  // Game/global state
   const [gameState, setGameState] = useState('LOADING');
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
@@ -141,7 +138,7 @@ function App() {
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
 
-  // Messages UI
+  // messages UI
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [selectedMessageSenderId, setSelectedMessageSenderId] = useState(null);
@@ -149,15 +146,15 @@ function App() {
   const [isReplyDirty, setIsReplyDirty] = useState(false);
   const [hoveredReplyText, setHoveredReplyText] = useState('');
   const [activeMessageForReply, setActiveMessageForReply] = useState(null);
-  const [inlineFeedback, setInlineFeedback] = useState(null);
+  const [lastSelectedReplyTone, setLastSelectedReplyTone] = useState(null);
 
-  // Assistant
+  // assistant
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  // Booking
+  // booking
   const [currentShow, setCurrentShow] = useState(null);
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
@@ -166,18 +163,19 @@ function App() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [participantResults, setParticipantResults] = useState([]);
 
-  // Show Results
+  // show recap
   const [showRecap, setShowRecap] = useState("");
   const [showRating, setShowRating] = useState(0);
 
-  // Storyline
+  // storylines
   const [showStorylineModal, setShowStorylineModal] = useState(false);
   const [storylineFormData, setStorylineFormData] = useState({ name: '', participants: [] });
   const [storylineParticipantSearch, setStorylineParticipantSearch] = useState("");
   const [storylineParticipantResults, setStorylineParticipantResults] = useState([]);
+
+  // detail screens
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
-  // Collections
   const DATASET_COLLECTIONS = [
     'dataset_companies',
     'dataset_wrestlers',
@@ -220,7 +218,6 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
-  // init firebase
   useEffect(() => {
     try {
       if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
@@ -263,11 +260,10 @@ function App() {
     }
   }, []);
 
-  // after auth
   useEffect(() => {
     if (!isAuthReady || !db || !userId || !appId) return;
 
-    const seedAndFetch = async () => {
+    const run = async () => {
       setLoadingMessage('Checking for game data...');
       await seedDefaultDataset(db, userId, appId);
 
@@ -280,7 +276,7 @@ function App() {
       setGameState('MAIN_MENU');
     };
 
-    seedAndFetch();
+    run();
   }, [isAuthReady, db, userId, appId]);
 
   const seedDefaultDataset = async (db, userId, appId) => {
@@ -289,9 +285,7 @@ function App() {
 
     try {
       const docSnap = await getDoc(datasetRef);
-      if (docSnap.exists()) {
-        return;
-      }
+      if (docSnap.exists()) return;
 
       setLoadingMessage('Creating default dataset...');
       const batch = writeBatch(db);
@@ -329,23 +323,36 @@ function App() {
 
       const wrestlerRefs = {};
       for (const wrestler of wrestlers) {
-        const wrestlerRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
-        wrestlerRefs[wrestler.name] = wrestlerRef.id;
-        batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
+        const wRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
+        wrestlerRefs[wrestler.name] = wRef.id;
+        batch.set(wRef, { ...wrestler, datasetId });
       }
 
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
-        datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
+        datasetId,
+        companyId,
+        titleName: "FX World Championship",
+        prestige: 80,
+        isTagTeam: false,
+        initialHolderId: null
       });
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
-        datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
+        datasetId,
+        companyId,
+        titleName: "FX Women's Championship",
+        prestige: 70,
+        isTagTeam: false,
+        initialHolderId: null
       });
 
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_tv_shows`)), {
-        datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
+        datasetId,
+        companyId,
+        showName: "FX Voltage",
+        dayOfWeek: "Monday"
       });
 
-      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       for (let i = 0; i < months.length; i++) {
         let tier = "Monthly_Event";
         let name = `${months[i]} Mayhem`;
@@ -354,8 +361,8 @@ function App() {
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
 
         batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_events`)), {
-          datasetId: datasetId,
-          companyId: companyId,
+          datasetId,
+          companyId,
           month: i + 1,
           eventName: name,
           eventTier: tier,
@@ -363,7 +370,7 @@ function App() {
       }
 
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
-        datasetId: datasetId,
+        datasetId,
         personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
         personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
         relationshipType: 'Rivalry',
@@ -371,7 +378,7 @@ function App() {
         notes: "Real-life rivalry from their training days."
       });
       batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
-        datasetId: datasetId,
+        datasetId,
         personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
         personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
         relationshipType: 'Friendship',
@@ -381,8 +388,8 @@ function App() {
 
       await batch.commit();
 
-    } catch (error) {
-      console.error("Error seeding dataset: ", error);
+    } catch (err) {
+      console.error("Error seeding dataset: ", err);
       setLoadingMessage("Error creating default data. Please refresh.");
     }
   };
@@ -390,11 +397,10 @@ function App() {
   const fetchDatasets = async (db, userId, appId) => {
     try {
       const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
-      const querySnapshot = await getDocs(q);
-      const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setDatasets(datasetsData);
-    } catch (error) {
-      console.error("Error fetching datasets: ", error);
+      const snap = await getDocs(q);
+      setDatasets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error("Error fetching datasets:", err);
     }
   };
 
@@ -402,165 +408,140 @@ function App() {
     if (!userId) return;
     try {
       const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`));
-      const querySnapshot = await getDocs(q);
-      const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPlayerSaves(savesData);
-    } catch (error) {
-      console.error("Error fetching player saves: ", error);
+      const snap = await getDocs(q);
+      setPlayerSaves(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error("Error fetching player saves:", err);
     }
   };
 
-  // start new game
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
-
     setGameState('BUSY');
-    setLoadingMessage('Starting your new game... This may take a moment.');
+    setLoadingMessage('Starting your new game...');
 
     try {
       const newSaveData = {
-        userId: userId,
-        datasetId: datasetId,
+        userId,
+        datasetId,
         saveName: `New Game (${new Date().toLocaleDateString()})`,
         lastPlayed: Timestamp.now(),
         currentDate: Timestamp.fromDate(new Date('2025-01-07T09:00:00')),
         playerCompanyId: null
       };
-      const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
-      const newSaveId = newSaveRef.id;
+
+      const saveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
+      const saveId = saveRef.id;
 
       const batch = writeBatch(db);
       const idMap = new Map();
       let playerCompanyId = null;
 
-      setLoadingMessage('Copying core data...');
-      for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
-        const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
-        if (!saveCollectionName) continue;
-
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
-        const querySnapshot = await getDocs(q);
-
-        for (const docSnap of querySnapshot.docs) {
-          const oldDocId = docSnap.id;
-          const docData = docSnap.data();
-
-          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
-          const newDocId = newDocRef.id;
-
-          idMap.set(oldDocId, newDocId);
-          batch.set(newDocRef, docData);
-
-          if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
-            playerCompanyId = newDocId;
+      for (const col of ID_MAPPED_COLLECTIONS) {
+        const saveCol = SAVE_COLLECTIONS_MAP[col];
+        if (!saveCol) continue;
+        const q = query(collection(db, `/artifacts/${appId}/public/data/${col}`), where("datasetId", "==", datasetId));
+        const snap = await getDocs(q);
+        for (const docSnap of snap.docs) {
+          const oldId = docSnap.id;
+          const data = docSnap.data();
+          const newRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${saveCol}`));
+          idMap.set(oldId, newRef.id);
+          batch.set(newRef, data);
+          if (col === 'dataset_companies' && !playerCompanyId) {
+            playerCompanyId = newRef.id;
           }
         }
       }
 
-      setLoadingMessage('Linking relationships and shows...');
-      const remainingCollections = DATASET_COLLECTIONS.filter(col => !ID_MAPPED_COLLECTIONS.includes(col));
+      const remaining = DATASET_COLLECTIONS.filter(c => !ID_MAPPED_COLLECTIONS.includes(c));
+      for (const col of remaining) {
+        const saveCol = SAVE_COLLECTIONS_MAP[col];
+        if (!saveCol) continue;
+        const q = query(collection(db, `/artifacts/${appId}/public/data/${col}`), where("datasetId", "==", datasetId));
+        const snap = await getDocs(q);
+        for (const docSnap of snap.docs) {
+          const data = docSnap.data();
+          let newData = { ...data };
 
-      for (const datasetCollectionName of remainingCollections) {
-        const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
-        if (!saveCollectionName) continue;
-
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
-        const querySnapshot = await getDocs(q);
-
-        for (const docSnap of querySnapshot.docs) {
-          const docData = docSnap.data();
-          let newDocData = { ...docData };
-
-          if (datasetCollectionName === 'dataset_events') {
-            newDocData.status = "Planned";
-            const showDate = (docData.month === 1)
-              ? new Date(2025, docData.month - 1, 7, 18, 0, 0)
-              : new Date(2025, docData.month - 1, 28, 18, 0, 0);
-            newDocData.date = Timestamp.fromDate(showDate);
-            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
+          if (col === 'dataset_events') {
+            newData.status = "Planned";
+            const showDate = (data.month === 1)
+              ? new Date(2025, data.month - 1, 7, 18, 0, 0)
+              : new Date(2025, data.month - 1, 28, 18, 0, 0);
+            newData.date = Timestamp.fromDate(showDate);
+            newData.companyId = idMap.get(data.companyId) || data.companyId;
           }
 
-          if (datasetCollectionName === 'dataset_relationships') {
-            newDocData.personA_Id = idMap.get(docData.personA_Id) || docData.personA_Id;
-            newDocData.personB_Id = idMap.get(docData.personB_Id) || docData.personB_Id;
+          if (col === 'dataset_relationships') {
+            newData.personA_Id = idMap.get(data.personA_Id) || data.personA_Id;
+            newData.personB_Id = idMap.get(data.personB_Id) || data.personB_Id;
           }
 
-          if (datasetCollectionName === 'dataset_titles') {
-            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
-            newDocData.initialHolderId = idMap.get(docData.initialHolderId) || null;
+          if (col === 'dataset_titles') {
+            newData.companyId = idMap.get(data.companyId) || data.companyId;
+            newData.initialHolderId = idMap.get(data.initialHolderId) || null;
           }
 
-          if (datasetCollectionName === 'dataset_tv_shows') {
-            newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
+          if (col === 'dataset_tv_shows') {
+            newData.companyId = idMap.get(data.companyId) || data.companyId;
           }
 
-          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
-          batch.set(newDocRef, newDocData);
+          const newRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${saveCol}`));
+          batch.set(newRef, newData);
         }
       }
 
       await batch.commit();
+      await setDoc(saveRef, { playerCompanyId }, { merge: true });
 
-      await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
+      await handleLoadGame(saveId);
 
-      await handleLoadGame(newSaveId);
-
-    } catch (error) {
-      console.error("Error creating new game: ", error);
+    } catch (err) {
+      console.error("Error creating new game:", err);
       setLoadingMessage("Failed to create new game. Please try again.");
       setGameState('MAIN_MENU');
     }
   };
 
-  // load game
   const handleLoadGame = async (saveId) => {
     if (!userId || !db || !appId) return;
-
     setGameState('BUSY');
     setLoadingMessage('Loading your save game...');
 
     try {
       const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, saveId);
-      const saveSnap = await getDoc(saveRef);
-
-      if (!saveSnap.exists()) {
-        throw new Error("Save game not found.");
-      }
-
-      const saveData = { id: saveSnap.id, ...saveSnap.data() };
+      const snap = await getDoc(saveRef);
+      if (!snap.exists()) throw new Error("Save not found.");
+      const saveData = { id: snap.id, ...snap.data() };
       setActiveSave(saveData);
 
-      let loadedGameData = {};
+      let loaded = {};
       let unreadCount = 0;
 
-      for (const collectionName of SAVE_COLLECTION_NAMES) {
-        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
-        const querySnapshot = await getDocs(q);
-
-        const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        loadedGameData[collectionName] = collectionData;
-
-        if (collectionName === 'save_messages') {
-          unreadCount = collectionData.filter(msg => !msg.isRead).length;
+      for (const col of SAVE_COLLECTION_NAMES) {
+        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${col}`));
+        const colSnap = await getDocs(q);
+        const arr = colSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        loaded[col] = arr;
+        if (col === 'save_messages') {
+          unreadCount = arr.filter(m => !m.isRead).length;
         }
       }
 
-      setGameData(loadedGameData);
+      setGameData(loaded);
       setUnreadMessages(unreadCount);
-
       setGameState('IN_GAME');
 
-    } catch (error) {
-      console.error("Error loading game: ", error);
-      setLoadingMessage("Failed to load game. Please try again.");
+    } catch (err) {
+      console.error("Error loading save:", err);
+      setLoadingMessage("Failed to load game.");
       setGameState('MAIN_MENU');
     }
   };
 
-  // next day
   const handleNextDay = async () => {
     if (!activeSave) return;
-
     setGameState('BUSY');
     setLoadingMessage('Simulating next day...');
 
@@ -569,21 +550,16 @@ function App() {
 
       const currentDate = activeSave.currentDate.toDate();
       const nextDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
-      const newTimestamp = Timestamp.fromDate(nextDate);
+      const newTs = Timestamp.fromDate(nextDate);
 
       const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, activeSave.id);
-      await setDoc(saveRef, {
-        currentDate: newTimestamp,
-        lastPlayed: Timestamp.now()
-      }, { merge: true });
+      await setDoc(saveRef, { currentDate: newTs, lastPlayed: Timestamp.now() }, { merge: true });
 
-      setActiveSave(prevSave => ({ ...prevSave, currentDate: newTimestamp }));
-
+      setActiveSave(prev => ({ ...prev, currentDate: newTs }));
       setGameState('IN_GAME');
-
-    } catch (error) {
-      console.error("Error advancing day: ", error);
-      setLoadingMessage("Error saving progress. Please refresh.");
+    } catch (err) {
+      console.error("Error advancing day:", err);
+      setLoadingMessage("Error advancing day.");
     }
   };
 
@@ -594,29 +570,26 @@ function App() {
     fetchPlayerSaves(db, userId, appId);
   };
 
-  // sim & ai messages
   const runSimulationAndEvents = async (saveId) => {
     const wrestlers = gameData.save_wrestlers;
     if (!wrestlers || wrestlers.length === 0) return;
 
     if (Math.random() < 0.25) {
-      const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
+      const randomW = wrestlers[Math.floor(Math.random() * wrestlers.length)];
       const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_negotiation'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-      await generateAndSaveMessage(saveId, randomWrestler, randomTopic);
+      await generateAndSaveMessage(saveId, randomW, randomTopic);
     }
   };
 
   const getCurrentGameTimestamp = () => {
-    if (activeSave && activeSave.currentDate) {
-      return activeSave.currentDate;
-    }
+    if (activeSave && activeSave.currentDate) return activeSave.currentDate;
     return Timestamp.now();
   };
 
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
     try {
-      const response = await fetch('/api/ai', {
+      const resp = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -626,13 +599,14 @@ function App() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`AI route failed: ${response.status}`);
+      if (!resp.ok) {
+        console.error("wrestler-message AI failed:", await resp.text());
+        return;
       }
 
-      const result = await response.json();
-      const messageText = result.message;
-      const replyOptions = Array.isArray(result.replyOptions) ? result.replyOptions.slice(0, 3) : [];
+      const data = await resp.json();
+      const messageText = data.message;
+      const replyOptions = Array.isArray(data.replyOptions) ? data.replyOptions.slice(0, 3) : [];
 
       if (messageText) {
         const messageData = {
@@ -647,21 +621,19 @@ function App() {
         };
 
         const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
-        const newDocRef = await addDoc(messagesRef, messageData);
+        const newRef = await addDoc(messagesRef, messageData);
 
-        const newMessage = { id: newDocRef.id, ...messageData };
-        setGameData(prevData => ({
-          ...prevData,
-          save_messages: [...(prevData.save_messages || []), newMessage]
+        setGameData(prev => ({
+          ...prev,
+          save_messages: [...(prev.save_messages || []), { id: newRef.id, ...messageData }]
         }));
         setUnreadMessages(prev => prev + 1);
       }
-    } catch (error) {
-      console.error("Error generating AI message: ", error);
+    } catch (err) {
+      console.error("Error generating message:", err);
     }
   };
 
-  // booker assistant
   const handleGetAIAdvice = async () => {
     if (!assistantQuery || !gameData.save_wrestlers) return;
 
@@ -673,7 +645,7 @@ function App() {
     )).join('\n');
 
     try {
-      const response = await fetch('/api/ai', {
+      const resp = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -683,14 +655,14 @@ function App() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`Assistant API failed with status: ${response.status}`);
+      if (!resp.ok) {
+        throw new Error(`assistant call failed: ${resp.status}`);
       }
 
-      const data = await response.json();
-      setAssistantResponse(data.text || "The AI assistant couldn't come up with a response. Try rephrasing your question.");
-    } catch (error) {
-      console.error("Error getting AI advice: ", error);
+      const data = await resp.json();
+      setAssistantResponse(data.text || "Couldn't generate response.");
+    } catch (err) {
+      console.error("Error in assistant:", err);
       setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
     } finally {
       setIsAssistantLoading(false);
@@ -699,61 +671,54 @@ function App() {
 
   const handleMarkMessagesRead = async () => {
     if (!activeSave || unreadMessages === 0) return;
-
     setUnreadMessages(0);
 
-    setGameData(prevData => ({
-      ...prevData,
-      save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
+    setGameData(prev => ({
+      ...prev,
+      save_messages: (prev.save_messages || []).map(m => ({ ...m, isRead: true }))
     }));
 
     try {
       const batch = writeBatch(db);
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-
-      gameData.save_messages.forEach(msg => {
-        if (!msg.isRead) {
-          const docRef = doc(messagesRef, msg.id);
-          batch.update(docRef, { isRead: true });
+      const ref = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      (gameData.save_messages || []).forEach(m => {
+        if (!m.isRead) {
+          batch.update(doc(ref, m.id), { isRead: true });
         }
       });
-
       await batch.commit();
-    } catch (error) {
-      console.error("Error marking messages as read: ", error);
+    } catch (err) {
+      console.error("Error marking read:", err);
     }
   };
 
-  // segment rating
   const calculateSegmentRating = (segment, allWrestlers) => {
     if (!segment || segment.participants.length === 0) return 0;
-
     let totalCharisma = 0;
     let totalWorkrate = 0;
     const participants = [];
 
     for (const p of segment.participants) {
-      const wrestler = allWrestlers.find(w => w.id === p.id);
-      if (wrestler) {
-        participants.push(wrestler);
-        totalCharisma += wrestler.stats.charisma;
+      const w = allWrestlers.find(x => x.id === p.id);
+      if (w) {
+        participants.push(w);
+        totalCharisma += w.stats.charisma;
       }
     }
 
-    const numParticipants = participants.length;
-    if (numParticipants === 0) return 0;
-
-    const avgCharisma = totalCharisma / numParticipants;
+    const count = participants.length;
+    if (count === 0) return 0;
+    const avgCharisma = totalCharisma / count;
 
     if (segment.type === 'Angle') {
       return Math.min(100, Math.floor(avgCharisma));
     }
 
     if (segment.type === 'Match') {
-      for (const wrestler of participants) {
-        totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
+      for (const w of participants) {
+        totalWorkrate += (w.stats.brawling + w.stats.speed + w.stats.technical) / 3;
       }
-      const avgWorkrate = totalWorkrate / numParticipants;
+      const avgWorkrate = totalWorkrate / count;
       const rating = (avgCharisma * 0.6) + (avgWorkrate * 0.4);
       return Math.min(100, Math.floor(rating));
     }
@@ -767,106 +732,95 @@ function App() {
     setGameState('BOOKING_SHOW');
   };
 
-  const handleOpenSegmentModal = (index) => {
-    setEditingSegmentIndex(index);
-    const existingSegment = currentSegments[index];
-    setSegmentFormData(existingSegment || { type: 'Match', participants: [], winnerId: null, storylineId: null });
+  const handleOpenSegmentModal = (idx) => {
+    setEditingSegmentIndex(idx);
+    const existing = currentSegments[idx];
+    setSegmentFormData(existing || { type: 'Match', participants: [], winnerId: null, storylineId: null });
     setParticipantSearch("");
     setParticipantResults([]);
     setShowSegmentModal(true);
   };
 
   const handleSaveSegment = () => {
-    const newSegments = [...currentSegments];
-    newSegments[editingSegmentIndex] = segmentFormData;
-    setCurrentSegments(newSegments);
-
+    const newSegs = [...currentSegments];
+    newSegs[editingSegmentIndex] = segmentFormData;
+    setCurrentSegments(newSegs);
     setShowSegmentModal(false);
     setEditingSegmentIndex(null);
     setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
   };
 
-  // run show
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
 
     try {
-      let ratedSegments = [];
-      let totalWeightedRating = 0;
+      let rated = [];
+      let totalWeighted = 0;
       let totalWeight = 0;
 
-      let lastNonNullSegmentIndex = -1;
+      let lastIndex = -1;
       for (let i = currentSegments.length - 1; i >= 0; i--) {
         if (currentSegments[i]) {
-          lastNonNullSegmentIndex = i;
+          lastIndex = i;
           break;
         }
       }
 
       for (let i = 0; i < currentSegments.length; i++) {
-        const segment = currentSegments[i];
-        if (!segment) {
-          ratedSegments.push(null);
+        const seg = currentSegments[i];
+        if (!seg) {
+          rated.push(null);
           continue;
         }
-
-        const rating = calculateSegmentRating(segment, gameData.save_wrestlers);
-        const ratedSegment = { ...segment, rating: rating };
-        ratedSegments.push(ratedSegment);
-
+        const rating = calculateSegmentRating(seg, gameData.save_wrestlers);
+        const rSeg = { ...seg, rating };
+        rated.push(rSeg);
         let weight = 1.0;
         if (i === 0) weight = 1.2;
-        if (i === lastNonNullSegmentIndex) weight = 2.0;
-
-        totalWeightedRating += rating * weight;
+        if (i === lastIndex) weight = 2.0;
+        totalWeighted += rating * weight;
         totalWeight += weight;
       }
 
-      const finalShowRating = totalWeight > 0 ? Math.floor(totalWeightedRating / totalWeight) : 0;
-      setShowRating(finalShowRating);
+      const finalRating = totalWeight > 0 ? Math.floor(totalWeighted / totalWeight) : 0;
+      setShowRating(finalRating);
 
       setLoadingMessage('Logging career events...');
-      await logCareerEvents(ratedSegments, finalShowRating);
+      await logCareerEvents(rated, finalRating);
 
       setLoadingMessage('Simulating backstage changes...');
-      await runShowSimulation(ratedSegments, currentShow);
+      await runShowSimulation(rated, currentShow);
 
       setLoadingMessage('Generating show recap...');
-      const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
-      setShowRecap(recapText);
+      const recap = await generateShowRecap(currentShow, rated, finalRating);
+      setShowRecap(recap);
 
       setLoadingMessage('Saving show results...');
+
       const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
-
-      const showUpdateData = {
+      const updateData = {
         status: "Complete",
-        segments: ratedSegments,
-        rating: finalShowRating,
-        recap: recapText
+        segments: rated,
+        rating: finalRating,
+        recap
       };
+      await setDoc(showRef, updateData, { merge: true });
 
-      await setDoc(showRef, showUpdateData, { merge: true });
-
-      setGameData(prevData => ({
-        ...prevData,
-        save_shows: prevData.save_shows.map(show =>
-          show.id === currentShow.id
-            ? { ...show, ...showUpdateData }
-            : show
-        )
+      setGameData(prev => ({
+        ...prev,
+        save_shows: prev.save_shows.map(s => s.id === currentShow.id ? { ...s, ...updateData } : s)
       }));
 
       setGameState('SHOW_RESULTS');
 
-    } catch (error) {
-      console.error("Error running show:", error);
-      setLoadingMessage("Error saving show. Please try again.");
+    } catch (err) {
+      console.error("Error running show:", err);
+      setLoadingMessage("Error running show.");
       setGameState('BOOKING_SHOW');
     }
   };
 
-  // ai show recap
   const generateShowRecap = async (show, ratedSegments, rating) => {
     const payload = {
       type: 'show-recap',
@@ -890,20 +844,16 @@ function App() {
         body: JSON.stringify(payload)
       });
 
-      if (!resp.ok) {
-        throw new Error(`AI recap call failed: ${resp.status}`);
-      }
+      if (!resp.ok) throw new Error(`recap failed: ${resp.status}`);
 
       const data = await resp.json();
-      const generatedText = data.text;
-      return generatedText || "An error occurred while generating the show recap. The show is still saved.";
-    } catch (error) {
-      console.error("Error generating AI recap: ", error);
-      return "An error occurred while generating the show recap. The show is still saved.";
+      return data.text || "Recap unavailable.";
+    } catch (err) {
+      console.error("Error generating recap:", err);
+      return "Recap unavailable.";
     }
   };
 
-  // post-show sim
   const runShowSimulation = async (ratedSegments, show) => {
     if (!ratedSegments || !show || !gameData.save_wrestlers || !gameData.save_relationships || !gameData.save_storylines || !db || !userId || !appId) {
       return;
@@ -913,155 +863,125 @@ function App() {
     const wrestlerUpdates = new Map();
     const storylineUpdates = new Map();
 
-    const allWrestlers = gameData.save_wrestlers;
-    const allRelationships = gameData.save_relationships;
-    const allStorylines = gameData.save_storylines;
+    const allW = gameData.save_wrestlers;
+    const allR = gameData.save_relationships;
+    const allS = gameData.save_storylines;
 
     const getWrestler = (id) => {
-      if (wrestlerUpdates.has(id)) {
-        return wrestlerUpdates.get(id);
-      }
-      return allWrestlers.find(w => w.id === id);
+      if (wrestlerUpdates.has(id)) return wrestlerUpdates.get(id);
+      return allW.find(w => w.id === id);
     };
 
-    const getRelationship = (id1, id2) => {
-      return allRelationships.find(rel =>
-        (rel.personA_Id === id1 && rel.personB_Id === id2) ||
-        (rel.personA_Id === id2 && rel.personB_Id === id1)
+    const getRelationship = (a, b) => {
+      return allR.find(rel =>
+        (rel.personA_Id === a && rel.personB_Id === b) ||
+        (rel.personA_Id === b && rel.personB_Id === a)
       );
     };
 
     const getStoryline = (id) => {
-      if (storylineUpdates.has(id)) {
-        return storylineUpdates.get(id);
-      }
-      return allStorylines.find(s => s.id === id);
+      if (storylineUpdates.has(id)) return storylineUpdates.get(id);
+      return allS.find(s => s.id === id);
     };
 
-    const getMoraleMultiplier = (tier) => {
+    const moraleMult = (tier) => {
       switch (tier) {
-        case 'Flagship_Event':
-          return 2.0;
-        case 'Major_Event':
-          return 1.5;
-        case 'Monthly_Event':
-        default:
-          return 1.0;
+        case 'Flagship_Event': return 2.0;
+        case 'Major_Event': return 1.5;
+        default: return 1.0;
       }
     };
 
-    const getHeatChange = (segmentRating) => {
-      if (segmentRating >= 75) return 5;
-      if (segmentRating >= 50) return 2;
+    const heatDelta = (r) => {
+      if (r >= 75) return 5;
+      if (r >= 50) return 2;
       return -3;
     };
 
     try {
-      const moraleMultiplier = getMoraleMultiplier(show.eventTier);
+      const mMult = moraleMult(show.eventTier);
 
-      for (const segment of ratedSegments) {
-        if (!segment) continue;
+      for (const seg of ratedSegments) {
+        if (!seg) continue;
 
-        const segmentRating = segment.rating || 50;
+        const segRating = seg.rating || 50;
 
-        if (segment.storylineId) {
-          const storyline = getStoryline(segment.storylineId);
-          if (storyline) {
-            const baseHeat = storylineUpdates.has(storyline.id)
-              ? storylineUpdates.get(storyline.id).heat
-              : storyline.heat;
-
-            const heatChange = getHeatChange(segmentRating);
-            const finalHeat = Math.max(0, Math.min(100, baseHeat + heatChange));
-
-            storylineUpdates.set(storyline.id, { ...storyline, heat: finalHeat });
+        if (seg.storylineId) {
+          const st = getStoryline(seg.storylineId);
+          if (st) {
+            const baseHeat = storylineUpdates.has(st.id) ? storylineUpdates.get(st.id).heat : st.heat;
+            const newHeat = Math.max(0, Math.min(100, baseHeat + heatDelta(segRating)));
+            storylineUpdates.set(st.id, { ...st, heat: newHeat });
           }
         }
 
-        if (segment.type === 'Match') {
-          const participantIds = segment.participants.map(p => p.id);
+        if (seg.type === 'Match') {
+          const ids = seg.participants.map(p => p.id);
 
-          for (const participant of segment.participants) {
-            const wrestler = getWrestler(participant.id);
-            if (!wrestler) continue;
+          for (const p of seg.participants) {
+            const w = getWrestler(p.id);
+            if (!w) continue;
 
+            const baseMorale = wrestlerUpdates.has(p.id) ? wrestlerUpdates.get(p.id).morale : w.morale;
             let moraleChange = 0;
-            const baseMorale = wrestlerUpdates.has(participant.id)
-              ? wrestlerUpdates.get(participant.id).morale
-              : wrestler.morale;
 
-            if (segment.storylineId) {
-              if (segment.winnerId === participant.id) {
+            if (seg.storylineId) {
+              if (seg.winnerId === p.id) {
                 moraleChange += 10;
-              } else if (segment.winnerId) {
+              } else if (seg.winnerId) {
                 moraleChange -= 5;
               }
             }
 
-            const opponentIds = participantIds.filter(id => id !== participant.id);
-            for (const oppId of opponentIds) {
-              const relationship = getRelationship(participant.id, oppId);
-              if (relationship) {
-                if (relationship.status.includes('Friend')) {
-                  moraleChange += 3;
-                } else if (relationship.status.includes('Dislike') || relationship.status.includes('Hate')) {
-                  moraleChange -= 3;
-                }
+            const opps = ids.filter(id => id !== p.id);
+            for (const oppId of opps) {
+              const rel = getRelationship(p.id, oppId);
+              if (rel) {
+                if (rel.status.includes('Friend')) moraleChange += 3;
+                else if (rel.status.includes('Dislike') || rel.status.includes('Hate')) moraleChange -= 3;
               }
             }
 
             if (moraleChange !== 0) {
-              const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
-              wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
+              const finalMorale = Math.max(0, Math.min(100, baseMorale + moraleChange * mMult));
+              wrestlerUpdates.set(p.id, { ...w, morale: finalMorale });
             }
           }
         }
       }
 
-      let updatesMade = false;
-
+      let updates = false;
       if (wrestlerUpdates.size > 0) {
-        wrestlerUpdates.forEach((wrestler, id) => {
-          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
-          batch.update(docRef, { morale: wrestler.morale });
+        wrestlerUpdates.forEach((w, id) => {
+          const wRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
+          batch.update(wRef, { morale: w.morale });
         });
-        updatesMade = true;
+        updates = true;
       }
 
       if (storylineUpdates.size > 0) {
-        storylineUpdates.forEach((storyline, id) => {
-          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
-          batch.update(docRef, { heat: storyline.heat });
+        storylineUpdates.forEach((s, id) => {
+          const sRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
+          batch.update(sRef, { heat: s.heat });
         });
-        updatesMade = true;
+        updates = true;
       }
 
-      if (updatesMade) {
+      if (updates) {
         await batch.commit();
 
-        setGameData(prevData => ({
-          ...prevData,
-          save_wrestlers: prevData.save_wrestlers.map(w => {
-            if (wrestlerUpdates.has(w.id)) {
-              return wrestlerUpdates.get(w.id);
-            }
-            return w;
-          }),
-          save_storylines: prevData.save_storylines.map(s => {
-            if (storylineUpdates.has(s.id)) {
-              return storylineUpdates.get(s.id);
-            }
-            return s;
-          })
+        setGameData(prev => ({
+          ...prev,
+          save_wrestlers: prev.save_wrestlers.map(w => wrestlerUpdates.has(w.id) ? wrestlerUpdates.get(w.id) : w),
+          save_storylines: prev.save_storylines.map(s => storylineUpdates.has(s.id) ? storylineUpdates.get(s.id) : s)
         }));
       }
 
-    } catch (error) {
-      console.error("Error during post-show simulation: ", error);
+    } catch (err) {
+      console.error("Error in show sim:", err);
     }
   };
 
-  // career events
   const logCareerEvents = async (ratedSegments, showRating) => {
     if (!db || !userId || !appId || !activeSave) return;
 
@@ -1070,103 +990,92 @@ function App() {
       const company = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
       const companySize = company ? company.size : "Unknown";
 
-      let newCareerEvents = [];
+      let newEvents = [];
 
-      for (const segment of ratedSegments) {
-        if (!segment) continue;
+      for (const seg of ratedSegments) {
+        if (!seg) continue;
 
-        for (const participant of segment.participants) {
-          const opponentIds = segment.participants
-            .filter(p => p.id !== participant.id)
-            .map(p => p.id);
-
-          const opponentNames = segment.participants
-            .filter(p => p.id !== participant.id)
-            .map(p => p.name)
-            .join(', ');
+        for (const p of seg.participants) {
+          const oppIds = seg.participants.filter(x => x.id !== p.id).map(x => x.id);
+          const oppNames = seg.participants.filter(x => x.id !== p.id).map(x => x.name).join(', ');
 
           let eventType = "Angle";
-          let notes = `Participated in an angle with ${opponentNames || 'others'}`;
+          let notes = `Participated in an angle with ${oppNames || 'others'}`;
 
-          if (segment.type === 'Match') {
-            if (segment.winnerId === participant.id) {
+          if (seg.type === 'Match') {
+            if (seg.winnerId === p.id) {
               eventType = "Match Win";
-              notes = `Won match against ${opponentNames || 'opponent(s)'}`;
-            } else if (segment.winnerId) {
+              notes = `Won match against ${oppNames || 'opponent(s)'}`;
+            } else if (seg.winnerId) {
               eventType = "Match Loss";
-              const winnerName = segment.participants.find(p => p.id === segment.winnerId)?.name;
+              const winnerName = seg.participants.find(x => x.id === seg.winnerId)?.name;
               notes = `Lost match to ${winnerName || 'opponent(s)'}`;
             } else {
               eventType = "Match Draw/NC";
-              notes = `Match with ${opponentNames || 'opponent(s)'} ended in a draw/no contest.`;
+              notes = `Match with ${oppNames || 'opponent(s)'} ended in a draw/no contest.`;
             }
           }
 
-          const careerEventData = {
+          const ev = {
             playerSaveId: activeSave.id,
-            wrestlerId: participant.id,
+            wrestlerId: p.id,
             date: activeSave.currentDate,
-            eventType: eventType,
+            eventType,
             companyId: activeSave.playerCompanyId,
-            companySize: companySize,
-            segmentRating: segment.rating || showRating,
-            opponentIds: opponentIds,
-            notes: notes,
-            storylineId: segment.storylineId || null,
+            companySize,
+            segmentRating: seg.rating || showRating,
+            opponentIds: oppIds,
+            notes,
+            storylineId: seg.storylineId || null,
             showId: currentShow.id
           };
 
-          const newEventRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
-          batch.set(newEventRef, careerEventData);
-
-          newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
+          const evRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
+          batch.set(evRef, ev);
+          newEvents.push({ id: evRef.id, ...ev });
         }
       }
 
       await batch.commit();
 
-      setGameData(prevData => ({
-        ...prevData,
+      setGameData(prev => ({
+        ...prev,
         save_career_events: [
-          ...(prevData.save_career_events || []),
-          ...newCareerEvents
+          ...(prev.save_career_events || []),
+          ...newEvents
         ]
       }));
-
-    } catch (error) {
-      console.error("Error logging career events:", error);
+    } catch (err) {
+      console.error("Error logging career events:", err);
     }
   };
 
-  // segment modal handlers
-  const handleParticipantSearch = (query) => {
-    setParticipantSearch(query);
-    if (query.length < 1) {
+  const handleParticipantSearch = (text) => {
+    setParticipantSearch(text);
+    if (text.length < 1) {
       setParticipantResults([]);
       return;
     }
-
     const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+      .filter(w => w.name.toLowerCase().includes(text.toLowerCase()))
       .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
-
     setParticipantResults(results.slice(0, 5));
   };
 
-  const handleAddParticipant = (wrestler) => {
+  const handleAddParticipant = (w) => {
     setSegmentFormData(prev => ({
       ...prev,
-      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
+      participants: [...prev.participants, { id: w.id, name: w.name }]
     }));
     setParticipantSearch("");
     setParticipantResults([]);
   };
 
-  const handleRemoveParticipant = (wrestlerId) => {
+  const handleRemoveParticipant = (id) => {
     setSegmentFormData(prev => ({
       ...prev,
-      participants: prev.participants.filter(p => p.id !== wrestlerId),
-      winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
+      participants: prev.participants.filter(p => p.id !== id),
+      winnerId: prev.winnerId === id ? null : prev.winnerId
     }));
   };
 
@@ -1192,7 +1101,6 @@ function App() {
     }));
   };
 
-  // storyline creation
   const handleOpenCreateStorylineModal = () => {
     setStorylineFormData({ name: '', participants: [] });
     setStorylineParticipantSearch("");
@@ -1200,44 +1108,41 @@ function App() {
     setShowStorylineModal(true);
   };
 
-  const handleStorylineParticipantSearch = (query) => {
-    setStorylineParticipantSearch(query);
-    if (query.length < 1) {
+  const handleStorylineParticipantSearch = (text) => {
+    setStorylineParticipantSearch(text);
+    if (text.length < 1) {
       setStorylineParticipantResults([]);
       return;
     }
     const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+      .filter(w => w.name.toLowerCase().includes(text.toLowerCase()))
       .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
     setStorylineParticipantResults(results.slice(0, 5));
   };
 
-  const handleAddStorylineParticipant = (wrestler) => {
+  const handleAddStorylineParticipant = (w) => {
     setStorylineFormData(prev => ({
       ...prev,
-      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
+      participants: [...prev.participants, { id: w.id, name: w.name }]
     }));
     setStorylineParticipantSearch("");
     setStorylineParticipantResults([]);
   };
 
-  const handleRemoveStorylineParticipant = (wrestlerId) => {
+  const handleRemoveStorylineParticipant = (id) => {
     setStorylineFormData(prev => ({
       ...prev,
-      participants: prev.participants.filter(p => p.id !== wrestlerId)
+      participants: prev.participants.filter(p => p.id !== id)
     }));
   };
 
   const handleCreateStoryline = async () => {
-    if (!storylineFormData.name || storylineFormData.participants.length < 2) {
-      return;
-    }
-
+    if (!storylineFormData.name || storylineFormData.participants.length < 2) return;
     setLoadingMessage('Creating storyline...');
     setGameState('BUSY');
 
     try {
-      const newStorylineData = {
+      const newData = {
         ...storylineFormData,
         companyId: activeSave.playerCompanyId,
         heat: 10,
@@ -1245,47 +1150,56 @@ function App() {
         beats: []
       };
 
-      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+      const sRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newData);
+      const storyline = { id: sRef.id, ...newData };
 
-      const newStoryline = { id: docRef.id, ...newStorylineData };
-
-      setGameData(prevData => ({
-        ...prevData,
-        save_storylines: [...(prevData.save_storylines || []), newStoryline]
+      setGameData(prev => ({
+        ...prev,
+        save_storylines: [...(prev.save_storylines || []), storyline]
       }));
 
       setShowStorylineModal(false);
       setGameState('STORYLINE_SCREEN');
-
-    } catch (error) {
-      console.error("Error creating storyline:", error);
-      setLoadingMessage("Failed to create storyline. Please try again.");
+    } catch (err) {
+      console.error("Error creating storyline:", err);
+      setLoadingMessage("Failed to create storyline.");
       setGameState('STORYLINE_SCREEN');
     }
   };
 
-  // career/relationships
-  const handleViewCareerHistory = (wrestler) => {
-    setViewingWrestler(wrestler);
+  const handleViewCareerHistory = (w) => {
+    setViewingWrestler(w);
     setGameState('CAREER_HISTORY_SCREEN');
   };
 
-  const handleViewRelationships = (wrestler) => {
-    setViewingWrestler(wrestler);
+  const handleViewRelationships = (w) => {
+    setViewingWrestler(w);
     setGameState('RELATIONSHIPS_SCREEN');
   };
 
-  // messages helpers
-  const getAllMessages = () => {
-    return gameData.save_messages || [];
-  };
+  // --- Messages helpers ---
+  const getAllMessages = () => gameData.save_messages || [];
 
   const getConversationThreads = () => {
     const all = getAllMessages();
     const map = new Map();
 
     all.forEach(msg => {
+      // ignore system messages entirely
+      if (msg.type === 'System') return;
+      if (typeof msg.body === 'string' && msg.body.startsWith("System:")) return;
+
       const senderId = msg.senderId || 'unknown';
+      const senderName = msg.senderName || '';
+
+      // filter out the booker in every possible shape
+      const isFromBooker = msg.isFromBooker === true;
+      const isBookerId = senderId.toLowerCase() === 'booker';
+      const isBookerName = senderName.toLowerCase() === 'booker';
+      if (isFromBooker || isBookerId || isBookerName) {
+        return;
+      }
+
       if (!map.has(senderId)) {
         map.set(senderId, []);
       }
@@ -1294,12 +1208,13 @@ function App() {
 
     const threads = [];
     map.forEach((msgs, senderId) => {
-      msgs.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+      msgs.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+      const lastMsg = msgs[msgs.length - 1];
       threads.push({
         senderId,
-        senderName: msgs[0]?.senderName || 'Unknown',
-        lastMessage: msgs[0],
-        messages: msgs.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis())
+        senderName: lastMsg?.senderName || 'Unknown',
+        lastMessage: lastMsg,
+        messages: msgs
       });
     });
 
@@ -1333,82 +1248,60 @@ function App() {
       setSelectedMessageSenderId(null);
       setActiveMessageForReply(null);
     }
+    setReplyDraft('');
+    setIsReplyDirty(false);
+    setHoveredReplyText('');
+    setLastSelectedReplyTone(null);
   };
 
-  // spikier follow-ups
+  // make "no" spikier, no matter morale
   const generateLocalFollowUp = (tone, originalMsg, wrestlerObj) => {
     const topic = originalMsg?.topic || 'general';
     const senderName = originalMsg?.senderName || 'Talent';
-    const morale = wrestlerObj?.morale ?? 75;
-    const isAlreadyIcy = morale < 60;
 
     if (tone === 'yes') {
       switch (topic) {
         case 'request_time_off':
-          return `${senderName}: Thanks for working with me on the time off — I’ll make sure I come back ready.`;
+          return `${senderName}: Appreciate you giving me the time. I’ll come back ready to go.`;
         case 'contract_negotiation':
-          return `${senderName}: Appreciate you meeting me in the middle. I’ll keep showing I’m worth it.`;
+          return `${senderName}: Thanks for working with me on that. I’ll make sure I justify it.`;
         case 'unhappy_booking':
-          return `${senderName}: That’s what I needed to hear. I’ll keep delivering so it makes sense on TV.`;
-        case 'excited_push':
-          return `${senderName}: Awesome. I’ll make sure the character stays hot.`;
+          return `${senderName}: That’s good to hear. I’ll keep proving I belong higher.`;
         default:
-          return `${senderName}: Cool, thanks for backing me on that.`;
+          return `${senderName}: Perfect — thanks for backing me on this.`;
       }
     }
 
     if (tone === 'no') {
-      // harsher if morale is already low
-      if (isAlreadyIcy) {
-        switch (topic) {
-          case 'request_time_off':
-            return `${senderName}: That’s rough. I was hoping for a little more understanding, but I get where your head’s at.`;
-          case 'contract_negotiation':
-            return `${senderName}: Okay… that’s not really what I was aiming for. I’ll keep my options open then.`;
-          case 'unhappy_booking':
-            return `${senderName}: So basically I stay where I am. Got it. I’ll do the job, but I want this on your radar.`;
-          default:
-            return `${senderName}: Understood. Not thrilled, but I hear you.`;
-        }
-      } else {
-        switch (topic) {
-          case 'request_time_off':
-            return `${senderName}: Alright. I’ll figure it out, but it’s not ideal.`;
-          case 'contract_negotiation':
-            return `${senderName}: Got it. I still think I’m worth more, but I’ll keep working.`;
-          case 'unhappy_booking':
-            return `${senderName}: That’s disappointing. I’ll keep getting reactions and we can talk again.`;
-          default:
-            return `${senderName}: Okay. I’ll roll with it for now.`;
-        }
+      // Always disappointed or annoyed for a no
+      switch (topic) {
+        case 'request_time_off':
+          return `${senderName}: That’s rough. I was hoping for some flexibility there. I’ll keep it professional, but I’m not thrilled.`;
+        case 'contract_negotiation':
+          return `${senderName}: Okay, but that’s not what I was looking for. I may have to see what else is out there if this doesn’t move.`;
+        case 'unhappy_booking':
+          return `${senderName}: So we’re staying where we are. I’ll do business, but I want it on record that I’m not happy with the spot.`;
+        case 'excited_push':
+          return `${senderName}: Alright. I thought there was momentum, but if the timing’s not there, I guess I wait.`;
+        default:
+          return `${senderName}: Got it. Not the answer I wanted, but I heard you.`;
       }
     }
 
     if (tone === 'maybe') {
-      if (isAlreadyIcy) {
-        switch (topic) {
-          case 'contract_negotiation':
-            return `${senderName}: Alright, but I don’t want this dragged out forever. Let’s circle back soon.`;
-          case 'unhappy_booking':
-            return `${senderName}: Okay… I’ll see what I can do in the meantime, but I do want movement.`;
-          default:
-            return `${senderName}: Fair. Keep me in the loop if things change.`;
-        }
-      } else {
-        switch (topic) {
-          case 'request_time_off':
-            return `${senderName}: That’s fair — I’ll keep you posted on dates and we’ll make it work.`;
-          case 'contract_negotiation':
-            return `${senderName}: Okay, let’s revisit after the next run of shows.`;
-          case 'unhappy_booking':
-            return `${senderName}: I get it. If the reactions keep coming, I’ll nudge you again.`;
-          default:
-            return `${senderName}: Sounds good — we can revisit when the timing’s better.`;
-        }
+      switch (topic) {
+        case 'request_time_off':
+          return `${senderName}: Fair enough — keep me in the loop on dates and I’ll work around it.`;
+        case 'contract_negotiation':
+          return `${senderName}: Okay, let’s revisit after the next run. I still think I’m worth more.`;
+        case 'unhappy_booking':
+          return `${senderName}: Alright. If I keep getting reactions, I’ll bring it back to you.`;
+        default:
+          return `${senderName}: That works — we can circle back when it makes sense.`;
       }
     }
 
-    return `${senderName}: Cool.`;
+    return `${senderName}: Okay.`;
   };
 
   const getMoraleDeltaForTone = (tone) => {
@@ -1425,7 +1318,7 @@ function App() {
     const senderId = activeMessageForReply.senderId;
     const senderName = activeMessageForReply.senderName;
 
-    const bookerMessage = {
+    const bookerMsg = {
       senderId: 'booker',
       senderName: 'Booker',
       body: replyDraft.trim(),
@@ -1436,39 +1329,21 @@ function App() {
       inReplyTo: activeMessageForReply.id
     };
 
-    let usedTone = 'maybe';
-    // simple heuristic: if draft looks like we hovered "yes" variant, or user typed "yes"/"ok" we could detect, but we keep it simple
-    if (hoveredReplyText && replyDraft.trim() === hoveredReplyText.trim()) {
-      // We can't reliably tell which button, but we'll default to the intent based on index
-      // so instead we'll infer from keywords:
-      if (replyDraft.toLowerCase().includes("not") || replyDraft.toLowerCase().includes("can’t") || replyDraft.toLowerCase().includes("cant") || replyDraft.toLowerCase().includes("won’t")) {
-        usedTone = 'no';
-      } else if (replyDraft.toLowerCase().includes("if") || replyDraft.toLowerCase().includes("let’s see") || replyDraft.toLowerCase().includes("let us see") || replyDraft.toLowerCase().includes("revisit")) {
-        usedTone = 'maybe';
-      } else {
-        usedTone = 'yes';
-      }
-    } else {
-      // user typed manually; let's do a tiny heuristic
+    let usedTone = lastSelectedReplyTone || 'maybe';
+    if (!lastSelectedReplyTone) {
       const lower = replyDraft.toLowerCase();
-      if (lower.startsWith("yes") || lower.startsWith("yeah") || lower.includes("we can do that") || lower.includes("okay we can do that")) {
-        usedTone = 'yes';
-      } else if (lower.startsWith("no") || lower.includes("not right now") || lower.includes("can’t do that") || lower.includes("cant do that")) {
-        usedTone = 'no';
-      } else if (lower.includes("if") || lower.includes("let's see") || lower.includes("lets see") || lower.includes("revisit")) {
-        usedTone = 'maybe';
-      }
+      if (lower.startsWith("yes") || lower.includes("we can do that")) usedTone = 'yes';
+      else if (lower.startsWith("no") || lower.includes("not right now") || lower.includes("can’t") || lower.includes("cant") || lower.includes("won’t")) usedTone = 'no';
+      else if (lower.includes("if") || lower.includes("revisit") || lower.includes("let's see") || lower.includes("lets see")) usedTone = 'maybe';
     }
 
-    const moraleDelta = getMoraleDeltaForTone(usedTone);
-
-    // find wrestler so we can make "no" harsher if morale is low
     const wrestlerObj = gameData.save_wrestlers?.find(w => w.id === senderId);
     const followUpText = generateLocalFollowUp(usedTone, activeMessageForReply, wrestlerObj);
+    const moraleDelta = getMoraleDeltaForTone(usedTone);
 
     const talentReply = {
-      senderId: senderId,
-      senderName: senderName,
+      senderId,
+      senderName,
       body: followUpText,
       timestamp: getCurrentGameTimestamp(),
       type: 'Text',
@@ -1476,37 +1351,27 @@ function App() {
       isFollowUp: true
     };
 
-    const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-    const bookerDocRef = await addDoc(messagesRef, bookerMessage);
-    const talentDocRef = await addDoc(messagesRef, talentReply);
+    const msgRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+    const bookerDoc = await addDoc(msgRef, bookerMsg);
+    const talentDoc = await addDoc(msgRef, talentReply);
 
     let updatedWrestlers = gameData.save_wrestlers;
     if (senderId && gameData.save_wrestlers) {
       const target = gameData.save_wrestlers.find(w => w.id === senderId);
       if (target) {
         const newMorale = Math.max(0, Math.min(100, (target.morale ?? 75) + moraleDelta));
-        const wrestlerRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, senderId);
-        await setDoc(wrestlerRef, { morale: newMorale }, { merge: true });
+        const wRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, senderId);
+        await setDoc(wRef, { morale: newMorale }, { merge: true });
         updatedWrestlers = gameData.save_wrestlers.map(w => w.id === senderId ? { ...w, morale: newMorale } : w);
-
-        if (moraleDelta !== 0) {
-          setInlineFeedback(`System: ${senderName} morale ${moraleDelta > 0 ? '+' : ''}${moraleDelta}`);
-        } else {
-          setInlineFeedback(`System: ${senderName} acknowledged your response.`);
-        }
-      } else {
-        setInlineFeedback(`System: ${senderName} acknowledged your response.`);
       }
-    } else {
-      setInlineFeedback(`System: ${senderName} acknowledged your response.`);
     }
 
-    setGameData(prevData => ({
-      ...prevData,
+    setGameData(prev => ({
+      ...prev,
       save_messages: [
-        ...(prevData.save_messages || []),
-        { id: bookerDocRef.id, ...bookerMessage },
-        { id: talentDocRef.id, ...talentReply }
+        ...(prev.save_messages || []),
+        { id: bookerDoc.id, ...bookerMsg },
+        { id: talentDoc.id, ...talentReply }
       ],
       save_wrestlers: updatedWrestlers
     }));
@@ -1514,37 +1379,35 @@ function App() {
     setReplyDraft('');
     setIsReplyDirty(false);
     setHoveredReplyText('');
+    setLastSelectedReplyTone(null);
   };
 
   const handleReplyHover = (text) => {
     if (!text) return;
     setHoveredReplyText(text);
-    if (!isReplyDirty) {
-      setReplyDraft(text);
-    }
+    if (!isReplyDirty) setReplyDraft(text);
   };
 
   const handleReplyHoverLeave = () => {
     setHoveredReplyText('');
-    if (!isReplyDirty) {
-      setReplyDraft('');
-    }
+    if (!isReplyDirty) setReplyDraft('');
   };
 
   const handleReplyDraftChange = (e) => {
     setReplyDraft(e.target.value);
     setIsReplyDirty(true);
+    setLastSelectedReplyTone(null);
   };
 
-  // NEW: click-to-lock handler
-  const handleReplyButtonClick = (text) => {
+  const handleReplyButtonClick = (text, tone) => {
     if (!text) return;
     setReplyDraft(text);
-    setIsReplyDirty(true);     // so hover leave doesn't wipe it
-    setHoveredReplyText('');   // we don't need hover text now
+    setIsReplyDirty(true);
+    setHoveredReplyText('');
+    setLastSelectedReplyTone(tone);
   };
 
-  // render screens
+  // --- renderers ---
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
       <LoadingIcon />
@@ -1613,7 +1476,6 @@ function App() {
 
   const renderGameDashboard = () => {
     if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
-
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
 
     const currentDateStr = activeSave.currentDate.toDate().toISOString().split('T')[0];
@@ -1640,7 +1502,6 @@ function App() {
           <div className="md:col-span-3">
             <div className="bg-gray-800 p-6 rounded-lg shadow-lg min-h-[400px]">
               <h3 className="text-xl font-semibold mb-4">Today's Actions</h3>
-
               {plannedShow ? (
                 <div className="text-center p-8 bg-gray-700 rounded-lg">
                   <h4 className="text-2xl font-bold text-yellow-300">IT'S SHOW DAY!</h4>
@@ -1706,18 +1567,12 @@ function App() {
               <RosterIcon />
               Roster
             </button>
-            <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
-              Staff
-            </button>
             <button
               onClick={() => setGameState('STORYLINE_SCREEN')}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
               <FireIcon />
               Storyline Planner
-            </button>
-            <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
-              Finances
             </button>
             <button
               onClick={handleExitGame}
@@ -1733,7 +1588,6 @@ function App() {
 
   const renderMessagesModal = () => {
     if (!showMessagesModal) return null;
-
     const threads = getConversationThreads();
     const selectedThread = threads.find(t => t.senderId === selectedMessageSenderId);
     const messagesForThread = selectedThread ? selectedThread.messages : [];
@@ -1751,7 +1605,7 @@ function App() {
           className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] flex"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* left pane */}
+          {/* left */}
           <div className="w-1/3 border-r border-gray-700 overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h2 className="text-xl font-bold text-white">Inbox</h2>
@@ -1778,7 +1632,7 @@ function App() {
                     setReplyDraft('');
                     setIsReplyDirty(false);
                     setHoveredReplyText('');
-                    setInlineFeedback(null);
+                    setLastSelectedReplyTone(null);
                   }}
                   className={`w-full flex flex-col items-start px-4 py-3 text-left hover:bg-gray-800 transition-all ${thread.senderId === selectedMessageSenderId ? 'bg-gray-800' : ''}`}
                 >
@@ -1792,44 +1646,42 @@ function App() {
             </div>
           </div>
 
-          {/* right pane */}
+          {/* right */}
           <div className="w-2/3 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <div>
                 <h3 className="text-lg font-bold text-white">{selectedThread ? selectedThread.senderName : 'Select a conversation'}</h3>
-                <p className="text-xs text-gray-400">All messages are shoot / backstage messages.</p>
+                <p className="text-xs text-gray-400">All messages are shoot/backstage.</p>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messagesForThread.length === 0 ? (
                 <p className="text-gray-400 text-sm">No messages in this conversation yet.</p>
               ) : (
-                messagesForThread.map(msg => (
-                  <div key={msg.id} className={`flex ${msg.isFromBooker ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] rounded-lg px-4 py-2 ${msg.isFromBooker ? 'bg-indigo-600 text-white' : msg.isFollowUp ? 'bg-gray-700 text-gray-100' : 'bg-gray-800 text-white'}`}>
-                      <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
-                      <p className="text-[0.6rem] text-gray-300 mt-1 text-right">{formatGameTimestamp(msg.timestamp)}</p>
+                messagesForThread.map(msg => {
+                  // already filtered system above, but double guard
+                  if (msg.type === 'System' || (typeof msg.body === 'string' && msg.body.startsWith("System:"))) {
+                    return null;
+                  }
+                  return (
+                    <div key={msg.id} className={`flex ${msg.isFromBooker ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] rounded-lg px-4 py-2 ${msg.isFromBooker ? 'bg-indigo-600 text-white' : msg.isFollowUp ? 'bg-gray-700 text-gray-100' : 'bg-gray-800 text-white'}`}>
+                        <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
+                        <p className="text-[0.6rem] text-gray-300 mt-1 text-right">{formatGameTimestamp(msg.timestamp)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
-              {inlineFeedback && (
-                <div className="flex justify-center">
-                  <div className="bg-yellow-900 text-yellow-100 text-xs px-3 py-1 rounded-full">
-                    {inlineFeedback}
-                  </div>
-                </div>
+                  );
+                })
               )}
             </div>
 
-            {/* reply area */}
             {selectedThread && (
               <div className="p-4 border-t border-gray-700 bg-gray-900">
                 <div className="flex space-x-2 mb-3">
                   <button
                     onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[0] || '')}
                     onMouseLeave={handleReplyHoverLeave}
-                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[0] || '')}
+                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[0] || '', 'yes')}
                     className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
                   >
                     Yes
@@ -1837,7 +1689,7 @@ function App() {
                   <button
                     onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[1] || '')}
                     onMouseLeave={handleReplyHoverLeave}
-                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[1] || '')}
+                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[1] || '', 'no')}
                     className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
                   >
                     No
@@ -1845,7 +1697,7 @@ function App() {
                   <button
                     onMouseEnter={() => handleReplyHover(activeMessageReplyOptions[2] || '')}
                     onMouseLeave={handleReplyHoverLeave}
-                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[2] || '')}
+                    onClick={() => handleReplyButtonClick(activeMessageReplyOptions[2] || '', 'maybe')}
                     className="px-3 py-1 bg-gray-800 rounded text-sm text-white hover:bg-gray-700"
                   >
                     Maybe
@@ -1867,7 +1719,7 @@ function App() {
                     Send
                   </button>
                 </div>
-                <p className="text-[0.65rem] text-gray-500 mt-2">Hover a button to preview. Click it to lock it in, then send.</p>
+                <p className="text-[0.65rem] text-gray-500 mt-2">Hover to preview. Click to lock. Send to finalize.</p>
               </div>
             )}
           </div>
@@ -1878,7 +1730,6 @@ function App() {
 
   const renderAssistantModal = () => {
     if (!showAssistantModal) return null;
-
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -1949,7 +1800,6 @@ function App() {
 
   const renderBookingScreen = () => {
     if (!currentShow) return null;
-
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1977,24 +1827,24 @@ function App() {
         </div>
 
         <div className="mt-6 space-y-3">
-          {currentSegments.map((segment, index) => (
+          {currentSegments.map((seg, idx) => (
             <button
-              key={index}
-              onClick={() => handleOpenSegmentModal(index)}
+              key={idx}
+              onClick={() => handleOpenSegmentModal(idx)}
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
             >
-              <span className="text-lg font-bold text-gray-400 w-12">{index + 1}.</span>
-              {segment ? (
+              <span className="text-lg font-bold text-gray-400 w-12">{idx + 1}.</span>
+              {seg ? (
                 <div>
-                  <span className={`text-sm font-bold px-2 py-0.5 rounded ${segment.type === 'Match' ? 'bg-blue-600' : 'bg-purple-600'}`}>
-                    {segment.type}
+                  <span className={`text-sm font-bold px-2 py-0.5 rounded ${seg.type === 'Match' ? 'bg-blue-600' : 'bg-purple-600'}`}>
+                    {seg.type}
                   </span>
                   <span className="ml-3 text-lg text-white">
-                    {segment.participants.map(p => p.name).join(' vs. ')}
+                    {seg.participants.map(p => p.name).join(' vs. ')}
                   </span>
-                  {segment.winnerId && (
+                  {seg.winnerId && (
                     <p className="ml-16 text-sm text-yellow-400">
-                      Winner: {segment.participants.find(p => p.id === segment.winnerId)?.name || 'N/A'}
+                      Winner: {seg.participants.find(p => p.id === seg.winnerId)?.name || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -2013,9 +1863,8 @@ function App() {
 
   const renderRosterScreen = () => {
     const wrestlers = gameData.save_wrestlers || [];
-
-    const getDispositionClass = (disposition) => {
-      switch (disposition) {
+    const dispClass = (d) => {
+      switch (d) {
         case 'Face': return 'text-green-400';
         case 'Heel': return 'text-red-400';
         case 'Tweener': return 'text-yellow-400';
@@ -2040,51 +1889,47 @@ function App() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {wrestlers.length === 0 && (
-            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
+            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found.</p>
           )}
-          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(wrestler => (
-            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
+          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(w => (
+            <div key={w.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white">{w.name}</h3>
+              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{w.gimmick}</span></p>
 
               <div className="flex justify-between text-sm mb-3">
-                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
-                  {wrestler.disposition}
-                </span>
-                <span className="text-gray-300">
-                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
-                </span>
+                <span className={`font-bold ${dispClass(w.disposition)}`}>{w.disposition}</span>
+                <span className="text-gray-300">Morale: <span className="font-semibold text-white">{w.morale}</span></span>
               </div>
 
               <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
                 <div>
                   <span className="text-gray-400">BRAWL</span>
-                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
+                  <p className="text-lg font-bold">{w.stats.brawling}</p>
                 </div>
                 <div>
                   <span className="text-gray-400">SPEED</span>
-                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
+                  <p className="text-lg font-bold">{w.stats.speed}</p>
                 </div>
                 <div>
                   <span className="text-gray-400">TECH</span>
-                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
+                  <p className="text-lg font-bold">{w.stats.technical}</p>
                 </div>
                 <div>
                   <span className="text-gray-400">CHAR</span>
-                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
+                  <p className="text-lg font-bold">{w.stats.charisma}</p>
                 </div>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => handleViewCareerHistory(wrestler)}
+                  onClick={() => handleViewCareerHistory(w)}
                   className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
                 >
                   <HistoryIcon />
                   History
                 </button>
                 <button
-                  onClick={() => handleViewRelationships(wrestler)}
+                  onClick={() => handleViewRelationships(w)}
                   className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
                 >
                   <RelationshipsIcon />
@@ -2098,56 +1943,53 @@ function App() {
     );
   };
 
-  const renderShowResultsScreen = () => {
-    return (
-      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
-        <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
-              <p className="text-indigo-300">
-                {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Overall Rating</p>
-              <p className="text-4xl font-bold text-yellow-400 flex items-center">
-                <StarIcon className="w-8 h-8 mr-1" />
-                {showRating}
-              </p>
-            </div>
+  const renderShowResultsScreen = () => (
+    <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
+      <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
+            <p className="text-indigo-300">
+              {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-400">Overall Rating</p>
+            <p className="text-4xl font-bold text-yellow-400 flex items-center">
+              <StarIcon className="w-8 h-8 mr-1" />
+              {showRating}
+            </p>
           </div>
         </div>
-
-        <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
-          <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
-          {showRecap ? (
-            <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
-              {showRecap}
-            </p>
-          ) : (
-            <div className="flex items-center justify-center p-8">
-              <LoadingIcon />
-              <span className="ml-3 text-lg">Generating AI recap...</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={handleNextDay}
-            className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-          >
-            Continue (Next Day)
-          </button>
-        </div>
       </div>
-    );
-  };
+
+      <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
+        <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
+        {showRecap ? (
+          <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+            {showRecap}
+          </p>
+        ) : (
+          <div className="flex items-center justify-center p-8">
+            <LoadingIcon />
+            <span className="ml-3 text-lg">Generating AI recap...</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 text-center">
+        <button
+          onClick={handleNextDay}
+          className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
+        >
+          Continue (Next Day)
+        </button>
+      </div>
+    </div>
+  );
 
   const renderStorylineScreen = () => {
     const storylines = gameData.save_storylines || [];
-
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -2157,7 +1999,7 @@ function App() {
           </h1>
           <div className="flex space-x-2">
             <button
-              onClick={() => handleOpenCreateStorylineModal()}
+              onClick={handleOpenCreateStorylineModal}
               className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
             >
               <PlusIcon />
@@ -2174,16 +2016,16 @@ function App() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {storylines.length === 0 && (
-            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines. Go create one!</p>
+            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines.</p>
           )}
-          {storylines.filter(s => s.status === 'Active').map(storyline => (
-            <div key={storyline.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{storyline.name}</h3>
+          {storylines.filter(s => s.status === 'Active').map(s => (
+            <div key={s.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-white">{s.name}</h3>
               <p className="text-sm text-gray-400 mb-2">
-                Heat: <span className="font-semibold text-red-400">{storyline.heat}</span>
+                Heat: <span className="font-semibold text-red-400">{s.heat}</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {storyline.participants.map(p => (
+                {s.participants.map(p => (
                   <span key={p.id} className="bg-gray-700 text-sm px-3 py-1 rounded-full">
                     {p.name}
                   </span>
@@ -2198,15 +2040,14 @@ function App() {
 
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
-
     const events = (gameData.save_career_events || [])
-      .filter(event => event.wrestlerId === viewingWrestler.id)
+      .filter(e => e.wrestlerId === viewingWrestler.id)
       .sort((a, b) => b.date.toMillis() - a.date.toMillis());
 
-    const getEventColor = (type) => {
-      if (type === 'Match Win') return 'text-green-400';
-      if (type === 'Match Loss') return 'text-red-400';
-      if (type.includes('Draw')) return 'text-yellow-400';
+    const color = (t) => {
+      if (t === 'Match Win') return 'text-green-400';
+      if (t === 'Match Loss') return 'text-red-400';
+      if (t.includes('Draw')) return 'text-yellow-400';
       return 'text-gray-300';
     };
 
@@ -2229,51 +2070,41 @@ function App() {
         </div>
 
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="flex flex-col">
-            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div className="shadow overflow-hidden border-b border-gray-700">
-                  <table className="min-w-full divide-y divide-gray-700">
-                    <thead className="bg-gray-700">
+          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div className="shadow overflow-hidden border-b border-gray-700">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {events.length === 0 ? (
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Event Type
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Notes
-                        </th>
+                        <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
+                          No career events found for this wrestler.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-gray-800 divide-y divide-gray-700">
-                      {events.length === 0 ? (
-                        <tr>
-                          <td colSpan="3" className="px-6 py-8 text-center text-gray-400">
-                            No career events found for this wrestler.
+                    ) : (
+                      events.map(e => (
+                        <tr key={e.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {e.date.toDate().toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-semibold ${color(e.eventType)}`}>{e.eventType}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                            {e.notes}
                           </td>
                         </tr>
-                      ) : (
-                        events.map(event => (
-                          <tr key={event.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                              {event.date.toDate().toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <span className={`font-semibold ${getEventColor(event.eventType)}`}>
-                                {event.eventType}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                              {event.notes}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2284,19 +2115,18 @@ function App() {
 
   const renderRelationshipsScreen = () => {
     if (!viewingWrestler || !gameData.save_relationships || !gameData.save_wrestlers) return renderLoadingScreen();
+    const rels = (gameData.save_relationships || [])
+      .filter(r => r.personA_Id === viewingWrestler.id || r.personB_Id === viewingWrestler.id);
 
-    const relationships = (gameData.save_relationships || [])
-      .filter(rel => rel.personA_Id === viewingWrestler.id || rel.personB_Id === viewingWrestler.id);
-
-    const getOtherPersonName = (rel) => {
-      const otherId = rel.personA_Id === viewingWrestler.id ? rel.personB_Id : rel.personA_Id;
-      const otherPerson = gameData.save_wrestlers.find(w => w.id === otherId);
-      return otherPerson ? otherPerson.name : 'Unknown Person';
+    const otherName = (r) => {
+      const otherId = r.personA_Id === viewingWrestler.id ? r.personB_Id : r.personA_Id;
+      const other = gameData.save_wrestlers.find(w => w.id === otherId);
+      return other ? other.name : 'Unknown Person';
     };
 
-    const getStatusColor = (status) => {
-      if (status.includes('Friend') || status.includes('Like')) return 'text-green-400';
-      if (status.includes('Dislike') || status.includes('Hate')) return 'text-red-400';
+    const statusColor = (s) => {
+      if (s.includes('Friend') || s.includes('Like')) return 'text-green-400';
+      if (s.includes('Dislike') || s.includes('Hate')) return 'text-red-400';
       return 'text-gray-300';
     };
 
@@ -2319,57 +2149,47 @@ function App() {
         </div>
 
         <div className="mt-6 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          <div className="flex flex-col">
-            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div className="shadow overflow-hidden border-b border-gray-700">
-                  <table className="min-w-full divide-y divide-gray-700">
-                    <thead className="bg-gray-700">
+          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div className="shadow overflow-hidden border-b border-gray-700">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Person</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {rels.length === 0 ? (
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Person
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                          Notes
-                        </th>
+                        <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                          No relationships found.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-gray-800 divide-y divide-gray-700">
-                      {relationships.length === 0 ? (
-                        <tr>
-                          <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
-                            No relationships found for this wrestler.
+                    ) : (
+                      rels.map(r => (
+                        <tr key={r.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
+                            {otherName(r)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {r.relationshipType}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`font-semibold ${statusColor(r.status)}`}>
+                              {r.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
+                            {r.notes}
                           </td>
                         </tr>
-                      ) : (
-                        relationships.map(rel => (
-                          <tr key={rel.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
-                              {getOtherPersonName(rel)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                              {rel.relationshipType}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <span className={`font-semibold ${getStatusColor(rel.status)}`}>
-                                {rel.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-200">
-                              {rel.notes}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2380,7 +2200,6 @@ function App() {
 
   const renderSegmentModal = () => {
     if (!showSegmentModal) return null;
-
     const storylines = gameData.save_storylines || [];
 
     return (
@@ -2432,9 +2251,7 @@ function App() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Participants
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Participants</label>
               <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
                 {segmentFormData.participants.map(p => (
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
@@ -2451,9 +2268,7 @@ function App() {
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Add Participant
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Add Participant</label>
               <div className="flex items-center">
                 <UserPlusIcon className="absolute left-3 w-5 h-5 text-gray-400" />
                 <input
@@ -2481,9 +2296,7 @@ function App() {
 
             {segmentFormData.type === 'Match' && (
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Winner (Optional)
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Winner (Optional)</label>
                 <select
                   name="winnerId"
                   value={segmentFormData.winnerId || ""}
@@ -2521,7 +2334,6 @@ function App() {
 
   const renderCreateStorylineModal = () => {
     if (!showStorylineModal) return null;
-
     return (
       <div
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -2555,9 +2367,7 @@ function App() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Participants (min. 2)
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Participants (min. 2)</label>
               <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
                 {storylineFormData.participants.map(p => (
                   <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
@@ -2574,9 +2384,7 @@ function App() {
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Add Participant
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Add Participant</label>
               <div className="flex items-center">
                 <UserPlusIcon className="absolute left-3 w-5 h-5 text-gray-400" />
                 <input
@@ -2622,7 +2430,6 @@ function App() {
     );
   };
 
-  // main render
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
       {(() => {
