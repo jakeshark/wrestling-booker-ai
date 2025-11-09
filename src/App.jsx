@@ -20,6 +20,7 @@ import {
   setLogLevel
 } from 'firebase/firestore';
 import MessagesModal from './components/MessagesModal';
+import AssistantModal from './components/AssistantModal';
 import useMessages from './hooks/useMessages';
 
 // --- Icon Components (Simple SVGs) ---
@@ -666,6 +667,7 @@ function App() {
     )).join('\n');
 
     try {
+      // TODO: centralize AI POST calls
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2230,6 +2232,18 @@ function App() {
         onSendReply={handleSendReply}
         replyOptions={replyOptions}
         replyInputValue={replyInputValue}
+      />
+      <AssistantModal
+        open={showAssistantModal}
+        onClose={() => setShowAssistantModal(false)}
+        assistantQuery={assistantQuery}
+        setAssistantQuery={setAssistantQuery}
+        assistantResponse={assistantResponse}
+        isAssistantLoading={isAssistantLoading}
+        onSend={handleGetAIAdvice}
+        AssistantIcon={AssistantIcon}
+        CloseIcon={CloseIcon}
+        LoadingIcon={LoadingIcon}
       />
       {renderAssistantModal()}
       {renderSegmentModal()}
