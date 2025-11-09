@@ -19,6 +19,9 @@ import {
   writeBatch,
   setLogLevel
 } from 'firebase/firestore';
+import MessagesModal from './components/MessagesModal';
+import AssistantModal from './components/AssistantModal';
+import useMessages from './hooks/useMessages';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -126,8 +129,6 @@ function App() {
   const [activeSave, setActiveSave] = useState(null);
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
-  const [showMessagesModal, setShowMessagesModal] = useState(false);
-  const [unreadMessages, setUnreadMessages] = useState(0);
   const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
@@ -154,11 +155,6 @@ function App() {
   const [viewingWrestler, setViewingWrestler] = useState(null);
 
   // --- Messages (iPhone-style) State ---
-  const [selectedContactId, setSelectedContactId] = useState(null);
-  const [replyDraft, setReplyDraft] = useState("");
-  const [hoverReply, setHoverReply] = useState(null);
-  const [lockedReply, setLockedReply] = useState(null);
-
   // --- Constants from original design ---
   const DATASET_COLLECTIONS = [
     'dataset_companies',
@@ -201,6 +197,24 @@ function App() {
   };
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
+
+  const {
+    showMessagesModal,
+    openMessages,
+    closeMessages,
+    unreadMessages,
+    contacts: messageContacts,
+    selectedContact,
+    conversationMessages,
+    handleContactClick,
+    handleReplyHover,
+    handleReplyHoverLeave,
+    handleReplyClick,
+    handleReplyDraftChange,
+    handleSendReply,
+    replyOptions,
+    replyInputValue
+  } = useMessages({ gameData, setGameData, activeSave, db, appId, userId });
 
   // --- Firebase Init ---
   useEffect(() => {
@@ -514,7 +528,6 @@ function App() {
       setActiveSave(saveData);
 
       let loadedGameData = {};
-      let unreadCount = 0;
 
       for (const collectionName of SAVE_COLLECTION_NAMES) {
         const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
@@ -523,21 +536,9 @@ function App() {
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         loadedGameData[collectionName] = collectionData;
 
-        if (collectionName === 'save_messages') {
-          unreadCount = collectionData.filter(msg => !msg.isRead).length;
-        }
       }
 
       setGameData(loadedGameData);
-      setUnreadMessages(unreadCount);
-
-      // pick first contact if any
-      const contacts = buildMessageContacts(loadedGameData.save_messages || [], loadedGameData.save_wrestlers || []);
-      if (contacts.length > 0) {
-        setSelectedContactId(contacts[0].id);
-      } else {
-        setSelectedContactId(null);
-      }
 
       setGameState('IN_GAME');
 
@@ -649,7 +650,6 @@ function App() {
         ...prevData,
         save_messages: [...(prevData.save_messages || []), newMessage]
       }));
-      setUnreadMessages(prev => prev + 1);
     } catch (error) {
       console.error("Error generating AI message: ", error);
     }
@@ -667,6 +667,7 @@ function App() {
     )).join('\n');
 
     try {
+      // TODO: centralize AI POST calls
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1263,272 +1264,6 @@ function App() {
     setGameState('RELATIONSHIPS_SCREEN');
   };
 
-  // --- Messages Helpers: build contacts from messages ---
-  const buildMessageContacts = (messages, wrestlers) => {
-    if (!messages) return [];
-    const contactsMap = new Map();
-
-    for (const msg of messages) {
-      // determine "other person" in this message
-      // if player is 'booker', then other is senderId (if senderId !== 'booker') else recipientId
-      let otherId = null;
-      let otherName = null;
-
-      if (msg.senderId && msg.senderId !== 'booker') {
-        otherId = msg.senderId;
-      } else if (msg.recipientId && msg.recipientId !== 'booker') {
-        otherId = msg.recipientId;
-      }
-
-      if (!otherId) continue; // don't list the booker
-
-      // try to get wrestler name
-      const wrestler = wrestlers.find(w => w.id === otherId);
-      otherName = wrestler ? wrestler.name : (msg.senderName || 'Unknown');
-
-      if (!contactsMap.has(otherId)) {
-        contactsMap.set(otherId, {
-          id: otherId,
-          name: otherName,
-          latestTimestamp: msg.timestamp,
-          latestSnippet: msg.body
-        });
-      } else {
-        // update latest if this msg is newer
-        const existing = contactsMap.get(otherId);
-        if (msg.timestamp && existing.latestTimestamp && msg.timestamp.toMillis() > existing.latestTimestamp.toMillis()) {
-          contactsMap.set(otherId, {
-            ...existing,
-            latestTimestamp: msg.timestamp,
-            latestSnippet: msg.body
-          });
-        }
-      }
-    }
-
-    // sort by latestTimestamp desc
-    const contacts = Array.from(contactsMap.values()).sort((a, b) => {
-      if (!a.latestTimestamp || !b.latestTimestamp) return 0;
-      return b.latestTimestamp.toMillis() - a.latestTimestamp.toMillis();
-    });
-
-    return contacts;
-  };
-
-  const handleOpenMessages = () => {
-    setShowMessagesModal(true);
-    const contacts = buildMessageContacts(gameData.save_messages || [], gameData.save_wrestlers || []);
-    if (contacts.length > 0 && !selectedContactId) {
-      setSelectedContactId(contacts[0].id);
-    }
-  };
-
-  const handleCloseMessages = async () => {
-    setShowMessagesModal(false);
-    setHoverReply(null);
-    setLockedReply(null);
-    setReplyDraft("");
-
-    if (!activeSave || unreadMessages === 0) return;
-
-    setUnreadMessages(0);
-
-    setGameData(prevData => ({
-      ...prevData,
-      save_messages: prevData.save_messages.map(msg => ({ ...msg, isRead: true }))
-    }));
-
-    try {
-      const batch = writeBatch(db);
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-
-      gameData.save_messages.forEach(msg => {
-        if (!msg.isRead) {
-          const docRef = doc(messagesRef, msg.id);
-          batch.update(docRef, { isRead: true });
-        }
-      });
-
-      await batch.commit();
-    } catch (error) {
-      console.error("Error marking messages as read: ", error);
-    }
-  };
-
-  const getSelectedConversationMessages = () => {
-    if (!selectedContactId) return [];
-
-    const allMsgs = gameData.save_messages || [];
-    return allMsgs
-      .filter(msg => {
-        // messages in this convo if:
-        // 1) msg.senderId === selectedContactId
-        // 2) msg.recipientId === selectedContactId
-        // 3) backward compatibility: old messages that only have senderId and that sender is the selected contact
-        if (msg.senderId === selectedContactId) return true;
-        if (msg.recipientId === selectedContactId) return true;
-        // old messages: if senderId is selected and recipientId missing
-        if (msg.senderId === selectedContactId && !msg.recipientId) return true;
-        return false;
-      })
-      .sort((a, b) => {
-        const aTime = a.timestamp ? a.timestamp.toMillis() : 0;
-        const bTime = b.timestamp ? b.timestamp.toMillis() : 0;
-        return aTime - bTime;
-      });
-  };
-
-  const handleContactClick = (contactId) => {
-    setSelectedContactId(contactId);
-    setReplyDraft("");
-    setHoverReply(null);
-    setLockedReply(null);
-  };
-
-  const getSelectedContact = () => {
-    if (!selectedContactId) return null;
-    const wrestlers = gameData.save_wrestlers || [];
-    const wrestler = wrestlers.find(w => w.id === selectedContactId);
-    if (wrestler) return wrestler;
-    return { id: selectedContactId, name: "Unknown Talent" };
-  };
-
-  const formatGameTimestamp = (ts) => {
-    // we store new messages with activeSave.currentDate
-    if (!ts) return '';
-    const d = ts.toDate();
-    return d.toLocaleString(); // good enough for now
-  };
-
-  const handleReplyHover = (text) => {
-    setHoverReply(text);
-  };
-
-  const handleReplyHoverLeave = () => {
-    // only clear hover, not locked
-    setHoverReply(null);
-  };
-
-  const handleReplyClick = (text) => {
-    // clicking a button should lock it into the text box
-    setLockedReply(text);
-    setReplyDraft(text);
-  };
-
-  const handleReplyDraftChange = (e) => {
-    setReplyDraft(e.target.value);
-    setLockedReply(null); // user is typing their own
-  };
-
-  const handleSendReply = async () => {
-    if (!replyDraft.trim() || !selectedContactId) return;
-    if (!activeSave || !db || !appId) return;
-
-    const contact = getSelectedContact();
-    const nowTs = activeSave.currentDate ? activeSave.currentDate : Timestamp.now();
-
-    // 1) Save player's message to Firestore targeted to THIS contact only
-    const playerMessage = {
-      senderId: 'booker',
-      senderName: 'Booker',
-      recipientId: selectedContactId,
-      body: replyDraft.trim(),
-      timestamp: nowTs,
-      type: 'Text',
-      isRead: true
-    };
-
-    try {
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
-      const newMsgRef = await addDoc(messagesRef, playerMessage);
-      const playerMsgWithId = { id: newMsgRef.id, ...playerMessage };
-
-      // update local state so it only shows in this thread
-      setGameData(prevData => ({
-        ...prevData,
-        save_messages: [...(prevData.save_messages || []), playerMsgWithId]
-      }));
-
-      // 2) Ask AI to generate follow-up based on tone
-      const tone = detectToneFromReply(replyDraft.trim());
-      const wrestler = contact;
-      const followup = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'wrestler-message',
-          wrestler: {
-            id: wrestler.id,
-            name: wrestler.name,
-            disposition: wrestler.disposition,
-            gimmick: wrestler.gimmick,
-            morale: wrestler.morale
-          },
-          topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
-        })
-      });
-
-      let followupData = null;
-      if (followup.ok) {
-        const json = await followup.json();
-        followupData = json;
-      }
-
-      // 3) Save AI/wrestler follow-up to Firestore, still in this convo
-      if (followupData && followupData.message) {
-        const followMessage = {
-          senderId: wrestler.id,
-          senderName: wrestler.name,
-          recipientId: 'booker',
-          body: rewriteFollowupForTone(followupData.message, tone),
-          timestamp: nowTs,
-          type: 'Text',
-          isRead: false,
-          replyOptions: followupData.replyOptions || []
-        };
-
-        const followMsgRef = await addDoc(messagesRef, followMessage);
-        const followMsgWithId = { id: followMsgRef.id, ...followMessage };
-
-        setGameData(prevData => ({
-          ...prevData,
-          save_messages: [...(prevData.save_messages || []), followMsgWithId]
-        }));
-
-        setUnreadMessages(prev => prev + 1);
-      }
-
-      // clear draft
-      setReplyDraft("");
-      setHoverReply(null);
-      setLockedReply(null);
-    } catch (error) {
-      console.error("Error sending reply:", error);
-    }
-  };
-
-  const detectToneFromReply = (text) => {
-    const lower = text.toLowerCase();
-    if (lower.includes("yes") || lower.includes("ok") || lower.includes("sounds good") || lower.includes("i can") || lower.includes("let's do it")) {
-      return 'positive';
-    }
-    if (lower.includes("no") || lower.includes("can't") || lower.includes("won't") || lower.includes("not right now") || lower.includes("doesn't fit")) {
-      return 'negative';
-    }
-    return 'neutral';
-  };
-
-  const rewriteFollowupForTone = (aiMessage, tone) => {
-    // this is a simple guard to push the AI message toward the correct emotional response
-    if (tone === 'negative') {
-      return `...okay, I get it. ${aiMessage} I was hoping for more, but I'll keep doing my part.`;
-    }
-    if (tone === 'positive') {
-      return `Awesome, appreciate that. ${aiMessage}`;
-    }
-    return aiMessage;
-  };
-
   // --- Render Functions ---
   const renderLoadingScreen = () => (
     <div className="flex flex-col items-center justify-center min-h-screen text-white">
@@ -1663,7 +1398,7 @@ function App() {
           <div className="md:col-span-1 space-y-4">
             <button
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
-              onClick={handleOpenMessages}
+              onClick={openMessages}
             >
               <span className="flex items-center">
                 <MessageIcon />
@@ -1717,222 +1452,6 @@ function App() {
             >
               Exit to Main Menu
             </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderMessagesModal = () => {
-    if (!showMessagesModal) return null;
-
-    const messages = gameData.save_messages || [];
-    const wrestlers = gameData.save_wrestlers || [];
-
-    const contacts = buildMessageContacts(messages, wrestlers);
-    const selectedContact = getSelectedContact();
-    const convoMessages = getSelectedConversationMessages();
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={handleCloseMessages}
-      >
-        <div
-          className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col md:flex-row overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Left pane: contacts */}
-          <div className="w-full md:w-1/3 bg-gray-800 border-r border-gray-700 flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b border-gray-700">
-              <h2 className="text-xl font-bold text-white flex items-center">
-                <MessageIcon />
-                Inbox
-              </h2>
-              <button
-                onClick={handleCloseMessages}
-                className="text-gray-400 hover:text-white"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {contacts.length === 0 ? (
-                <p className="text-gray-400 p-4">No messages yet.</p>
-              ) : (
-                contacts.map(contact => (
-                  <button
-                    key={contact.id}
-                    onClick={() => handleContactClick(contact.id)}
-                    className={`w-full text-left px-4 py-3 flex flex-col border-b border-gray-700 hover:bg-gray-700 transition ${
-                      contact.id === selectedContactId ? 'bg-gray-700' : ''
-                    }`}
-                  >
-                    <span className="text-white font-semibold">{contact.name}</span>
-                    <span className="text-xs text-gray-400 truncate">{contact.latestSnippet}</span>
-                    {contact.latestTimestamp && (
-                      <span className="text-[10px] text-gray-500">
-                        {contact.latestTimestamp.toDate().toLocaleString()}
-                      </span>
-                    )}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Right pane: conversation */}
-          <div className="w-full md:w-2/3 bg-gray-900 flex flex-col">
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-white">
-                  {selectedContact ? selectedContact.name : 'Select a person'}
-                </h3>
-                <p className="text-xs text-gray-400">Backstage messages (shoot)</p>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-              {convoMessages.length === 0 ? (
-                <p className="text-gray-500 text-center mt-4">No messages with this person yet.</p>
-              ) : (
-                convoMessages.map(msg => {
-                  const isBooker = msg.senderId === 'booker';
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isBooker ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                          isBooker ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-gray-700 text-white rounded-bl-none'
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap text-sm">{msg.body}</p>
-                        <p className="text-[10px] text-gray-200 mt-1 text-right">
-                          {msg.timestamp ? msg.timestamp.toDate().toLocaleString() : ''}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Reply area */}
-            {selectedContact && (
-              <div className="p-4 border-t border-gray-800 bg-gray-900">
-                <div className="flex space-x-2 mb-3">
-                  {/* we try to grab the latest replyOptions for this convo */}
-                  {(() => {
-                    const latestFromContact = [...convoMessages].reverse().find(m => m.senderId === selectedContact.id && Array.isArray(m.replyOptions));
-                    const replyOptions = latestFromContact ? latestFromContact.replyOptions : [];
-                    const labels = ["Yes", "No", "Maybe"];
-                    return labels.map((label, idx) => {
-                      const hoverText = replyOptions[idx] || '';
-                      return (
-                        <button
-                          key={label}
-                          className="px-3 py-1 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600"
-                          onMouseEnter={() => handleReplyHover(hoverText)}
-                          onMouseLeave={handleReplyHoverLeave}
-                          onClick={() => handleReplyClick(hoverText || label)}
-                        >
-                          {label}
-                        </button>
-                      );
-                    });
-                  })()}
-                </div>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={hoverReply !== null && !lockedReply ? hoverReply : replyDraft}
-                    onChange={handleReplyDraftChange}
-                    placeholder="Type your reply..."
-                    className="flex-grow bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <button
-                    onClick={handleSendReply}
-                    className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition"
-                  >
-                    Send
-                  </button>
-                </div>
-                {/* (we removed the system: acknowledged line per your request) */}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderAssistantModal = () => {
-    if (!showAssistantModal) return null;
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowAssistantModal(false)}
-      >
-        <div
-          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white flex items-center">
-              <AssistantIcon />
-              AI Booker Assistant
-            </h2>
-            <button
-              onClick={() => setShowAssistantModal(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="flex-grow overflow-y-auto p-4 space-y-4">
-            {assistantResponse ? (
-              <div className="p-4 bg-gray-700 rounded-lg whitespace-pre-wrap font-mono text-sm">
-                {assistantResponse}
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 p-8">
-                <p className="text-lg">Welcome, Booker.</p>
-                <p>Ask me for creative advice, booking ideas, or who to push.</p>
-                <p className="text-sm mt-4">(e.g., "Who has main event potential?" or "Give me a feud idea for Alex Valour.")</p>
-              </div>
-            )}
-
-            {isAssistantLoading && (
-              <div className="flex items-center justify-center p-4">
-                <LoadingIcon />
-                <span className="ml-2">Assistant is thinking...</span>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 border-t border-gray-700 bg-gray-800">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={assistantQuery}
-                onChange={(e) => setAssistantQuery(e.target.value)}
-                placeholder="Ask for booking advice..."
-                className="flex-grow bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                disabled={isAssistantLoading}
-                onKeyPress={(e) => e.key === 'Enter' && !isAssistantLoading && handleGetAIAdvice()}
-              />
-              <button
-                onClick={handleGetAIAdvice}
-                disabled={isAssistantLoading || !assistantQuery}
-                className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all disabled:bg-gray-500 disabled:cursor-not-allowed"
-              >
-                Send
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -2628,8 +2147,33 @@ function App() {
             return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
         }
       })()}
-      {renderMessagesModal()}
-      {renderAssistantModal()}
+      <MessagesModal
+        isOpen={showMessagesModal}
+        onClose={closeMessages}
+        contacts={messageContacts}
+        selectedContact={selectedContact}
+        conversationMessages={conversationMessages}
+        onContactClick={handleContactClick}
+        onReplyHover={handleReplyHover}
+        onReplyHoverLeave={handleReplyHoverLeave}
+        onReplyClick={handleReplyClick}
+        onReplyDraftChange={handleReplyDraftChange}
+        onSendReply={handleSendReply}
+        replyOptions={replyOptions}
+        replyInputValue={replyInputValue}
+      />
+      <AssistantModal
+        open={showAssistantModal}
+        onClose={() => setShowAssistantModal(false)}
+        assistantQuery={assistantQuery}
+        setAssistantQuery={setAssistantQuery}
+        assistantResponse={assistantResponse}
+        isAssistantLoading={isAssistantLoading}
+        onSend={handleGetAIAdvice}
+        AssistantIcon={AssistantIcon}
+        CloseIcon={CloseIcon}
+        LoadingIcon={LoadingIcon}
+      />
       {renderSegmentModal()}
       {renderCreateStorylineModal()}
     </div>
