@@ -38,3 +38,24 @@
 - Implement a shared AI request utility that both the assistant and messaging flows can consume.
 - Continue modularizing App.jsx, starting with extracting the Booking screen into `src/components/BookingScreen.jsx` per the new plan.
 - Configure the Git remote so future commits can be pushed for backup.
+
+## Codex Session Summary — 2025-11-10
+
+**Files Modified or Created:**
+- src/components/BookingScreen.jsx — extracted the booking UI into a dedicated component fed by App state.
+- src/App.jsx — wired in the new BookingScreen component and removed the inline renderer.
+- docs/session-log.md — recorded the booking screen extraction.
+
+**Features / Fixes Implemented:**
+- Migrated the booking screen JSX into `BookingScreen.jsx` while keeping Firestore and AI recap flows anchored in App state.
+- Passed the existing booking handlers, segment data, and timestamps into the new component to preserve booking behavior.
+- Replaced the inline render switch branch with the new component to keep the game flow intact.
+
+**Known Issues / To-Do:**
+- Shared AI POST helper remains unimplemented despite TODO markers in assistant and messaging flows.
+- Additional App.jsx screens (roster, storylines, etc.) still need extraction to continue the modular refactor.
+
+**Next Steps / Recommendations:**
+- Continue decomposing App.jsx by extracting the roster and storyline screens into their own components/hooks.
+- Build a shared AI request utility so assistant and messaging POST logic can converge on one helper.
+- Confirm Git remote configuration so modular refactor commits can be pushed for safekeeping.

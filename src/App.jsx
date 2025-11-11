@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import MessagesModal from './components/MessagesModal';
 import AssistantModal from './components/AssistantModal';
+import BookingScreen from './components/BookingScreen';
 import useMessages from './hooks/useMessages';
 
 // --- Icon Components (Simple SVGs) ---
@@ -2214,7 +2215,17 @@ function App() {
           case 'IN_GAME':
             return renderGameDashboard();
           case 'BOOKING_SHOW':
-            return renderBookingScreen();
+            return (
+              <BookingScreen
+                currentShow={currentShow}
+                currentDate={activeSave?.currentDate}
+                segments={currentSegments}
+                onCancel={() => setGameState('IN_GAME')}
+                onRunShow={handleRunShow}
+                onOpenSegment={handleOpenSegmentModal}
+                SegmentAddIcon={PlusIcon}
+              />
+            );
           case 'ROSTER_SCREEN':
             return renderRosterScreen();
           case 'SHOW_RESULTS':
