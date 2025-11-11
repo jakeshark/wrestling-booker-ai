@@ -22,6 +22,7 @@ import {
 import MessagesModal from './components/MessagesModal';
 import AssistantModal from './components/AssistantModal';
 import BookingScreen from './components/BookingScreen';
+import RosterScreen from './components/RosterScreen';
 import useMessages from './hooks/useMessages';
 
 // --- Icon Components (Simple SVGs) ---
@@ -2227,7 +2228,17 @@ function App() {
               />
             );
           case 'ROSTER_SCREEN':
-            return renderRosterScreen();
+            return (
+              <RosterScreen
+                wrestlers={gameData.save_wrestlers || []}
+                onBackToDashboard={() => setGameState('IN_GAME')}
+                onViewCareerHistory={handleViewCareerHistory}
+                onViewRelationships={handleViewRelationships}
+                RosterIcon={RosterIcon}
+                HistoryIcon={HistoryIcon}
+                RelationshipsIcon={RelationshipsIcon}
+              />
+            );
           case 'SHOW_RESULTS':
             return renderShowResultsScreen();
           case 'STORYLINE_SCREEN':

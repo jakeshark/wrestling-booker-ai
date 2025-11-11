@@ -59,3 +59,22 @@
 - Continue decomposing App.jsx by extracting the roster and storyline screens into their own components/hooks.
 - Build a shared AI request utility so assistant and messaging POST logic can converge on one helper.
 - Confirm Git remote configuration so modular refactor commits can be pushed for safekeeping.
+
+## Codex Session Summary — 2025-11-11
+
+**Files Modified or Created:**
+- src/components/RosterScreen.jsx — extracted the roster UI into a reusable component fed by App state.
+- src/App.jsx — replaced the inline roster renderer with the new component and passed through selection handlers.
+- docs/session-log.md — documented the roster screen extraction.
+
+**Features / Fixes Implemented:**
+- Moved the roster listing and selection controls into `RosterScreen.jsx` while preserving existing Tailwind styling.
+- Wired the component into the game state switch so roster navigation and history/relationship actions still call the original handlers.
+
+**Known Issues / To-Do:**
+- Firestore helpers remain duplicated across features; consider adding a shared path utility in a future refactor.
+- Additional screens (storyline, relationships, etc.) are still defined inline within `App.jsx`.
+
+**Next Steps / Recommendations:**
+- Continue extracting remaining screens from `App.jsx` to reduce file size and improve maintainability.
+- Implement shared utilities for Firestore path building and AI request handling per earlier TODO markers.
