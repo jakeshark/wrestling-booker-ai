@@ -607,6 +607,7 @@ function App() {
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
     try {
+      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -667,7 +668,7 @@ function App() {
     )).join('\n');
 
     try {
-      // TODO: centralize AI POST calls
+      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1529,6 +1530,16 @@ function App() {
     );
   };
 
+  /*
+    Extraction Plan: BookingScreen Component
+    1. Move this renderer into src/components/BookingScreen.jsx exporting a component that receives
+       currentShow, activeSave, currentSegments, and all booking callbacks (handleOpenSegmentModal,
+       handleRunShow, setGameState) as props to keep Firebase/Game state mutations centralized in App.
+    2. Hoist supporting icons (PlusIcon) or pass them through props to avoid duplicate SVG definitions
+       once the component is isolated.
+    3. Preserve formatting helpers by either colocating them inside the new component or lifting shared
+       utilities (e.g., participant labels) into a booking utilities module when additional screens move out.
+  */
   const renderBookingScreen = () => {
     if (!currentShow) return null;
 
