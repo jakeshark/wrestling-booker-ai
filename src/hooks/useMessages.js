@@ -232,6 +232,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
 
       const tone = detectToneFromReply(replyDraft.trim());
       const wrestler = contact;
+      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
       const followup = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
