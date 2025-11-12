@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, doc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import { callAI } from '../utils/aiClient';
 import paths from '../utils/firestorePaths';
-import { addJournalEntry, extractPromiseFromReply } from '@/utils/journal';
+import { addJournalEntry, extractPromiseFromReply } from "../utils/journal";
 
 const buildMessageContacts = (messages, wrestlers) => {
   if (!messages) return [];
