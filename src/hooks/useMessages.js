@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, doc, Timestamp, writeBatch } from 'firebase/firestore';
+import { callAI } from '../utils/aiClient';
+import paths from '../utils/firestorePaths';
 
 const buildMessageContacts = (messages, wrestlers) => {
   if (!messages) return [];
@@ -162,7 +164,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
 
     try {
       const batch = writeBatch(db);
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_messages'));
 
       (gameData.save_messages || []).forEach(msg => {
         if (!msg.isRead) {
@@ -221,7 +223,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
     };
 
     try {
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_messages`);
+      const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_messages'));
       const newMsgRef = await addDoc(messagesRef, playerMessage);
       const playerMsgWithId = { id: newMsgRef.id, ...playerMessage };
 
@@ -232,27 +234,16 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
 
       const tone = detectToneFromReply(replyDraft.trim());
       const wrestler = contact;
-      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
-      const followup = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'wrestler-message',
-          wrestler: {
-            id: wrestler.id,
-            name: wrestler.name,
-            disposition: wrestler.disposition,
-            gimmick: wrestler.gimmick,
-            morale: wrestler.morale
-          },
-          topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
-        })
+      const followupData = await callAI('wrestler-message', {
+        wrestler: {
+          id: wrestler.id,
+          name: wrestler.name,
+          disposition: wrestler.disposition,
+          gimmick: wrestler.gimmick,
+          morale: wrestler.morale
+        },
+        topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
       });
-
-      let followupData = null;
-      if (followup.ok) {
-        followupData = await followup.json();
-      }
 
       if (followupData && followupData.message) {
         const followMessage = {
