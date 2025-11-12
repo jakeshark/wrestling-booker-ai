@@ -105,6 +105,13 @@ const RelationshipsIcon = () => (
   </svg>
 );
 
+const createEmptySegment = () => ({
+  type: 'Match',
+  participants: [],
+  winnerId: null,
+  storylineId: null
+});
+
 // --- Firebase Config ---
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -140,9 +147,7 @@ function App() {
   const [currentSegments, setCurrentSegments] = useState([]);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
   const [editingSegmentIndex, setEditingSegmentIndex] = useState(null);
-  const [segmentFormData, setSegmentFormData] = useState({ type: 'Match', participants: [], winnerId: null, storylineId: null });
-  const [participantSearch, setParticipantSearch] = useState("");
-  const [participantResults, setParticipantResults] = useState([]);
+  const [segmentFormData, setSegmentFormData] = useState(createEmptySegment);
 
   // --- Show Results State ---
   const [showResultsData, setShowResultsData] = useState(null);
@@ -681,20 +686,36 @@ const handleGetAIAdvice = async () => {
   const handleOpenSegmentModal = (index) => {
     setEditingSegmentIndex(index);
     const existingSegment = currentSegments[index];
-    setSegmentFormData(existingSegment || { type: 'Match', participants: [], winnerId: null, storylineId: null });
-    setParticipantSearch("");
-    setParticipantResults([]);
+    if (existingSegment) {
+      setSegmentFormData({
+        ...existingSegment,
+        participants: existingSegment.participants ? [...existingSegment.participants] : []
+      });
+    } else {
+      setSegmentFormData(createEmptySegment());
+    }
     setShowSegmentModal(true);
   };
 
-  const handleSaveSegment = () => {
-    const newSegments = [...currentSegments];
-    newSegments[editingSegmentIndex] = segmentFormData;
-    setCurrentSegments(newSegments);
-
+  const handleSegmentCancel = () => {
     setShowSegmentModal(false);
     setEditingSegmentIndex(null);
-    setSegmentFormData({ type: 'Match', participants: [], winnerId: null, storylineId: null });
+    setSegmentFormData(createEmptySegment());
+  };
+
+  const handleSaveSegment = () => {
+    if (editingSegmentIndex === null) return;
+
+    const newSegments = [...currentSegments];
+    newSegments[editingSegmentIndex] = {
+      type: segmentFormData.type,
+      participants: [...segmentFormData.participants],
+      winnerId: segmentFormData.winnerId,
+      storylineId: segmentFormData.storylineId || null
+    };
+    setCurrentSegments(newSegments);
+
+    handleSegmentCancel();
   };
 
   const calculateSegmentRating = (segment, allWrestlers) => {
@@ -1089,58 +1110,47 @@ const handleGetAIAdvice = async () => {
     }
   };
 
-  // --- Participant search in booking ---
-  const handleParticipantSearch = (query) => {
-    setParticipantSearch(query);
-    if (query.length < 1) {
-      setParticipantResults([]);
-      return;
-    }
+  // --- Segment editing ---
+  const handleSegmentChange = (field, value) => {
+    setSegmentFormData(prev => {
+      if (field === 'participants') {
+        const updatedParticipants = value;
+        const winnerStillPresent = updatedParticipants.some(p => p.id === prev.winnerId);
 
-    const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
-      .filter(w => !segmentFormData.participants.find(p => p.id === w.id));
+        return {
+          ...prev,
+          participants: updatedParticipants,
+          winnerId: winnerStillPresent ? prev.winnerId : null
+        };
+      }
 
-    setParticipantResults(results.slice(0, 5));
-  };
+      if (field === 'type') {
+        return {
+          ...prev,
+          type: value,
+          winnerId: value === 'Angle' ? null : prev.winnerId
+        };
+      }
 
-  const handleAddParticipant = (wrestler) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      participants: [...prev.participants, { id: wrestler.id, name: wrestler.name }]
-    }));
-    setParticipantSearch("");
-    setParticipantResults([]);
-  };
+      if (field === 'winnerId') {
+        return {
+          ...prev,
+          winnerId: value || null
+        };
+      }
 
-  const handleRemoveParticipant = (wrestlerId) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(p => p.id !== wrestlerId),
-      winnerId: prev.winnerId === wrestlerId ? null : prev.winnerId
-    }));
-  };
+      if (field === 'storylineId') {
+        return {
+          ...prev,
+          storylineId: value || null
+        };
+      }
 
-  const handleWinnerSelect = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      winnerId: e.target.value || null
-    }));
-  };
-
-  const handleSegmentTypeChange = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      type: e.target.value,
-      winnerId: e.target.value === 'Angle' ? null : prev.winnerId
-    }));
-  };
-
-  const handleStorylineSelect = (e) => {
-    setSegmentFormData(prev => ({
-      ...prev,
-      storylineId: e.target.value || null
-    }));
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
   // --- Storylines ---
@@ -1736,148 +1746,9 @@ const handleGetAIAdvice = async () => {
     );
   };
 
-  const renderSegmentModal = () => {
-    if (!showSegmentModal) return null;
-
-    const storylines = gameData.save_storylines || [];
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowSegmentModal(false)}
-      >
-        <div
-          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white">Edit Segment {editingSegmentIndex + 1}</h2>
-            <button
-              onClick={() => setShowSegmentModal(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Segment Type</label>
-              <select
-                name="type"
-                value={segmentFormData.type}
-                onChange={handleSegmentTypeChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="Match">Match</option>
-                <option value="Angle">Angle</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Assign to Storyline (Optional)</label>
-              <select
-                name="storylineId"
-                value={segmentFormData.storylineId || ""}
-                onChange={handleStorylineSelect}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">-- None --</option>
-                {storylines.filter(s => s.status === 'Active').map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Participants
-              </label>
-              <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
-                {segmentFormData.participants.map(p => (
-                  <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
-                    {p.name}
-                    <button
-                      onClick={() => handleRemoveParticipant(p.id)}
-                      className="ml-2 text-indigo-100 hover:text-white"
-                    >
-                      <XCircleIcon />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Add Participant
-              </label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={participantSearch}
-                  onChange={(e) => handleParticipantSearch(e.target.value)}
-                  placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              {participantResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {participantResults.map(w => (
-                    <button
-                      key={w.id}
-                      onClick={() => handleAddParticipant(w)}
-                      className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
-                    >
-                      {w.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {segmentFormData.type === 'Match' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Winner (Optional)
-                </label>
-                <select
-                  name="winnerId"
-                  value={segmentFormData.winnerId || ""}
-                  onChange={handleWinnerSelect}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  disabled={segmentFormData.participants.length === 0}
-                >
-                  <option value="">-- Select a Winner --</option>
-                  {segmentFormData.participants.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 bg-gray-700 border-t border-gray-600 flex justify-end space-x-3">
-            <button
-              onClick={() => setShowSegmentModal(false)}
-              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveSegment}
-              className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-            >
-              Save Segment
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const gameContextValue = {
     wrestlers: gameData.save_wrestlers || [],
+    storylines: gameData.save_storylines || [],
     goToDashboard: () => setGameState('IN_GAME'),
     handleViewCareerHistory,
     handleViewRelationships,
@@ -1909,6 +1780,11 @@ const handleGetAIAdvice = async () => {
                   onRunShow={handleRunShow}
                   onOpenSegment={handleOpenSegmentModal}
                   SegmentAddIcon={PlusIcon}
+                  segmentModalOpen={showSegmentModal}
+                  segment={editingSegmentIndex !== null ? { ...segmentFormData, participants: [...segmentFormData.participants], segmentNumber: editingSegmentIndex + 1 } : null}
+                  onSegmentChange={handleSegmentChange}
+                  onSegmentSave={handleSaveSegment}
+                  onSegmentCancel={handleSegmentCancel}
                 />
               );
             case 'ROSTER_SCREEN':
@@ -1980,7 +1856,6 @@ const handleGetAIAdvice = async () => {
           LoadingIcon={LoadingIcon}
         />
         {renderAssistantModal()}
-        {renderSegmentModal()}
       </div>
     </GameProvider>
   );
