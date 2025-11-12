@@ -8,6 +8,7 @@ const playerSavesCollection = (appId, userId) => `${userRoot(appId, userId)}/pla
 const playerSaveDocPath = (appId, userId, saveId) => `${playerSavesCollection(appId, userId)}/${saveId}`;
 const playerSaveCollection = (appId, userId, saveId, collection) => `${playerSaveDocPath(appId, userId, saveId)}/${collection}`;
 const playerSaveDoc = (appId, userId, saveId, collection, docId) => `${playerSaveCollection(appId, userId, saveId, collection)}/${docId}`;
+const saveWrestlers = (appId, userId, saveId) => `${playerSaveDocPath(appId, userId, saveId)}/save_wrestlers`;
 
 const paths = {
   baseArtifactsPath,
@@ -18,7 +19,8 @@ const paths = {
   playerSavesCollection,
   playerSaveDocPath,
   playerSaveCollection,
-  playerSaveDoc
+  playerSaveDoc,
+  saveWrestlers
 };
 
 export default paths;

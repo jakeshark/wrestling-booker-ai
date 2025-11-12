@@ -24,7 +24,8 @@ const MessagesModal = ({
   onReplyDraftChange,
   onSendReply,
   replyOptions,
-  replyInputValue
+  replyInputValue,
+  isSending
 }) => {
   if (!isOpen) return null;
 
@@ -109,10 +110,11 @@ const MessagesModal = ({
                   return (
                     <button
                       key={label}
-                      className="px-3 py-1 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600"
+                      className="px-3 py-1 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       onMouseEnter={() => onReplyHover(hoverText)}
                       onMouseLeave={onReplyHoverLeave}
-                      onClick={() => onReplyClick(hoverText || label)}
+                      onClick={() => onReplyClick(hoverText || label, label)}
+                      disabled={isSending}
                     >
                       {label}
                     </button>
@@ -129,9 +131,14 @@ const MessagesModal = ({
                 />
                 <button
                   onClick={onSendReply}
-                  className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition"
+                  disabled={isSending || !replyInputValue.trim()}
+                  className={`px-6 py-2 font-bold rounded-lg transition ${
+                    isSending || !replyInputValue.trim()
+                      ? 'bg-indigo-800 text-white/70 cursor-not-allowed'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                  }`}
                 >
-                  Send
+                  {isSending ? 'Sending…' : 'Send'}
                 </button>
               </div>
             </div>

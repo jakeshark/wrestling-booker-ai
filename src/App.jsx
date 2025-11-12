@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -29,6 +29,7 @@ import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
 import paths from './utils/firestorePaths';
+import Snackbar from './components/Snackbar';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -141,6 +142,7 @@ function App() {
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
   // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
@@ -203,6 +205,20 @@ function App() {
 
   const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
 
+  const addToast = useCallback((text) => {
+    if (!text) return;
+    setToasts(prevToasts => {
+      const id = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      return [...prevToasts, { id, text }];
+    });
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+  }, []);
+
   const {
     showMessagesModal,
     openMessages,
@@ -218,8 +234,9 @@ function App() {
     handleReplyDraftChange,
     handleSendReply,
     replyOptions,
-    replyInputValue
-  } = useMessages({ gameData, setGameData, activeSave, db, appId, userId });
+    replyInputValue,
+    isSending
+  } = useMessages({ gameData, setGameData, activeSave, db, appId, userId, addToast });
 
   // --- Firebase Init ---
   useEffect(() => {
@@ -634,7 +651,8 @@ function App() {
       timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
       type: 'Text',
       isRead: false,
-      replyOptions: replyOptions
+      replyOptions: replyOptions,
+      topic
     };
 
     const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, saveId, 'save_messages'));
@@ -1842,6 +1860,7 @@ const handleGetAIAdvice = async () => {
           onSendReply={handleSendReply}
           replyOptions={replyOptions}
           replyInputValue={replyInputValue}
+          isSending={isSending}
         />
         <AssistantModal
           open={showAssistantModal}
@@ -1856,6 +1875,7 @@ const handleGetAIAdvice = async () => {
           LoadingIcon={LoadingIcon}
         />
         {renderAssistantModal()}
+        <Snackbar toasts={toasts} onDismiss={dismissToast} />
       </div>
     </GameProvider>
   );
