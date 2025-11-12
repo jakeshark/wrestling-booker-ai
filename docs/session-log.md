@@ -78,3 +78,23 @@
 **Next Steps / Recommendations:**
 - Continue extracting remaining screens from `App.jsx` to reduce file size and improve maintainability.
 - Implement shared utilities for Firestore path building and AI request handling per earlier TODO markers.
+
+## Codex Session Summary — 2025-11-12
+
+**Files Modified or Created:**
+- src/components/StorylineScreen.jsx — extracted the storyline planner UI into its own component powered by App state.
+- src/App.jsx — replaced the inline storyline renderer with the new component and passed through the existing handlers and modal state.
+- docs/session-log.md — logged the storyline screen extraction details.
+
+**Features / Fixes Implemented:**
+- Moved the storyline manager list and creation modal into `StorylineScreen.jsx` while preserving Tailwind styling and modal behavior.
+- Continued to source storylines from `gameData.save_storylines` and wired the existing create, search, and participant handlers via props.
+- Kept navigation back to the dashboard controlled from App by passing the existing state setter into the new component.
+
+**Known Issues / To-Do:**
+- Firestore path strings for storyline creation still live in `App.jsx`; consider centralizing them alongside other TODO markers.
+- Additional inline screens (relationships, history, etc.) remain to be extracted from `App.jsx`.
+
+**Next Steps / Recommendations:**
+- Continue modularizing the remaining screens and dialogs out of `App.jsx` to improve readability.
+- Create shared utilities for Firestore paths and AI requests once the current refactor stabilizes.
