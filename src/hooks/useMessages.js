@@ -310,9 +310,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         ))
       }));
 
-      if (typeof addToast === 'function') {
-        addToast(`${wrestler.name}: Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`);
-      }
+      const toastMessage = `${wrestler.name}: Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`;
 
       const careerEventData = {
         type: 'reply_effect',
@@ -347,6 +345,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         tone: replyTone
       });
 
+      let reactionSaved = false;
       if (reactionData && reactionData.message) {
         const followMessage = {
           senderId: wrestler.id,
@@ -367,6 +366,15 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
           ...prevData,
           save_messages: [...(prevData.save_messages || []), followMsgWithId]
         }));
+        reactionSaved = true;
+      }
+
+      if (typeof addToast === 'function') {
+        if (reactionSaved) {
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+        // Show toast after the wrestler reaction has rendered so the player reads the message first.
+        addToast(toastMessage);
       }
 
       setReplyDraft('');
