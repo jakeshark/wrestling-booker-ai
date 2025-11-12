@@ -8,7 +8,13 @@ const playerSavesCollection = (appId, userId) => `${userRoot(appId, userId)}/pla
 const playerSaveDocPath = (appId, userId, saveId) => `${playerSavesCollection(appId, userId)}/${saveId}`;
 const playerSaveCollection = (appId, userId, saveId, collection) => `${playerSaveDocPath(appId, userId, saveId)}/${collection}`;
 const playerSaveDoc = (appId, userId, saveId, collection, docId) => `${playerSaveCollection(appId, userId, saveId, collection)}/${docId}`;
-const saveWrestlers = (appId, userId, saveId) => `${playerSaveDocPath(appId, userId, saveId)}/save_wrestlers`;
+
+export const saveDoc = (appId, userId, saveId) => playerSaveDocPath(appId, userId, saveId);
+export const saveMessages = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_messages`;
+export const saveWrestlers = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_wrestlers`;
+export const saveShows = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_shows`;
+export const saveStorylines = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_storylines`;
+export const saveCareerEvents = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_career_events`;
 
 const paths = {
   baseArtifactsPath,
@@ -20,7 +26,24 @@ const paths = {
   playerSaveDocPath,
   playerSaveCollection,
   playerSaveDoc,
-  saveWrestlers
+  saveDoc,
+  saveMessages,
+  saveWrestlers,
+  saveShows,
+  saveStorylines,
+  saveCareerEvents,
+};
+
+export {
+  baseArtifactsPath,
+  publicDataRoot,
+  publicDataCollection,
+  publicDataDoc,
+  userRoot,
+  playerSavesCollection,
+  playerSaveDocPath,
+  playerSaveCollection,
+  playerSaveDoc,
 };
 
 export default paths;

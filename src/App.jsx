@@ -25,11 +25,13 @@ import BookingScreen from './components/BookingScreen';
 import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
 import ShowResults from './components/ShowResults';
+import ConfirmDialog from './components/ConfirmDialog';
 import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
 import paths from './utils/firestorePaths';
 import Snackbar from './components/Snackbar';
+import { deletePlayerSave } from './utils/deleteSave';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -79,6 +81,21 @@ const RosterIcon = () => (
 const XCircleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
     <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.707-11.707a1 1 0 0 0-1.414-1.414L10 8.586 7.707 6.293a1 1 0 0 0-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 1 0 1.414 1.414L10 11.414l2.293 2.293a1 1 0 0 0 1.414-1.414L11.414 10l2.293-2.293Z" clipRule="evenodd" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="w-5 h-5"
+  >
+    <path
+      fillRule="evenodd"
+      d="M9.75 3a1.5 1.5 0 0 1 1.5-1.5h1.5A1.5 1.5 0 0 1 14.25 3H18a.75.75 0 0 1 0 1.5h-.443l-.772 13.113A2.25 2.25 0 0 1 14.543 20.75H9.457a2.25 2.25 0 0 1-2.242-2.137L6.443 4.5H6a.75.75 0 0 1 0-1.5h3.75Zm2.25 3a.75.75 0 0 0-1.5 0v9.75a.75.75 0 0 0 1.5 0V6Zm2.25 0a.75.75 0 0 0-1.5 0v9.75a.75.75 0 0 0 1.5 0V6Z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -143,6 +160,10 @@ function App() {
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteTargetSave, setDeleteTargetSave] = useState(null);
+  const [deleteTargetSaveId, setDeleteTargetSaveId] = useState(null);
+  const [isDeletingSave, setIsDeletingSave] = useState(false);
 
   // --- Booking State ---
   const [currentShow, setCurrentShow] = useState(null);
@@ -218,6 +239,65 @@ function App() {
   const dismissToast = useCallback((id) => {
     setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
   }, []);
+
+  const handleRequestDeleteSave = useCallback((save) => {
+    if (!save || isDeletingSave) return;
+    setDeleteTargetSave(save);
+    setDeleteTargetSaveId(save.id);
+    setConfirmDeleteOpen(true);
+  }, [isDeletingSave]);
+
+  const handleCancelDeleteSave = useCallback(() => {
+    if (isDeletingSave) return;
+    setConfirmDeleteOpen(false);
+    setDeleteTargetSave(null);
+    setDeleteTargetSaveId(null);
+  }, [isDeletingSave]);
+
+  const handleConfirmDeleteSave = useCallback(async () => {
+    if (!deleteTargetSaveId || !db || !appId || !userId) {
+      console.warn('[DeleteSave] Missing required information to delete save.');
+      return;
+    }
+
+    setIsDeletingSave(true);
+
+    try {
+      await deletePlayerSave({ db, appId, userId, saveId: deleteTargetSaveId });
+
+      setPlayerSaves(prevSaves => prevSaves.filter(save => save.id !== deleteTargetSaveId));
+
+      if (activeSave?.id === deleteTargetSaveId) {
+        setActiveSave(null);
+        setGameData({});
+        setGameState('MAIN_MENU');
+        setCurrentShow(null);
+        setCurrentSegments([]);
+        setShowSegmentModal(false);
+        setEditingSegmentIndex(null);
+        setSegmentFormData(createEmptySegment());
+        setShowResultsData(null);
+        setShowStorylineModal(false);
+        setStorylineFormData({ name: '', participants: [] });
+        setStorylineParticipantSearch("");
+        setStorylineParticipantResults([]);
+        setViewingWrestler(null);
+      }
+
+      addToast('Save deleted.');
+      setConfirmDeleteOpen(false);
+      setDeleteTargetSave(null);
+      setDeleteTargetSaveId(null);
+    } catch (error) {
+      console.error('[DeleteSave] Failed to delete save', error);
+      addToast('Delete failed. Please try again.');
+      setConfirmDeleteOpen(false);
+      setDeleteTargetSave(null);
+      setDeleteTargetSaveId(null);
+    } finally {
+      setIsDeletingSave(false);
+    }
+  }, [deleteTargetSaveId, db, appId, userId, activeSave, addToast]);
 
   const {
     showMessagesModal,
@@ -1302,21 +1382,43 @@ const handleGetAIAdvice = async () => {
             <div className="space-y-3">
               {playerSaves
                 .sort((a, b) => b.lastPlayed.toMillis() - a.lastPlayed.toMillis())
-                .map(save => (
-                  <button
-                    key={save.id}
-                    onClick={() => handleLoadGame(save.id)}
-                    className="w-full text-left p-4 bg-gray-700 rounded-lg hover:bg-gray-600 shadow-md transition-all duration-200"
-                  >
-                    <h3 className="text-lg font-bold text-white">{save.saveName}</h3>
-                    <p className="text-gray-300 text-sm">
-                      In-Game Date: {save.currentDate.toDate().toLocaleDateString()}
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      Last Played: {save.lastPlayed.toDate().toLocaleString()}
-                    </p>
-                  </button>
-                ))}
+                .map(save => {
+                  const deletingThisSave = isDeletingSave && deleteTargetSaveId === save.id;
+
+                  return (
+                    <div
+                      key={save.id}
+                      className="flex items-start justify-between gap-3 p-4 bg-gray-700 rounded-lg shadow-md transition-all duration-200 hover:bg-gray-600"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleLoadGame(save.id)}
+                        className="flex-1 text-left"
+                        disabled={isDeletingSave}
+                      >
+                        <h3 className="text-lg font-bold text-white">{save.saveName}</h3>
+                        <p className="text-gray-300 text-sm">
+                          In-Game Date: {save.currentDate.toDate().toLocaleDateString()}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          Last Played: {save.lastPlayed.toDate().toLocaleString()}
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleRequestDeleteSave(save);
+                        }}
+                        disabled={deletingThisSave}
+                        className="flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-red-400 hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label={`Delete save ${save.saveName}`}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>
@@ -1875,6 +1977,14 @@ const handleGetAIAdvice = async () => {
           LoadingIcon={LoadingIcon}
         />
         {renderAssistantModal()}
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          title={`Delete ${deleteTargetSave?.saveName || 'Save'}`}
+          message="This will delete this game save permanently and cannot be undone. Are you sure?"
+          onConfirm={handleConfirmDeleteSave}
+          onCancel={handleCancelDeleteSave}
+          loading={isDeletingSave}
+        />
         <Snackbar toasts={toasts} onDismiss={dismissToast} />
       </div>
     </GameProvider>
