@@ -25,6 +25,7 @@ import BookingScreen from './components/BookingScreen';
 import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
 import useMessages from './hooks/useMessages';
+import { callAI } from './utils/aiClient';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -606,95 +607,73 @@ function App() {
   };
 
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
-    console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
-    setLoadingMessage(`Generating event for ${wrestler.name}...`);
+  console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
+  setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
-    try {
-      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'wrestler-message',
-          wrestler: {
-            id: wrestler.id,
-            name: wrestler.name,
-            disposition: wrestler.disposition,
-            gimmick: wrestler.gimmick,
-            morale: wrestler.morale
-          },
-          topic
-        })
-      });
+  try {
+    const result = await callAI('wrestler-message', {
+      wrestler: {
+        id: wrestler.id,
+        name: wrestler.name,
+        disposition: wrestler.disposition,
+        gimmick: wrestler.gimmick,
+        morale: wrestler.morale
+      },
+      topic
+    });
 
-      if (!response.ok) {
-        throw new Error(`API call failed: ${response.status}`);
-      }
+    const messageText = result.message;
+    const replyOptions = result.replyOptions || [];
 
-      const result = await response.json();
-      const messageText = result.message;
-      const replyOptions = result.replyOptions || [];
+    const messageData = {
+      senderId: wrestler.id,
+      senderName: wrestler.name,
+      recipientId: 'booker', // so we can isolate convo
+      body: messageText,
+      timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
+      type: 'Text',
+      isRead: false,
+      replyOptions: replyOptions
+    };
 
-      const messageData = {
-        senderId: wrestler.id,
-        senderName: wrestler.name,
-        recipientId: 'booker', // so we can isolate convo
-        body: messageText,
-        timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
-        type: 'Text',
-        isRead: false,
-        replyOptions: replyOptions
-      };
+    const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
+    const newDocRef = await addDoc(messagesRef, messageData);
 
-      const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
-      const newDocRef = await addDoc(messagesRef, messageData);
+    const newMessage = { id: newDocRef.id, ...messageData };
+    setGameData(prevData => ({
+      ...prevData,
+      save_messages: [...(prevData.save_messages || []), newMessage]
+    }));
+  } catch (error) {
+    console.error("Error generating AI message: ", error);
+  }
+};
 
-      const newMessage = { id: newDocRef.id, ...messageData };
-      setGameData(prevData => ({
-        ...prevData,
-        save_messages: [...(prevData.save_messages || []), newMessage]
-      }));
-    } catch (error) {
-      console.error("Error generating AI message: ", error);
-    }
-  };
+ // --- AI Assistant ---
+const handleGetAIAdvice = async () => {
+  if (!assistantQuery || !gameData.save_wrestlers) return;
 
-  // --- AI Assistant ---
-  const handleGetAIAdvice = async () => {
-    if (!assistantQuery || !gameData.save_wrestlers) return;
+  setIsAssistantLoading(true);
+  setAssistantResponse("");
 
-    setIsAssistantLoading(true);
-    setAssistantResponse("");
+  const rosterContext = gameData.save_wrestlers.map(w => (
+    `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats.charisma})`
+  )).join('\n');
 
-    const rosterContext = gameData.save_wrestlers.map(w => (
-      `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats.charisma})`
-    )).join('\n');
+  try {
+    const data = await callAI('booker-assistant', {
+      rosterContext,
+      query: assistantQuery
+    });
 
-    try {
-      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'booker-assistant',
-          rosterContext,
-          query: assistantQuery
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("AI assistant request failed.");
-      }
-
-      const data = await response.json();
-      setAssistantResponse(data.text || "The AI assistant couldn't come up with a response. Try rephrasing your question.");
-    } catch (error) {
-      console.error("Error getting AI advice: ", error);
-      setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
-    } finally {
-      setIsAssistantLoading(false);
-    }
-  };
+    setAssistantResponse(data.text || "The AI assistant couldn't come up with a response. Try rephrasing your question.");
+  } catch (error) {
+    console.error("Error getting AI advice: ", error);
+    setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
+  } finally {
+    setIsAssistantLoading(false);
+  }
+};
 
   // --- Booking helpers ---
   const handleStartBookingShow = (show) => {
