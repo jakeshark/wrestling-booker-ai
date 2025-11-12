@@ -22,9 +22,16 @@ const AssistantModal = ({
     event.stopPropagation();
   };
 
+  const handleSend = () => {
+    if (isAssistantLoading) return;
+    if (!assistantQuery || assistantQuery.trim().length === 0) return;
+    onSend();
+  };
+
   const handleKeyPress = (event) => {
-    if (event.key === 'Enter' && !isAssistantLoading && assistantQuery) {
-      onSend();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSend();
     }
   };
 
@@ -83,8 +90,8 @@ const AssistantModal = ({
               onKeyPress={handleKeyPress}
             />
             <button
-              onClick={onSend}
-              disabled={isAssistantLoading || !assistantQuery}
+              onClick={handleSend}
+              disabled={isAssistantLoading || !assistantQuery || assistantQuery.trim().length === 0}
               className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all disabled:bg-gray-500 disabled:cursor-not-allowed"
             >
               Send
