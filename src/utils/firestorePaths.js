@@ -29,10 +29,11 @@ export const careerEventsCol = (appId, userId, saveId) =>
 export const journalEntriesCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_journal_entries`;
 
-// Optional grouped helpers
-export const journal = {
-  entries: journalEntriesCol,
-};
+// alias expected by journal.js
+export const saveJournalEntries = (appId, userId, saveId) =>
+  journalEntriesCol(appId, userId, saveId);
+
+export const journal = { entries: journalEntriesCol };
 
 export const paths = {
   playerSaveCollection,
@@ -45,3 +46,6 @@ export const paths = {
   journalEntriesCol,
   journal,
 };
+
+// add default export to satisfy `import paths, {...} from './firestorePaths'`
+export default paths;
