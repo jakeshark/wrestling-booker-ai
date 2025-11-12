@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, doc, Timestamp, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, doc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import { callAI } from '../utils/aiClient';
 import paths from '../utils/firestorePaths';
+import { getOutcomeForReply } from '../utils/replyOutcomes';
 
 const buildMessageContacts = (messages, wrestlers) => {
   if (!messages) return [];
@@ -68,12 +69,40 @@ const rewriteFollowupForTone = (aiMessage, tone) => {
   return aiMessage;
 };
 
-const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) => {
+const labelToTone = (label) => {
+  const normalized = (label || '').toLowerCase();
+  if (normalized === 'yes') return 'yes';
+  if (normalized === 'no') return 'no';
+  if (normalized === 'maybe') return 'maybe';
+  return null;
+};
+
+const detectReplyTone = (text, fallbackTone) => {
+  if (fallbackTone) return fallbackTone;
+  const lower = (text || '').toLowerCase();
+  if (lower.includes('yes') || lower.includes('sure') || lower.includes('definitely') || lower.includes("let's do") || lower.includes('absolutely')) {
+    return 'yes';
+  }
+  if (lower.includes('no') || lower.includes("can't") || lower.includes("won't") || lower.includes('not happening') || lower.includes('decline')) {
+    return 'no';
+  }
+  if (lower.includes('maybe') || lower.includes('perhaps') || lower.includes('not sure') || lower.includes('we will see')) {
+    return 'maybe';
+  }
+  const sentiment = detectToneFromReply(text || '');
+  if (sentiment === 'positive') return 'yes';
+  if (sentiment === 'negative') return 'no';
+  return 'maybe';
+};
+
+const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, addToast }) => {
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState(null);
   const [replyDraft, setReplyDraft] = useState('');
   const [hoverReply, setHoverReply] = useState(null);
   const [lockedReply, setLockedReply] = useState(null);
+  const [selectedReplyTone, setSelectedReplyTone] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
   const contacts = useMemo(() => (
     buildMessageContacts(gameData.save_messages || [], gameData.save_wrestlers || [])
@@ -104,6 +133,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
     setHoverReply(null);
     setLockedReply(null);
     setReplyDraft('');
+    setSelectedReplyTone(null);
+    setIsSending(false);
 
     if (!selectedContactId && contacts.length > 0) {
       setSelectedContactId(contacts[0].id);
@@ -153,6 +184,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
     setHoverReply(null);
     setLockedReply(null);
     setReplyDraft('');
+    setSelectedReplyTone(null);
+    setIsSending(false);
 
     const unreadCount = (gameData.save_messages || []).filter(msg => !msg.isRead).length;
     if (!activeSave || !db || !appId || !userId || unreadCount === 0) return;
@@ -184,6 +217,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
     setReplyDraft('');
     setHoverReply(null);
     setLockedReply(null);
+    setSelectedReplyTone(null);
+    setIsSending(false);
   }, []);
 
   const handleReplyHover = useCallback((text) => {
@@ -194,35 +229,44 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
     setHoverReply(null);
   }, []);
 
-  const handleReplyClick = useCallback((text) => {
+  const handleReplyClick = useCallback((text, label) => {
     setLockedReply(text);
     setReplyDraft(text);
+    const tone = labelToTone(label) || detectReplyTone(text, null);
+    setSelectedReplyTone(tone);
   }, []);
 
   const handleReplyDraftChange = useCallback((e) => {
-    setReplyDraft(e.target.value);
+    const value = e.target.value;
+    setReplyDraft(value);
+    if (!lockedReply) {
+      setSelectedReplyTone(null);
+    }
     setLockedReply(null);
-  }, []);
+  }, [lockedReply]);
 
   const handleSendReply = useCallback(async () => {
+    if (isSending) return;
     if (!replyDraft.trim() || !selectedContactId) return;
-    if (!activeSave || !db || !appId) return;
+    if (!activeSave || !db || !appId || !userId) return;
 
     const contact = selectedContact;
     if (!contact) return;
     const nowTs = activeSave.currentDate ? activeSave.currentDate : Timestamp.now();
+    const trimmedReply = replyDraft.trim();
 
     const playerMessage = {
       senderId: 'booker',
       senderName: 'Booker',
       recipientId: selectedContactId,
-      body: replyDraft.trim(),
+      body: trimmedReply,
       timestamp: nowTs,
       type: 'Text',
       isRead: true
     };
 
     try {
+      setIsSending(true);
       const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_messages'));
       const newMsgRef = await addDoc(messagesRef, playerMessage);
       const playerMsgWithId = { id: newMsgRef.id, ...playerMessage };
@@ -234,15 +278,46 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
 
       // TODO(journal): optionally call enqueueJournalNote(...) when the player makes a promise.
 
-      const tone = detectToneFromReply(replyDraft.trim());
+      const tone = detectToneFromReply(trimmedReply);
       const wrestler = contact;
+      const latestTopicMessage = [...conversationMessages]
+        .reverse()
+        .find(message => message.senderId === selectedContactId && message.topic);
+      const topic = latestTopicMessage?.topic || 'general';
+      const replyTone = detectReplyTone(trimmedReply, selectedReplyTone);
+      const { moraleDelta } = getOutcomeForReply(topic, replyTone);
+      const currentMorale = typeof wrestler.morale === 'number' ? wrestler.morale : 50;
+      const clampedMorale = Math.max(0, Math.min(100, currentMorale + moraleDelta));
+      const wrestlerDocRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), wrestler.id);
+      await setDoc(wrestlerDocRef, { morale: clampedMorale }, { merge: true });
+
+      setGameData(prevData => ({
+        ...prevData,
+        save_wrestlers: (prevData.save_wrestlers || []).map(w => (
+          w.id === wrestler.id ? { ...w, morale: clampedMorale } : w
+        ))
+      }));
+
+      console.log(`[ReplyOutcome] ${wrestler.name} topic=${topic} tone=${replyTone} delta=${moraleDelta} -> ${clampedMorale}`);
+
+      if (typeof addToast === 'function') {
+        let moraleText = `Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`;
+        if (clampedMorale === 0) {
+          moraleText = 'Morale at minimum (0)';
+        } else if (clampedMorale === 100) {
+          moraleText = 'Morale capped (100)';
+        }
+        addToast(`${wrestler.name}: ${moraleText}`);
+      }
+
+      const updatedWrestler = { ...wrestler, morale: clampedMorale };
       const followupData = await callAI('wrestler-message', {
         wrestler: {
-          id: wrestler.id,
-          name: wrestler.name,
-          disposition: wrestler.disposition,
-          gimmick: wrestler.gimmick,
-          morale: wrestler.morale
+          id: updatedWrestler.id,
+          name: updatedWrestler.name,
+          disposition: updatedWrestler.disposition,
+          gimmick: updatedWrestler.gimmick,
+          morale: updatedWrestler.morale
         },
         topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
       });
@@ -256,7 +331,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
           timestamp: nowTs,
           type: 'Text',
           isRead: false,
-          replyOptions: followupData.replyOptions || []
+          replyOptions: followupData.replyOptions || [],
+          topic
         };
 
         const followMsgRef = await addDoc(messagesRef, followMessage);
@@ -271,10 +347,26 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
       setReplyDraft('');
       setHoverReply(null);
       setLockedReply(null);
+      setSelectedReplyTone(null);
     } catch (error) {
       console.error('Error sending reply:', error);
+    } finally {
+      setIsSending(false);
     }
-  }, [activeSave, appId, db, replyDraft, selectedContact, selectedContactId, setGameData, userId]);
+  }, [
+    activeSave,
+    addToast,
+    appId,
+    conversationMessages,
+    db,
+    isSending,
+    replyDraft,
+    selectedContact,
+    selectedContactId,
+    selectedReplyTone,
+    setGameData,
+    userId
+  ]);
 
   return {
     showMessagesModal,
@@ -294,7 +386,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
     hoverReply,
     lockedReply,
     replyOptions,
-    replyInputValue
+    replyInputValue,
+    isSending
   };
 };
 

@@ -159,3 +159,26 @@
 **Next Steps / Recommendations:**
 - Integrate the journal helper into the reply flow once promise metadata is defined.
 - Consider expanding the helper with validation and status updates after initial integration tests.
+
+## Codex Session Summary — 2025-11-16
+
+**Files Modified or Created:**
+- src/components/Snackbar.jsx — lightweight toast stack for morale feedback.
+- src/utils/replyOutcomes.js — maps wrestler topics and reply tones to morale deltas.
+- src/hooks/useMessages.js — applies reply outcomes, persists morale, and queues toasts.
+- src/components/MessagesModal.jsx — disables double sends and surfaces sending state.
+- src/App.jsx — lifts toast state, wires Snackbar, and hands addToast into messaging.
+- src/utils/firestorePaths.js — added save_wrestlers helper for morale updates.
+
+**Features / Fixes Implemented:**
+- Award or deduct morale immediately after player replies, clamping to 0–100 and persisting to Firestore.
+- Surfaced instant feedback via stackable Snackbar toasts that auto-dismiss and note morale caps.
+- Sequenced morale persistence ahead of AI follow-ups without altering conversation threading.
+
+**Known Issues / To-Do:**
+- npm install/build still blocked in this environment (missing registry access); CI should verify once dependencies resolve.
+- Future polish: expose the toast helper through context so other systems can surface feedback.
+
+**Next Steps / Recommendations:**
+- Extend reply outcomes with promise/journal logging once narrative flags are defined.
+- Consider animating Snackbar entries and adding manual dismiss affordances for accessibility.
