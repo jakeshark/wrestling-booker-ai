@@ -118,3 +118,24 @@
 **Next Steps / Recommendations:**
 - Continue extracting remaining inline screens (career history, relationships) into dedicated components.
 - Factor out the repeated icon components so they can be shared across screens without duplication.
+
+## Codex Session Summary — 2025-11-14
+
+**Files Modified or Created:**
+- src/components/SegmentModal.jsx — new reusable modal for editing booking segments.
+- src/components/BookingScreen.jsx — now renders `SegmentModal` and delegates segment form changes via props.
+- src/App.jsx — passes modal state/handlers into `BookingScreen` and exposes storylines through `GameProvider`.
+- docs/session-log.md — recorded the segment modal extraction work.
+
+**Features / Fixes Implemented:**
+- Extracted the inline segment editor from `App.jsx` into a dedicated component that sources roster/storyline data from context.
+- Updated the booking screen to orchestrate modal visibility, preserving the original Tailwind styling and UX flow.
+- Centralized segment state management in `App.jsx`, ensuring winner validation and storyline assignments stay intact.
+
+**Known Issues / To-Do:**
+- Icon components remain duplicated between `App.jsx` and the new modal; future refactors could consolidate them.
+- Shared AI/firestore helpers mentioned earlier are still outstanding.
+
+**Next Steps / Recommendations:**
+- Continue migrating remaining modals from `App.jsx` into standalone components to reduce file size.
+- Extract common SVG icon components into a shared module for reuse across screens.
