@@ -21,6 +21,9 @@ import {
 } from 'firebase/firestore';
 import MessagesModal from './components/MessagesModal';
 import AssistantModal from './components/AssistantModal';
+import BookingScreen from './components/BookingScreen';
+import RosterScreen from './components/RosterScreen';
+import StorylineScreen from './components/StorylineScreen';
 import useMessages from './hooks/useMessages';
 
 // --- Icon Components (Simple SVGs) ---
@@ -607,6 +610,7 @@ function App() {
     setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
     try {
+      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -667,7 +671,7 @@ function App() {
     )).join('\n');
 
     try {
-      // TODO: centralize AI POST calls
+      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1529,159 +1533,6 @@ function App() {
     );
   };
 
-  const renderBookingScreen = () => {
-    if (!currentShow) return null;
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Book Show: {currentShow.eventName}</h1>
-            <p className="text-indigo-300">
-              {activeSave.currentDate.toDate().toLocaleDateString('en-US', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-              })}
-              <span className="ml-4 font-semibold text-yellow-400">(Tier: {currentShow.eventTier})</span>
-            </p>
-          </div>
-          <div className="flex space-x-2 mt-4 md:mt-0">
-            <button
-              onClick={() => setGameState('IN_GAME')}
-              className="px-4 py-2 bg-gray-600 text-white font-bold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleRunShow}
-              className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-            >
-              Run Show
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-3">
-          {currentSegments.map((segment, index) => (
-            <button
-              key={index}
-              onClick={() => handleOpenSegmentModal(index)}
-              className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
-            >
-              <span className="text-lg font-bold text-gray-400 w-12">{index + 1}.</span>
-              {segment ? (
-                <div>
-                  <span className={`text-sm font-bold px-2 py-0.5 rounded ${segment.type === 'Match' ? 'bg-blue-600' : 'bg-purple-600'}`}>
-                    {segment.type}
-                  </span>
-                  <span className="ml-3 text-lg text-white">
-                    {segment.participants.map(p => p.name).join(' vs. ')}
-                  </span>
-                  {segment.winnerId && (
-                    <p className="ml-16 text-sm text-yellow-400">
-                      Winner: {segment.participants.find(p => p.id === segment.winnerId)?.name || 'N/A'}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <span className="text-lg text-gray-400 flex items-center">
-                  <PlusIcon />
-                  Add Segment
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderRosterScreen = () => {
-    const wrestlers = gameData.save_wrestlers || [];
-
-    const getDispositionClass = (disposition) => {
-      switch (disposition) {
-        case 'Face': return 'text-green-400';
-        case 'Heel': return 'text-red-400';
-        case 'Tweener': return 'text-yellow-400';
-        default: return 'text-gray-400';
-      }
-    };
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <RosterIcon />
-            Your Roster
-          </h1>
-          <button
-            onClick={() => setGameState('IN_GAME')}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {wrestlers.length === 0 && (
-            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
-          )}
-          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(wrestler => (
-            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
-
-              <div className="flex justify-between text-sm mb-3">
-                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
-                  {wrestler.disposition}
-                </span>
-                <span className="text-gray-300">
-                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
-                </span>
-              </div>
-
-              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
-                <div>
-                  <span className="text-gray-400">BRAWL</span>
-                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">SPEED</span>
-                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">TECH</span>
-                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">CHAR</span>
-                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleViewCareerHistory(wrestler)}
-                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
-                >
-                  <HistoryIcon />
-                  History
-                </button>
-                <button
-                  onClick={() => handleViewRelationships(wrestler)}
-                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
-                >
-                  <RelationshipsIcon />
-                  Relations
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -1724,57 +1575,6 @@ function App() {
           >
             Continue (Next Day)
           </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderStorylineScreen = () => {
-    const storylines = gameData.save_storylines || [];
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <FireIcon />
-            Storyline Manager
-          </h1>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => handleOpenCreateStorylineModal()}
-              className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all flex items-center"
-            >
-              <PlusIcon />
-              Create Storyline
-            </button>
-            <button
-              onClick={() => setGameState('IN_GAME')}
-              className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {storylines.length === 0 && (
-            <p className="text-gray-400 md:col-span-2 text-center p-8">You have no active storylines. Go create one!</p>
-          )}
-          {storylines.filter(s => s.status === 'Active').map(storyline => (
-            <div key={storyline.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{storyline.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">
-                Heat: <span className="font-semibold text-red-400">{storyline.heat}</span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {storyline.participants.map(p => (
-                  <span key={p.id} className="bg-gray-700 text-sm px-3 py-1 rounded-full">
-                    {p.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     );
@@ -2088,108 +1888,6 @@ function App() {
     );
   };
 
-  const renderCreateStorylineModal = () => {
-    if (!showStorylineModal) return null;
-
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-        onClick={() => setShowStorylineModal(false)}
-      >
-        <div
-          className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white">Create New Storyline</h2>
-            <button
-              onClick={() => setShowStorylineModal(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Storyline Name</label>
-              <input
-                type="text"
-                name="name"
-                value={storylineFormData.name}
-                onChange={(e) => setStorylineFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Main Event Title Feud"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Participants (min. 2)
-              </label>
-              <div className="p-2 bg-gray-700 rounded-lg min-h-[50px] flex flex-wrap gap-2">
-                {storylineFormData.participants.map(p => (
-                  <span key={p.id} className="flex items-center bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">
-                    {p.name}
-                    <button
-                      onClick={() => handleRemoveStorylineParticipant(p.id)}
-                      className="ml-2 text-indigo-100 hover:text-white"
-                    >
-                      <XCircleIcon />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Add Participant
-              </label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={storylineParticipantSearch}
-                  onChange={(e) => handleStorylineParticipantSearch(e.target.value)}
-                  placeholder="Search roster..."
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              {storylineParticipantResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {storylineParticipantResults.map(w => (
-                    <button
-                      key={w.id}
-                      onClick={() => handleAddStorylineParticipant(w)}
-                      className="block w-full text-left px-4 py-2 text-white hover:bg-indigo-500"
-                    >
-                      {w.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="p-4 bg-gray-700 border-t border-gray-600 flex justify-end space-x-3">
-            <button
-              onClick={() => setShowStorylineModal(false)}
-              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-500 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateStoryline}
-              className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-            >
-              Create Storyline
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // --- Main Render ---
   return (
     <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
@@ -2203,13 +1901,53 @@ function App() {
           case 'IN_GAME':
             return renderGameDashboard();
           case 'BOOKING_SHOW':
-            return renderBookingScreen();
+            return (
+              <BookingScreen
+                currentShow={currentShow}
+                currentDate={activeSave?.currentDate}
+                segments={currentSegments}
+                onCancel={() => setGameState('IN_GAME')}
+                onRunShow={handleRunShow}
+                onOpenSegment={handleOpenSegmentModal}
+                SegmentAddIcon={PlusIcon}
+              />
+            );
           case 'ROSTER_SCREEN':
-            return renderRosterScreen();
+            return (
+              <RosterScreen
+                wrestlers={gameData.save_wrestlers || []}
+                onBackToDashboard={() => setGameState('IN_GAME')}
+                onViewCareerHistory={handleViewCareerHistory}
+                onViewRelationships={handleViewRelationships}
+                RosterIcon={RosterIcon}
+                HistoryIcon={HistoryIcon}
+                RelationshipsIcon={RelationshipsIcon}
+              />
+            );
           case 'SHOW_RESULTS':
             return renderShowResultsScreen();
           case 'STORYLINE_SCREEN':
-            return renderStorylineScreen();
+            return (
+              <StorylineScreen
+                storylines={gameData.save_storylines || []}
+                onOpenCreateStoryline={handleOpenCreateStorylineModal}
+                onBackToDashboard={() => setGameState('IN_GAME')}
+                showStorylineModal={showStorylineModal}
+                onCloseStorylineModal={() => setShowStorylineModal(false)}
+                storylineFormData={storylineFormData}
+                setStorylineFormData={setStorylineFormData}
+                storylineParticipantSearch={storylineParticipantSearch}
+                onStorylineParticipantSearch={handleStorylineParticipantSearch}
+                storylineParticipantResults={storylineParticipantResults}
+                onAddStorylineParticipant={handleAddStorylineParticipant}
+                onRemoveStorylineParticipant={handleRemoveStorylineParticipant}
+                onCreateStoryline={handleCreateStoryline}
+                FireIcon={FireIcon}
+                PlusIcon={PlusIcon}
+                CloseIcon={CloseIcon}
+                XCircleIcon={XCircleIcon}
+              />
+            );
           case 'CAREER_HISTORY_SCREEN':
             return renderCareerHistoryScreen();
           case 'RELATIONSHIPS_SCREEN':
@@ -2247,7 +1985,6 @@ function App() {
       />
       {renderAssistantModal()}
       {renderSegmentModal()}
-      {renderCreateStorylineModal()}
     </div>
   );
 }
