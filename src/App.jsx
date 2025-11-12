@@ -24,6 +24,7 @@ import AssistantModal from './components/AssistantModal';
 import BookingScreen from './components/BookingScreen';
 import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
+import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
 import paths from './utils/firestorePaths';
@@ -1578,93 +1579,6 @@ const handleGetAIAdvice = async () => {
     );
   };
 
-  const renderRosterScreen = () => {
-    const wrestlers = gameData.save_wrestlers || [];
-
-    const getDispositionClass = (disposition) => {
-      switch (disposition) {
-        case 'Face': return 'text-green-400';
-        case 'Heel': return 'text-red-400';
-        case 'Tweener': return 'text-yellow-400';
-        default: return 'text-gray-400';
-      }
-    };
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <RosterIcon />
-            Your Roster
-          </h1>
-          <button
-            onClick={() => setGameState('IN_GAME')}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {wrestlers.length === 0 && (
-            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
-          )}
-          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(wrestler => (
-            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
-
-              <div className="flex justify-between text-sm mb-3">
-                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
-                  {wrestler.disposition}
-                </span>
-                <span className="text-gray-300">
-                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
-                </span>
-              </div>
-
-              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
-                <div>
-                  <span className="text-gray-400">BRAWL</span>
-                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">SPEED</span>
-                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">TECH</span>
-                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">CHAR</span>
-                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleViewCareerHistory(wrestler)}
-                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
-                >
-                  <HistoryIcon />
-                  History
-                </button>
-                <button
-                  onClick={() => handleViewRelationships(wrestler)}
-                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
-                >
-                  <RelationshipsIcon />
-                  Relations
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -2020,104 +1934,106 @@ const handleGetAIAdvice = async () => {
     );
   };
 
+  const gameContextValue = {
+    wrestlers: gameData.save_wrestlers || [],
+    goToDashboard: () => setGameState('IN_GAME'),
+    handleViewCareerHistory,
+    handleViewRelationships,
+    RosterIcon,
+    HistoryIcon,
+    RelationshipsIcon
+  };
+
   // --- Main Render ---
   return (
-    <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
-      {(() => {
-        switch (gameState) {
-          case 'LOADING':
-          case 'BUSY':
-            return renderLoadingScreen();
-          case 'MAIN_MENU':
-            return renderMainMenu();
-          case 'IN_GAME':
-            return renderGameDashboard();
-          case 'BOOKING_SHOW':
-            return (
-              <BookingScreen
-                currentShow={currentShow}
-                currentDate={activeSave?.currentDate}
-                segments={currentSegments}
-                onCancel={() => setGameState('IN_GAME')}
-                onRunShow={handleRunShow}
-                onOpenSegment={handleOpenSegmentModal}
-                SegmentAddIcon={PlusIcon}
-              />
-            );
-          case 'ROSTER_SCREEN':
-            return (
-              <RosterScreen
-                wrestlers={gameData.save_wrestlers || []}
-                onBackToDashboard={() => setGameState('IN_GAME')}
-                onViewCareerHistory={handleViewCareerHistory}
-                onViewRelationships={handleViewRelationships}
-                RosterIcon={RosterIcon}
-                HistoryIcon={HistoryIcon}
-                RelationshipsIcon={RelationshipsIcon}
-              />
-            );
-          case 'SHOW_RESULTS':
-            return renderShowResultsScreen();
-          case 'STORYLINE_SCREEN':
-            return (
-              <StorylineScreen
-                storylines={gameData.save_storylines || []}
-                onOpenCreateStoryline={handleOpenCreateStorylineModal}
-                onBackToDashboard={() => setGameState('IN_GAME')}
-                showStorylineModal={showStorylineModal}
-                onCloseStorylineModal={() => setShowStorylineModal(false)}
-                storylineFormData={storylineFormData}
-                setStorylineFormData={setStorylineFormData}
-                storylineParticipantSearch={storylineParticipantSearch}
-                onStorylineParticipantSearch={handleStorylineParticipantSearch}
-                storylineParticipantResults={storylineParticipantResults}
-                onAddStorylineParticipant={handleAddStorylineParticipant}
-                onRemoveStorylineParticipant={handleRemoveStorylineParticipant}
-                onCreateStoryline={handleCreateStoryline}
-                FireIcon={FireIcon}
-                PlusIcon={PlusIcon}
-                CloseIcon={CloseIcon}
-                XCircleIcon={XCircleIcon}
-              />
-            );
-          case 'CAREER_HISTORY_SCREEN':
-            return renderCareerHistoryScreen();
-          case 'RELATIONSHIPS_SCREEN':
-            return renderRelationshipsScreen();
-          default:
-            return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
-        }
-      })()}
-      <MessagesModal
-        isOpen={showMessagesModal}
-        onClose={closeMessages}
-        contacts={messageContacts}
-        selectedContact={selectedContact}
-        conversationMessages={conversationMessages}
-        onContactClick={handleContactClick}
-        onReplyHover={handleReplyHover}
-        onReplyHoverLeave={handleReplyHoverLeave}
-        onReplyClick={handleReplyClick}
-        onReplyDraftChange={handleReplyDraftChange}
-        onSendReply={handleSendReply}
-        replyOptions={replyOptions}
-        replyInputValue={replyInputValue}
-      />
-      <AssistantModal
-        open={showAssistantModal}
-        onClose={() => setShowAssistantModal(false)}
-        assistantQuery={assistantQuery}
-        setAssistantQuery={setAssistantQuery}
-        assistantResponse={assistantResponse}
-        isAssistantLoading={isAssistantLoading}
-        onSend={handleGetAIAdvice}
-        AssistantIcon={AssistantIcon}
-        CloseIcon={CloseIcon}
-        LoadingIcon={LoadingIcon}
-      />
-      {renderAssistantModal()}
-      {renderSegmentModal()}
-    </div>
+    <GameProvider value={gameContextValue}>
+      <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
+        {(() => {
+          switch (gameState) {
+            case 'LOADING':
+            case 'BUSY':
+              return renderLoadingScreen();
+            case 'MAIN_MENU':
+              return renderMainMenu();
+            case 'IN_GAME':
+              return renderGameDashboard();
+            case 'BOOKING_SHOW':
+              return (
+                <BookingScreen
+                  currentShow={currentShow}
+                  currentDate={activeSave?.currentDate}
+                  segments={currentSegments}
+                  onCancel={() => setGameState('IN_GAME')}
+                  onRunShow={handleRunShow}
+                  onOpenSegment={handleOpenSegmentModal}
+                  SegmentAddIcon={PlusIcon}
+                />
+              );
+            case 'ROSTER_SCREEN':
+              return <RosterScreen />;
+            case 'SHOW_RESULTS':
+              return renderShowResultsScreen();
+            case 'STORYLINE_SCREEN':
+              return (
+                <StorylineScreen
+                  storylines={gameData.save_storylines || []}
+                  onOpenCreateStoryline={handleOpenCreateStorylineModal}
+                  onBackToDashboard={() => setGameState('IN_GAME')}
+                  showStorylineModal={showStorylineModal}
+                  onCloseStorylineModal={() => setShowStorylineModal(false)}
+                  storylineFormData={storylineFormData}
+                  setStorylineFormData={setStorylineFormData}
+                  storylineParticipantSearch={storylineParticipantSearch}
+                  onStorylineParticipantSearch={handleStorylineParticipantSearch}
+                  storylineParticipantResults={storylineParticipantResults}
+                  onAddStorylineParticipant={handleAddStorylineParticipant}
+                  onRemoveStorylineParticipant={handleRemoveStorylineParticipant}
+                  onCreateStoryline={handleCreateStoryline}
+                  FireIcon={FireIcon}
+                  PlusIcon={PlusIcon}
+                  CloseIcon={CloseIcon}
+                  XCircleIcon={XCircleIcon}
+                />
+              );
+            case 'CAREER_HISTORY_SCREEN':
+              return renderCareerHistoryScreen();
+            case 'RELATIONSHIPS_SCREEN':
+              return renderRelationshipsScreen();
+            default:
+              return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
+          }
+        })()}
+        <MessagesModal
+          isOpen={showMessagesModal}
+          onClose={closeMessages}
+          contacts={messageContacts}
+          selectedContact={selectedContact}
+          conversationMessages={conversationMessages}
+          onContactClick={handleContactClick}
+          onReplyHover={handleReplyHover}
+          onReplyHoverLeave={handleReplyHoverLeave}
+          onReplyClick={handleReplyClick}
+          onReplyDraftChange={handleReplyDraftChange}
+          onSendReply={handleSendReply}
+          replyOptions={replyOptions}
+          replyInputValue={replyInputValue}
+        />
+        <AssistantModal
+          open={showAssistantModal}
+          onClose={() => setShowAssistantModal(false)}
+          assistantQuery={assistantQuery}
+          setAssistantQuery={setAssistantQuery}
+          assistantResponse={assistantResponse}
+          isAssistantLoading={isAssistantLoading}
+          onSend={handleGetAIAdvice}
+          AssistantIcon={AssistantIcon}
+          CloseIcon={CloseIcon}
+          LoadingIcon={LoadingIcon}
+        />
+        {renderAssistantModal()}
+        {renderSegmentModal()}
+      </div>
+    </GameProvider>
   );
 }
 
