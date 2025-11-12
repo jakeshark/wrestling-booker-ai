@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, doc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import { callAI } from '../utils/aiClient';
 import paths from '../utils/firestorePaths';
-import { getOutcomeForReply } from '../utils/replyOutcomes';
 
 const buildMessageContacts = (messages, wrestlers) => {
   if (!messages) return [];
@@ -59,16 +58,6 @@ const detectToneFromReply = (text) => {
   return 'neutral';
 };
 
-const rewriteFollowupForTone = (aiMessage, tone) => {
-  if (tone === 'negative') {
-    return `...okay, I get it. ${aiMessage} I was hoping for more, but I'll keep doing my part.`;
-  }
-  if (tone === 'positive') {
-    return `Awesome, appreciate that. ${aiMessage}`;
-  }
-  return aiMessage;
-};
-
 const labelToTone = (label) => {
   const normalized = (label || '').toLowerCase();
   if (normalized === 'yes') return 'yes';
@@ -93,6 +82,13 @@ const detectReplyTone = (text, fallbackTone) => {
   if (sentiment === 'positive') return 'yes';
   if (sentiment === 'negative') return 'no';
   return 'maybe';
+};
+
+// TODO: expose tone→delta in settings for balancing.
+const REPLY_TONE_DELTAS = {
+  yes: 4,
+  maybe: 1,
+  no: -5
 };
 
 const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, addToast }) => {
@@ -167,15 +163,32 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       });
   }, [gameData.save_messages, selectedContactId]);
 
+  const latestThreadMessage = useMemo(() => (
+    conversationMessages.length > 0
+      ? conversationMessages[conversationMessages.length - 1]
+      : null
+  ), [conversationMessages]);
+
+  const canReplyToThread = useMemo(() => {
+    if (!latestThreadMessage) return false;
+    if (latestThreadMessage.senderId === 'booker') return false;
+    return latestThreadMessage.canReply !== false;
+  }, [latestThreadMessage]);
+
   const replyOptions = useMemo(() => {
     if (!selectedContactId || conversationMessages.length === 0) return [];
+    if (!canReplyToThread) return [];
 
     const latestFromContact = [...conversationMessages]
       .reverse()
-      .find(message => message.senderId === selectedContactId && Array.isArray(message.replyOptions));
+      .find(message => (
+        message.senderId === selectedContactId &&
+        Array.isArray(message.replyOptions) &&
+        message.canReply !== false
+      ));
 
     return latestFromContact ? latestFromContact.replyOptions : [];
-  }, [conversationMessages, selectedContactId]);
+  }, [canReplyToThread, conversationMessages, selectedContactId]);
 
   const replyInputValue = hoverReply !== null && !lockedReply ? hoverReply : replyDraft;
 
@@ -249,6 +262,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     if (isSending) return;
     if (!replyDraft.trim() || !selectedContactId) return;
     if (!activeSave || !db || !appId || !userId) return;
+    if (!canReplyToThread) return;
 
     const contact = selectedContact;
     if (!contact) return;
@@ -262,7 +276,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       body: trimmedReply,
       timestamp: nowTs,
       type: 'Text',
-      isRead: true
+      isRead: true,
+      canReply: false
     };
 
     try {
@@ -276,19 +291,13 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         save_messages: [...(prevData.save_messages || []), playerMsgWithId]
       }));
 
-      // TODO (Journal): if this reply includes a promise, create a quest
-      // Example payload:
-      // import { createQuest } from '../utils/journal';
-      // await createQuest(db, { appId, userId, saveId: activeSave.id, quest: { /* ... */ }});
-
-      const tone = detectToneFromReply(trimmedReply);
       const wrestler = contact;
       const latestTopicMessage = [...conversationMessages]
         .reverse()
         .find(message => message.senderId === selectedContactId && message.topic);
       const topic = latestTopicMessage?.topic || 'general';
       const replyTone = detectReplyTone(trimmedReply, selectedReplyTone);
-      const { moraleDelta } = getOutcomeForReply(topic, replyTone);
+      const moraleDelta = REPLY_TONE_DELTAS[replyTone] ?? 0;
       const currentMorale = typeof wrestler.morale === 'number' ? wrestler.morale : 50;
       const clampedMorale = Math.max(0, Math.min(100, currentMorale + moraleDelta));
       const wrestlerDocRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), wrestler.id);
@@ -301,20 +310,31 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         ))
       }));
 
-      console.log(`[ReplyOutcome] ${wrestler.name} topic=${topic} tone=${replyTone} delta=${moraleDelta} -> ${clampedMorale}`);
-
       if (typeof addToast === 'function') {
-        let moraleText = `Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`;
-        if (clampedMorale === 0) {
-          moraleText = 'Morale at minimum (0)';
-        } else if (clampedMorale === 100) {
-          moraleText = 'Morale capped (100)';
-        }
-        addToast(`${wrestler.name}: ${moraleText}`);
+        addToast(`${wrestler.name}: Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`);
+      }
+
+      const careerEventData = {
+        type: 'reply_effect',
+        wrestlerId: wrestler.id,
+        moraleDelta,
+        date: nowTs
+      };
+
+      try {
+        const careerEventsRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_career_events'));
+        const careerEventRef = await addDoc(careerEventsRef, careerEventData);
+        const careerEventWithId = { id: careerEventRef.id, ...careerEventData };
+        setGameData(prevData => ({
+          ...prevData,
+          save_career_events: [...(prevData.save_career_events || []), careerEventWithId]
+        }));
+      } catch (careerEventError) {
+        console.error('Error logging reply effect career event:', careerEventError);
       }
 
       const updatedWrestler = { ...wrestler, morale: clampedMorale };
-      const followupData = await callAI('wrestler-message', {
+      const reactionData = await callAI('wrestler-reaction', {
         wrestler: {
           id: updatedWrestler.id,
           name: updatedWrestler.name,
@@ -322,20 +342,22 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
           gimmick: updatedWrestler.gimmick,
           morale: updatedWrestler.morale
         },
-        topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
+        topic,
+        playerMessage: trimmedReply,
+        tone: replyTone
       });
 
-      if (followupData && followupData.message) {
+      if (reactionData && reactionData.message) {
         const followMessage = {
           senderId: wrestler.id,
           senderName: wrestler.name,
           recipientId: 'booker',
-          body: rewriteFollowupForTone(followupData.message, tone),
+          body: reactionData.message,
           timestamp: nowTs,
           type: 'Text',
           isRead: false,
-          replyOptions: followupData.replyOptions || [],
-          topic
+          topic,
+          canReply: false
         };
 
         const followMsgRef = await addDoc(messagesRef, followMessage);
@@ -364,6 +386,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     db,
     isSending,
     replyDraft,
+    canReplyToThread,
     selectedContact,
     selectedContactId,
     selectedReplyTone,
@@ -389,6 +412,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     hoverReply,
     lockedReply,
     replyOptions,
+    canReplyToThread,
     replyInputValue,
     isSending
   };

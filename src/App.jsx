@@ -318,6 +318,7 @@ function App() {
     handleReplyDraftChange,
     handleSendReply,
     replyOptions,
+    canReplyToThread,
     replyInputValue,
     isSending
   } = useMessages({ gameData, setGameData, activeSave, db, appId, userId, addToast });
@@ -780,6 +781,7 @@ function App() {
       type: 'Text',
       isRead: false,
       replyOptions: replyOptions,
+      canReply: true,
       topic
     };
 
@@ -2039,6 +2041,7 @@ const handleGetAIAdvice = async () => {
           onReplyDraftChange={handleReplyDraftChange}
           onSendReply={handleSendReply}
           replyOptions={replyOptions}
+          canReplyToThread={canReplyToThread}
           replyInputValue={replyInputValue}
           isSending={isSending}
         />

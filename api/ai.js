@@ -190,6 +190,86 @@ ${
     }
 
     //
+    // 1b) WRESTLER REACTION TO PLAYER REPLY
+    //
+    if (type === 'wrestler-reaction') {
+      const {
+        wrestler,
+        topic,
+        playerMessage,
+        tone
+      } = req.body;
+
+      const wrestlerName = wrestler?.name || 'the talent';
+      const toneDescriptor = (() => {
+        if (tone === 'yes') return 'positive (booker agreed)';
+        if (tone === 'no') return 'negative (booker declined)';
+        if (tone === 'maybe') return 'mixed/conditional (booker hesitated)';
+        return tone || 'unknown';
+      })();
+
+      const systemPrompt = `
+You are writing a short reaction to the booker’s decision.
+DO NOT ask a new question. DO NOT make a new request. Acknowledge the decision and end the conversation for now.
+Return JSON:
+{ "message": "string", "requiresReply": false }
+      `.trim();
+
+      const userPrompt = `
+Talent: ${wrestlerName}
+On-screen disposition: ${wrestler?.disposition || 'Unknown'}
+On-screen gimmick: ${wrestler?.gimmick || 'Unknown'}
+Current morale: ${wrestler?.morale ?? 75}
+Topic / situation: ${topic || 'general'}
+Booker decision tone: ${toneDescriptor}
+Booker said:
+"""${playerMessage || 'No direct quote provided.'}"""
+
+Write 1-3 sentences reacting to the decision. Acknowledge it and close the conversation for now.
+      `.trim();
+
+      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.8,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!openaiRes.ok) {
+        const errText = await openaiRes.text();
+        console.error("OpenAI error (wrestler-reaction):", errText);
+        return res.status(500).json({ error: 'OpenAI request failed', details: errText });
+      }
+
+      const data = await openaiRes.json();
+      const raw = data.choices?.[0]?.message?.content?.trim() || "";
+
+      let message = `Alright, I hear you.`;
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.message) {
+          message = parsed.message;
+        }
+      } catch (e) {
+        console.warn("JSON parse failed for wrestler-reaction, using fallback message.");
+        message = raw || message;
+      }
+
+      return res.status(200).json({ message, requiresReply: false });
+    }
+
+    //
     // 2) BOOKER ASSISTANT
     //
     if (type === 'booker-assistant') {
