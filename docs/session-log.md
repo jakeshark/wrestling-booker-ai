@@ -139,3 +139,23 @@
 **Next Steps / Recommendations:**
 - Continue migrating remaining modals from `App.jsx` into standalone components to reduce file size.
 - Extract common SVG icon components into a shared module for reuse across screens.
+
+## Codex Session Summary — 2025-11-15
+
+**Files Modified or Created:**
+- src/utils/journal.js — new helper for enqueueing save journal notes in Firestore.
+- src/hooks/useMessages.js — added a TODO hook for future journal integration when players make promises.
+- docs/session-log.md — documented the journal scaffold addition.
+
+**Features / Fixes Implemented:**
+- Added a minimal `enqueueJournalNote` helper that writes save journal entries under each player save.
+- Marked the messaging reply handler with a TODO so future promise logic can log to the journal.
+- Recorded the new scaffolding in the ongoing session log for discoverability.
+
+**Known Issues / To-Do:**
+- Journal helper currently infers the Firestore instance from the default app; callers will need to ensure Firebase is initialized.
+- No automatic triggers call the helper yet; the TODO marker should be wired up once promise tracking is implemented.
+
+**Next Steps / Recommendations:**
+- Integrate the journal helper into the reply flow once promise metadata is defined.
+- Consider expanding the helper with validation and status updates after initial integration tests.

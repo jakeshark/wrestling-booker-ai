@@ -232,6 +232,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
         save_messages: [...(prevData.save_messages || []), playerMsgWithId]
       }));
 
+      // TODO(journal): optionally call enqueueJournalNote(...) when the player makes a promise.
+
       const tone = detectToneFromReply(replyDraft.trim());
       const wrestler = contact;
       const followupData = await callAI('wrestler-message', {
