@@ -203,3 +203,27 @@
 **Next Steps / Recommendations:**
 - Extend the delete utility or Firestore rules to auto-discover new subcollections when they are introduced.
 - Continue modularizing App.jsx to keep onboarding new features manageable.
+
+## Codex Session Summary — 2025-11-17
+
+**Files Modified or Created:**
+- src/utils/journal.js — rebuilt with quest CRUD helpers plus evaluation logic and logging.
+- src/utils/firestorePaths.js — exposed save_journal_entries path helper.
+- src/components/JournalPanel.jsx — new dashboard drawer showing quest filters and notes.
+- src/components/QuestBadge.jsx — badge button that surfaces the active quest count.
+- src/App.jsx — wired journal badge, drawer, and next-day evaluation toasts.
+- src/hooks/useMessages.js — documented the future quest-creation hook in the reply handler.
+- docs/session-log.md — recorded the journal/quest scaffolding work.
+
+**Features / Fixes Implemented:**
+- Added Firestore-backed quest helpers (create/update/evaluate) with defensive timestamp handling and MVP condition checks.
+- Surfaced a non-intrusive Journal drawer with filter tabs, expandable entries, and an active-count badge in the dashboard sidebar.
+- Hooked quest evaluation into the Next Day flow so successes/failures log notes, update Firestore, and trigger toasts without blocking gameplay.
+
+**Known Issues / To-Do:**
+- TODO hooks remain in the messaging reply flow to translate promises into concrete quests once NLP parsing lands.
+- Quest evaluation currently handles basic roster/deadline checks; richer storyline/title logic can be layered in later.
+
+**Next Steps / Recommendations:**
+- Extend evaluateQuests with additional condition types (e.g., storyline milestones) as the narrative system expands.
+- Implement the promise parsing pipeline to populate createQuest payloads directly from message replies.

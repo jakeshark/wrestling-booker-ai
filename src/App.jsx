@@ -26,12 +26,15 @@ import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
 import ShowResults from './components/ShowResults';
 import ConfirmDialog from './components/ConfirmDialog';
+import JournalPanel from './components/JournalPanel';
+import QuestBadge from './components/QuestBadge';
 import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
 import paths from './utils/firestorePaths';
 import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
+import { evaluateQuests } from './utils/journal';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -159,6 +162,7 @@ function App() {
   const [assistantQuery, setAssistantQuery] = useState("");
   const [assistantResponse, setAssistantResponse] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const [showJournalPanel, setShowJournalPanel] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteTargetSave, setDeleteTargetSave] = useState(null);
@@ -224,7 +228,7 @@ function App() {
     'save_career_events': 'save_career_events'
   };
 
-  const SAVE_COLLECTION_NAMES = Object.values(SAVE_COLLECTIONS_MAP);
+  const SAVE_COLLECTION_NAMES = [...new Set([...Object.values(SAVE_COLLECTIONS_MAP), 'save_journal_entries'])];
 
   const addToast = useCallback((text) => {
     if (!text) return;
@@ -642,6 +646,8 @@ function App() {
 
       setGameData(loadedGameData);
 
+      setShowJournalPanel(false);
+
       setGameState('IN_GAME');
 
     } catch (error) {
@@ -655,12 +661,13 @@ function App() {
     setActiveSave(null);
     setGameData({});
     setGameState('MAIN_MENU');
+    setShowJournalPanel(false);
     fetchPlayerSaves(db, userId, appId);
   };
 
   // --- Next Day / Sim ---
   const handleNextDay = async () => {
-    if (!activeSave) return;
+    if (!activeSave || !db || !appId || !userId) return;
 
     setGameState('BUSY');
     setLoadingMessage('Simulating next day...');
@@ -668,8 +675,9 @@ function App() {
     try {
       await runSimulationAndEvents(activeSave.id);
 
-      const currentDate = activeSave.currentDate.toDate();
-      const nextDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+      const currentDate = activeSave.currentDate?.toDate ? activeSave.currentDate.toDate() : new Date();
+      const nextDate = new Date(currentDate.getTime());
+      nextDate.setDate(nextDate.getDate() + 1);
       const newTimestamp = Timestamp.fromDate(nextDate);
 
       const saveRef = doc(db, paths.playerSavesCollection(appId, userId), activeSave.id);
@@ -677,6 +685,46 @@ function App() {
         currentDate: newTimestamp,
         lastPlayed: Timestamp.now()
       }, { merge: true });
+
+      const evaluationResult = await evaluateQuests(db, {
+        appId,
+        userId,
+        saveId: activeSave.id,
+        gameData: { ...gameData, currentDate: newTimestamp }
+      });
+
+      if (evaluationResult?.quests) {
+        setGameData(prevData => ({
+          ...prevData,
+          save_journal_entries: evaluationResult.quests
+        }));
+      }
+
+      if (evaluationResult?.succeeded?.length) {
+        evaluationResult.succeeded.forEach(({ quest }) => {
+          if (!quest) return;
+          addToast(`Quest succeeded: ${quest.title || 'Untitled Quest'}`);
+        });
+      }
+
+      if (evaluationResult?.failed?.length) {
+        evaluationResult.failed.forEach(({ quest, reason }) => {
+          if (!quest) return;
+          const label = (() => {
+            switch (reason) {
+              case 'deadline':
+                return 'deadline passed';
+              case 'wrestler_left':
+                return 'roster change';
+              case 'retired':
+                return 'talent retired';
+              default:
+                return 'see journal';
+            }
+          })();
+          addToast(`Quest failed: ${quest.title || 'Untitled Quest'} (${label})`);
+        });
+      }
 
       setActiveSave(prevSave => ({ ...prevSave, currentDate: newTimestamp }));
 
@@ -1436,6 +1484,9 @@ const handleGetAIAdvice = async () => {
       show.date.toDate().toISOString().split('T')[0] === currentDateStr && show.status === 'Planned'
     );
 
+    const journalEntries = gameData.save_journal_entries || [];
+    const activeQuestCount = journalEntries.filter(quest => (quest.status || 'active').toLowerCase() === 'active').length;
+
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
@@ -1489,6 +1540,10 @@ const handleGetAIAdvice = async () => {
           </div>
 
           <div className="md:col-span-1 space-y-4">
+            <QuestBadge
+              count={activeQuestCount}
+              onClick={() => setShowJournalPanel(true)}
+            />
             <button
               className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center justify-between"
               onClick={openMessages}
@@ -1617,6 +1672,27 @@ const handleGetAIAdvice = async () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderJournalPanel = () => {
+    if (!showJournalPanel) return null;
+
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-70 flex justify-end z-50"
+        onClick={() => setShowJournalPanel(false)}
+      >
+        <div
+          className="h-full w-full max-w-xl"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <JournalPanel
+            quests={gameData.save_journal_entries || []}
+            onClose={() => setShowJournalPanel(false)}
+          />
         </div>
       </div>
     );
@@ -1869,6 +1945,7 @@ const handleGetAIAdvice = async () => {
   const gameContextValue = {
     wrestlers: gameData.save_wrestlers || [],
     storylines: gameData.save_storylines || [],
+    journalEntries: gameData.save_journal_entries || [],
     goToDashboard: () => setGameState('IN_GAME'),
     handleViewCareerHistory,
     handleViewRelationships,
@@ -1948,6 +2025,7 @@ const handleGetAIAdvice = async () => {
               return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
           }
         })()}
+        {renderJournalPanel()}
         <MessagesModal
           isOpen={showMessagesModal}
           onClose={closeMessages}

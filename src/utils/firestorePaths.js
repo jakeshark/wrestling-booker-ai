@@ -15,6 +15,7 @@ export const saveWrestlers = (appId, userId, saveId) => `${saveDoc(appId, userId
 export const saveShows = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_shows`;
 export const saveStorylines = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_storylines`;
 export const saveCareerEvents = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_career_events`;
+export const saveJournalEntries = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_journal_entries`;
 
 const paths = {
   baseArtifactsPath,
@@ -32,6 +33,7 @@ const paths = {
   saveShows,
   saveStorylines,
   saveCareerEvents,
+  saveJournalEntries,
 };
 
 export {

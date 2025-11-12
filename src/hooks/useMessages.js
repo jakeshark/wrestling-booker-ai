@@ -276,7 +276,10 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         save_messages: [...(prevData.save_messages || []), playerMsgWithId]
       }));
 
-      // TODO(journal): optionally call enqueueJournalNote(...) when the player makes a promise.
+      // TODO (Journal): if this reply includes a promise, create a quest
+      // Example payload:
+      // import { createQuest } from '../utils/journal';
+      // await createQuest(db, { appId, userId, saveId: activeSave.id, quest: { /* ... */ }});
 
       const tone = detectToneFromReply(trimmedReply);
       const wrestler = contact;
