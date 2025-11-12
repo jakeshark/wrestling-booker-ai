@@ -24,6 +24,7 @@ const MessagesModal = ({
   onReplyDraftChange,
   onSendReply,
   replyOptions,
+  canReplyToThread,
   replyInputValue,
   isSending
 }) => {
@@ -102,7 +103,7 @@ const MessagesModal = ({
             )}
           </div>
 
-          {selectedContact && (
+          {selectedContact && canReplyToThread && (
             <div className="p-4 border-t border-gray-800 bg-gray-900">
               <div className="flex space-x-2 mb-3">
                 {['Yes', 'No', 'Maybe'].map((label, index) => {
