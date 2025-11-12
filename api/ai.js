@@ -213,6 +213,15 @@ You are writing a short reaction to the booker’s decision.
 DO NOT ask a new question. DO NOT make a new request. Acknowledge the decision and end the conversation for now.
 Return JSON:
 { "message": "string", "requiresReply": false }
+
+STYLE & POV RULES:
+- Address the booker directly using "you/your".
+- Never refer to the booker in third person ("the booker", "they").
+- Keep it short (1–3 sentences), acknowledge the decision, and end the conversation (no new questions/requests).
+
+Examples:
+- YES outcome: "Appreciate it. If you’re backing me, I’ll make sure the work shows next taping."
+- NO outcome: "Got it. Not the answer I hoped for, but I hear you."
       `.trim();
 
       const userPrompt = `
@@ -266,7 +275,7 @@ Write 1-3 sentences reacting to the decision. Acknowledge it and close the conve
         message = raw || message;
       }
 
-      return res.status(200).json({ message, requiresReply: false });
+      return res.status(200).json({ message, requiresReply: false, canReply: false });
     }
 
     //
