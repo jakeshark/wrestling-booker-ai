@@ -182,3 +182,24 @@
 **Next Steps / Recommendations:**
 - Extend reply outcomes with promise/journal logging once narrative flags are defined.
 - Consider animating Snackbar entries and adding manual dismiss affordances for accessibility.
+
+## Codex Session Summary — 2025-11-16
+
+**Files Modified or Created:**
+- src/components/ConfirmDialog.jsx — introduced reusable confirmation modal with destructive action styling.
+- src/utils/firestorePaths.js — added named helpers for player save documents and subcollections.
+- src/utils/deleteSave.js — implemented recursive batched deletion for player saves and subcollections.
+- src/App.jsx — wired delete confirmation flow into the main menu and reset active save state post-deletion.
+
+**Features / Fixes Implemented:**
+- Added a confirmation dialog and trash control so players can remove saves directly from the main menu.
+- Created a Firestore utility that deletes known subcollections in 500-doc batches before removing the save document.
+- Hooked UI state to disable interactions during deletion, clear active game data, and surface success/error toasts.
+
+**Known Issues / To-Do:**
+- Recursive delete currently targets only the known subcollections; future nested additions will require updating the helper.
+- Additional refactoring may further isolate App.jsx concerns as more screens and flows are extracted.
+
+**Next Steps / Recommendations:**
+- Extend the delete utility or Firestore rules to auto-discover new subcollections when they are introduced.
+- Continue modularizing App.jsx to keep onboarding new features manageable.
