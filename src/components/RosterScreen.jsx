@@ -2,6 +2,12 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const RosterScreen = ({
+
+const RosterScreen = ({
+  wrestlers,
+  onBackToDashboard,
+  onViewCareerHistory,
+  onViewRelationships,
   RosterIcon,
   HistoryIcon,
   RelationshipsIcon,
@@ -38,6 +44,7 @@ const RosterScreen = ({
         </h1>
         <button
           onClick={navigateToDashboard}
+          onClick={onBackToDashboard}
           className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
         >
           Back to Dashboard
@@ -86,6 +93,7 @@ const RosterScreen = ({
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button
                 onClick={() => viewCareerHistory(wrestler)}
+                onClick={() => onViewCareerHistory(wrestler)}
                 className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
               >
                 {HistoryIcon && <HistoryIcon />}
@@ -93,6 +101,7 @@ const RosterScreen = ({
               </button>
               <button
                 onClick={() => viewRelationships(wrestler)}
+                onClick={() => onViewRelationships(wrestler)}
                 className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
               >
                 {RelationshipsIcon && <RelationshipsIcon />}

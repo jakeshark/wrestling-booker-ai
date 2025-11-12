@@ -244,6 +244,21 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId }) =
           morale: wrestler.morale
         },
         topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
+      // TODO: centralizeAIRequests - share AI POST helpers between booking events and assistant interactions
+      const followup = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'wrestler-message',
+          wrestler: {
+            id: wrestler.id,
+            name: wrestler.name,
+            disposition: wrestler.disposition,
+            gimmick: wrestler.gimmick,
+            morale: wrestler.morale
+          },
+          topic: tone === 'negative' ? 'push_denied' : tone === 'positive' ? 'push_approved' : 'conditional_response'
+        })
       });
 
       if (followupData && followupData.message) {
