@@ -24,8 +24,10 @@ import AssistantModal from './components/AssistantModal';
 import BookingScreen from './components/BookingScreen';
 import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
+import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
+import paths from './utils/firestorePaths';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -285,7 +287,7 @@ function App() {
   // --- Dataset Seeder ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
-    const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
+    const datasetRef = doc(db, paths.publicDataCollection(appId, 'datasets'), datasetId);
 
     try {
       const docSnap = await getDoc(datasetRef);
@@ -303,7 +305,7 @@ function App() {
         createdAt: Timestamp.now()
       });
 
-      const companyRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_companies`));
+      const companyRef = doc(collection(db, paths.publicDataCollection(appId, 'dataset_companies')));
       const companyId = companyRef.id;
       batch.set(companyRef, {
         datasetId: datasetId,
@@ -330,19 +332,19 @@ function App() {
 
       const wrestlerRefs = {};
       for (const wrestler of wrestlers) {
-        const wrestlerRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
+        const wrestlerRef = doc(collection(db, paths.publicDataCollection(appId, 'dataset_wrestlers')));
         wrestlerRefs[wrestler.name] = wrestlerRef.id;
         batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
       }
 
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
         datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
       });
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
         datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
       });
 
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_tv_shows`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_tv_shows'))), {
         datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
       });
 
@@ -354,7 +356,7 @@ function App() {
         if (i === 7) { tier = "Major_Event"; name = "Summer Scorcher"; }
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
 
-        batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_events`)), {
+        batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_events'))), {
           datasetId: datasetId,
           companyId: companyId,
           month: i + 1,
@@ -363,7 +365,7 @@ function App() {
         });
       }
 
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_relationships'))), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
         personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
@@ -371,7 +373,7 @@ function App() {
         status: 'Strongly Dislike',
         notes: "Real-life rivalry from their training days."
       });
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_relationships'))), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
         personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
@@ -390,7 +392,7 @@ function App() {
 
   const fetchDatasets = async (db, userId, appId) => {
     try {
-      const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
+      const q = query(collection(db, paths.publicDataCollection(appId, 'datasets')));
       const querySnapshot = await getDocs(q);
       const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setDatasets(datasetsData);
@@ -402,7 +404,7 @@ function App() {
   const fetchPlayerSaves = async (db, userId, appId) => {
     if (!userId) return;
     try {
-      const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`));
+      const q = query(collection(db, paths.playerSavesCollection(appId, userId)));
       const querySnapshot = await getDocs(q);
       const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPlayerSaves(savesData);
@@ -428,7 +430,7 @@ function App() {
         playerCompanyId: null
       };
 
-      const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
+      const newSaveRef = await addDoc(collection(db, paths.playerSavesCollection(appId, userId)), newSaveData);
       const newSaveId = newSaveRef.id;
 
       const batch = writeBatch(db);
@@ -440,14 +442,14 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const q = query(collection(db, paths.publicDataCollection(appId, datasetCollectionName)), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
           const oldDocId = docSnap.id;
           const docData = docSnap.data();
 
-          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          const newDocRef = doc(collection(db, paths.playerSaveCollection(appId, userId, newSaveId, saveCollectionName)));
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
@@ -465,7 +467,7 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const q = query(collection(db, paths.publicDataCollection(appId, datasetCollectionName)), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
@@ -495,7 +497,7 @@ function App() {
             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
 
-          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          const newDocRef = doc(collection(db, paths.playerSaveCollection(appId, userId, newSaveId, saveCollectionName)));
           batch.set(newDocRef, newDocData);
         }
       }
@@ -521,7 +523,7 @@ function App() {
     setLoadingMessage('Loading your save game...');
 
     try {
-      const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, saveId);
+      const saveRef = doc(db, paths.playerSavesCollection(appId, userId), saveId);
       const saveSnap = await getDoc(saveRef);
 
       if (!saveSnap.exists()) {
@@ -534,7 +536,7 @@ function App() {
       let loadedGameData = {};
 
       for (const collectionName of SAVE_COLLECTION_NAMES) {
-        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
+        const q = query(collection(db, paths.playerSaveCollection(appId, userId, saveId, collectionName)));
         const querySnapshot = await getDocs(q);
 
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -574,7 +576,7 @@ function App() {
       const nextDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
       const newTimestamp = Timestamp.fromDate(nextDate);
 
-      const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, activeSave.id);
+      const saveRef = doc(db, paths.playerSavesCollection(appId, userId), activeSave.id);
       await setDoc(saveRef, {
         currentDate: newTimestamp,
         lastPlayed: Timestamp.now()
@@ -636,7 +638,7 @@ function App() {
       replyOptions: replyOptions
     };
 
-    const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
+    const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, saveId, 'save_messages'));
     const newDocRef = await addDoc(messagesRef, messageData);
 
     const newMessage = { id: newDocRef.id, ...messageData };
@@ -788,7 +790,7 @@ const handleGetAIAdvice = async () => {
       setShowRecap(recapText);
 
       setLoadingMessage('Saving show results...');
-      const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
+      const showRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_shows'), currentShow.id);
 
       const showUpdateData = {
         status: "Complete",
@@ -839,7 +841,6 @@ const handleGetAIAdvice = async () => {
       }).join('\n');
 
     const payload = {
-      type: 'show-recap',
       showName: show.eventName,
       overallRating: rating,
       segments: ratedSegments.map(s => s ? {
@@ -849,17 +850,7 @@ const handleGetAIAdvice = async () => {
     };
 
     try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`API call failed with status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      const result = await callAI('show-recap', payload);
       return result.text || "An error occurred while generating the show recap. The show is still saved.";
     } catch (error) {
       console.error("Error generating AI recap: ", error);
@@ -989,7 +980,7 @@ const handleGetAIAdvice = async () => {
 
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
-          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
+          const docRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_wrestlers'), id);
           batch.update(docRef, { morale: wrestler.morale });
         });
         updatesMade = true;
@@ -997,7 +988,7 @@ const handleGetAIAdvice = async () => {
 
       if (storylineUpdates.size > 0) {
         storylineUpdates.forEach((storyline, id) => {
-          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
+          const docRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_storylines'), id);
           batch.update(docRef, { heat: storyline.heat });
         });
         updatesMade = true;
@@ -1086,7 +1077,7 @@ const handleGetAIAdvice = async () => {
             showId: currentShow.id
           };
 
-          const newEventRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
+          const newEventRef = doc(collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_career_events')));
           batch.set(newEventRef, careerEventData);
 
           newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
@@ -1217,7 +1208,7 @@ const handleGetAIAdvice = async () => {
         beats: []
       };
 
-      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+      const docRef = await addDoc(collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_storylines')), newStorylineData);
 
       const newStoryline = { id: docRef.id, ...newStorylineData };
 
@@ -1588,93 +1579,6 @@ const handleGetAIAdvice = async () => {
     );
   };
 
-  const renderRosterScreen = () => {
-    const wrestlers = gameData.save_wrestlers || [];
-
-    const getDispositionClass = (disposition) => {
-      switch (disposition) {
-        case 'Face': return 'text-green-400';
-        case 'Heel': return 'text-red-400';
-        case 'Tweener': return 'text-yellow-400';
-        default: return 'text-gray-400';
-      }
-    };
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
-        <div className="flex justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <RosterIcon />
-            Your Roster
-          </h1>
-          <button
-            onClick={() => setGameState('IN_GAME')}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-500 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {wrestlers.length === 0 && (
-            <p className="text-gray-400 md:col-span-3 text-center">No wrestlers found in your save data.</p>
-          )}
-          {wrestlers.sort((a, b) => a.name.localeCompare(b.name)).map(wrestler => (
-            <div key={wrestler.id} className="bg-gray-800 p-4 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold text-white">{wrestler.name}</h3>
-              <p className="text-sm text-gray-400 mb-2">Gimmick: <span className="font-semibold text-gray-200">{wrestler.gimmick}</span></p>
-
-              <div className="flex justify-between text-sm mb-3">
-                <span className={`font-bold ${getDispositionClass(wrestler.disposition)}`}>
-                  {wrestler.disposition}
-                </span>
-                <span className="text-gray-300">
-                  Morale: <span className="font-semibold text-white">{wrestler.morale}</span>
-                </span>
-              </div>
-
-              <div className="border-t border-gray-700 pt-2 grid grid-cols-4 gap-2 text-center text-xs">
-                <div>
-                  <span className="text-gray-400">BRAWL</span>
-                  <p className="text-lg font-bold">{wrestler.stats.brawling}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">SPEED</span>
-                  <p className="text-lg font-bold">{wrestler.stats.speed}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">TECH</span>
-                  <p className="text-lg font-bold">{wrestler.stats.technical}</p>
-                </div>
-                <div>
-                  <span className="text-gray-400">CHAR</span>
-                  <p className="text-lg font-bold">{wrestler.stats.charisma}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleViewCareerHistory(wrestler)}
-                  className="w-full p-2 bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-500 transition-all flex items-center justify-center"
-                >
-                  <HistoryIcon />
-                  History
-                </button>
-                <button
-                  onClick={() => handleViewRelationships(wrestler)}
-                  className="w-full p-2 bg-purple-600 text-white font-semibold rounded-lg text-sm hover:bg-purple-500 transition-all flex items-center justify-center"
-                >
-                  <RelationshipsIcon />
-                  Relations
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const renderShowResultsScreen = () => {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
@@ -2030,104 +1934,106 @@ const handleGetAIAdvice = async () => {
     );
   };
 
+  const gameContextValue = {
+    wrestlers: gameData.save_wrestlers || [],
+    goToDashboard: () => setGameState('IN_GAME'),
+    handleViewCareerHistory,
+    handleViewRelationships,
+    RosterIcon,
+    HistoryIcon,
+    RelationshipsIcon
+  };
+
   // --- Main Render ---
   return (
-    <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
-      {(() => {
-        switch (gameState) {
-          case 'LOADING':
-          case 'BUSY':
-            return renderLoadingScreen();
-          case 'MAIN_MENU':
-            return renderMainMenu();
-          case 'IN_GAME':
-            return renderGameDashboard();
-          case 'BOOKING_SHOW':
-            return (
-              <BookingScreen
-                currentShow={currentShow}
-                currentDate={activeSave?.currentDate}
-                segments={currentSegments}
-                onCancel={() => setGameState('IN_GAME')}
-                onRunShow={handleRunShow}
-                onOpenSegment={handleOpenSegmentModal}
-                SegmentAddIcon={PlusIcon}
-              />
-            );
-          case 'ROSTER_SCREEN':
-            return (
-              <RosterScreen
-                wrestlers={gameData.save_wrestlers || []}
-                onBackToDashboard={() => setGameState('IN_GAME')}
-                onViewCareerHistory={handleViewCareerHistory}
-                onViewRelationships={handleViewRelationships}
-                RosterIcon={RosterIcon}
-                HistoryIcon={HistoryIcon}
-                RelationshipsIcon={RelationshipsIcon}
-              />
-            );
-          case 'SHOW_RESULTS':
-            return renderShowResultsScreen();
-          case 'STORYLINE_SCREEN':
-            return (
-              <StorylineScreen
-                storylines={gameData.save_storylines || []}
-                onOpenCreateStoryline={handleOpenCreateStorylineModal}
-                onBackToDashboard={() => setGameState('IN_GAME')}
-                showStorylineModal={showStorylineModal}
-                onCloseStorylineModal={() => setShowStorylineModal(false)}
-                storylineFormData={storylineFormData}
-                setStorylineFormData={setStorylineFormData}
-                storylineParticipantSearch={storylineParticipantSearch}
-                onStorylineParticipantSearch={handleStorylineParticipantSearch}
-                storylineParticipantResults={storylineParticipantResults}
-                onAddStorylineParticipant={handleAddStorylineParticipant}
-                onRemoveStorylineParticipant={handleRemoveStorylineParticipant}
-                onCreateStoryline={handleCreateStoryline}
-                FireIcon={FireIcon}
-                PlusIcon={PlusIcon}
-                CloseIcon={CloseIcon}
-                XCircleIcon={XCircleIcon}
-              />
-            );
-          case 'CAREER_HISTORY_SCREEN':
-            return renderCareerHistoryScreen();
-          case 'RELATIONSHIPS_SCREEN':
-            return renderRelationshipsScreen();
-          default:
-            return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
-        }
-      })()}
-      <MessagesModal
-        isOpen={showMessagesModal}
-        onClose={closeMessages}
-        contacts={messageContacts}
-        selectedContact={selectedContact}
-        conversationMessages={conversationMessages}
-        onContactClick={handleContactClick}
-        onReplyHover={handleReplyHover}
-        onReplyHoverLeave={handleReplyHoverLeave}
-        onReplyClick={handleReplyClick}
-        onReplyDraftChange={handleReplyDraftChange}
-        onSendReply={handleSendReply}
-        replyOptions={replyOptions}
-        replyInputValue={replyInputValue}
-      />
-      <AssistantModal
-        open={showAssistantModal}
-        onClose={() => setShowAssistantModal(false)}
-        assistantQuery={assistantQuery}
-        setAssistantQuery={setAssistantQuery}
-        assistantResponse={assistantResponse}
-        isAssistantLoading={isAssistantLoading}
-        onSend={handleGetAIAdvice}
-        AssistantIcon={AssistantIcon}
-        CloseIcon={CloseIcon}
-        LoadingIcon={LoadingIcon}
-      />
-      {renderAssistantModal()}
-      {renderSegmentModal()}
-    </div>
+    <GameProvider value={gameContextValue}>
+      <div className="bg-gray-900 min-h-screen font-sans text-gray-200">
+        {(() => {
+          switch (gameState) {
+            case 'LOADING':
+            case 'BUSY':
+              return renderLoadingScreen();
+            case 'MAIN_MENU':
+              return renderMainMenu();
+            case 'IN_GAME':
+              return renderGameDashboard();
+            case 'BOOKING_SHOW':
+              return (
+                <BookingScreen
+                  currentShow={currentShow}
+                  currentDate={activeSave?.currentDate}
+                  segments={currentSegments}
+                  onCancel={() => setGameState('IN_GAME')}
+                  onRunShow={handleRunShow}
+                  onOpenSegment={handleOpenSegmentModal}
+                  SegmentAddIcon={PlusIcon}
+                />
+              );
+            case 'ROSTER_SCREEN':
+              return <RosterScreen />;
+            case 'SHOW_RESULTS':
+              return renderShowResultsScreen();
+            case 'STORYLINE_SCREEN':
+              return (
+                <StorylineScreen
+                  storylines={gameData.save_storylines || []}
+                  onOpenCreateStoryline={handleOpenCreateStorylineModal}
+                  onBackToDashboard={() => setGameState('IN_GAME')}
+                  showStorylineModal={showStorylineModal}
+                  onCloseStorylineModal={() => setShowStorylineModal(false)}
+                  storylineFormData={storylineFormData}
+                  setStorylineFormData={setStorylineFormData}
+                  storylineParticipantSearch={storylineParticipantSearch}
+                  onStorylineParticipantSearch={handleStorylineParticipantSearch}
+                  storylineParticipantResults={storylineParticipantResults}
+                  onAddStorylineParticipant={handleAddStorylineParticipant}
+                  onRemoveStorylineParticipant={handleRemoveStorylineParticipant}
+                  onCreateStoryline={handleCreateStoryline}
+                  FireIcon={FireIcon}
+                  PlusIcon={PlusIcon}
+                  CloseIcon={CloseIcon}
+                  XCircleIcon={XCircleIcon}
+                />
+              );
+            case 'CAREER_HISTORY_SCREEN':
+              return renderCareerHistoryScreen();
+            case 'RELATIONSHIPS_SCREEN':
+              return renderRelationshipsScreen();
+            default:
+              return <p className="text-white p-6">An unexpected error occurred. Please refresh.</p>;
+          }
+        })()}
+        <MessagesModal
+          isOpen={showMessagesModal}
+          onClose={closeMessages}
+          contacts={messageContacts}
+          selectedContact={selectedContact}
+          conversationMessages={conversationMessages}
+          onContactClick={handleContactClick}
+          onReplyHover={handleReplyHover}
+          onReplyHoverLeave={handleReplyHoverLeave}
+          onReplyClick={handleReplyClick}
+          onReplyDraftChange={handleReplyDraftChange}
+          onSendReply={handleSendReply}
+          replyOptions={replyOptions}
+          replyInputValue={replyInputValue}
+        />
+        <AssistantModal
+          open={showAssistantModal}
+          onClose={() => setShowAssistantModal(false)}
+          assistantQuery={assistantQuery}
+          setAssistantQuery={setAssistantQuery}
+          assistantResponse={assistantResponse}
+          isAssistantLoading={isAssistantLoading}
+          onSend={handleGetAIAdvice}
+          AssistantIcon={AssistantIcon}
+          CloseIcon={CloseIcon}
+          LoadingIcon={LoadingIcon}
+        />
+        {renderAssistantModal()}
+        {renderSegmentModal()}
+      </div>
+    </GameProvider>
   );
 }
 
