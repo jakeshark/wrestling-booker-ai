@@ -16,6 +16,9 @@ export const saveShows = (appId, userId, saveId) => `${saveDoc(appId, userId, sa
 export const saveStorylines = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_storylines`;
 export const saveCareerEvents = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_career_events`;
 export const saveJournalEntries = (appId, userId, saveId) => `${saveDoc(appId, userId, saveId)}/save_journal_entries`;
+// Add this export beside existing helpers
+export const journal = (appId, userId, saveId) =>
+  `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_journal`;
 
 const paths = {
   baseArtifactsPath,
@@ -34,6 +37,7 @@ const paths = {
   saveStorylines,
   saveCareerEvents,
   saveJournalEntries,
+  journal,
 };
 
 export {
@@ -46,6 +50,8 @@ export {
   playerSaveDocPath,
   playerSaveCollection,
   playerSaveDoc,
+  journal,
+  paths,
 };
 
 export default paths;
