@@ -98,3 +98,23 @@
 **Next Steps / Recommendations:**
 - Continue modularizing the remaining screens and dialogs out of `App.jsx` to improve readability.
 - Create shared utilities for Firestore paths and AI requests once the current refactor stabilizes.
+
+## Codex Session Summary — 2025-11-13
+
+**Files Modified or Created:**
+- src/components/ShowResults.jsx — extracted the show results UI with AI recap handling.
+- src/App.jsx — wired the new ShowResults component and delegated recap persistence to a dedicated callback.
+- docs/session-log.md — noted the show results screen extraction.
+
+**Features / Fixes Implemented:**
+- Moved the results screen into `ShowResults.jsx`, including the segment list, summary panel, and recap display.
+- Shifted the show recap generation to the new component while keeping the Firestore write shape unchanged via an App-level callback.
+- Hooked the existing “Next Day” flow into the modular screen so players can save and continue from the results view.
+
+**Known Issues / To-Do:**
+- Shared AI request helper remains a future improvement; the recap component still calls `callAI` directly.
+- Consider surfacing storyline names in the summary once that data is readily available to the component.
+
+**Next Steps / Recommendations:**
+- Continue extracting remaining inline screens (career history, relationships) into dedicated components.
+- Factor out the repeated icon components so they can be shared across screens without duplication.
