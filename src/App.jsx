@@ -24,6 +24,7 @@ import AssistantModal from './components/AssistantModal';
 import BookingScreen from './components/BookingScreen';
 import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
+import ShowResults from './components/ShowResults';
 import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
@@ -77,12 +78,6 @@ const RosterIcon = () => (
 const XCircleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
     <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.707-11.707a1 1 0 0 0-1.414-1.414L10 8.586 7.707 6.293a1 1 0 0 0-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 1 0 1.414 1.414L10 11.414l2.293 2.293a1 1 0 0 0 1.414-1.414L11.414 10l2.293-2.293Z" clipRule="evenodd" />
-  </svg>
-);
-
-const StarIcon = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={props.className || "w-5 h-5 text-yellow-400"}>
-    <path fillRule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.83 4.401 4.79 1.149c.82.198 1.135 1.106.546 1.691l-3.473 3.385 1.03 4.88c.174.82-.716 1.459-1.442 1.053L10 18.273l-4.32 2.271c-.726.406-1.616-.234-1.442-1.053l1.03-4.88L1.873 10.124c-.589-.586-.274-1.493.546-1.691l4.79-1.149 1.83-4.401Z" clipRule="evenodd" />
   </svg>
 );
 
@@ -150,8 +145,7 @@ function App() {
   const [participantResults, setParticipantResults] = useState([]);
 
   // --- Show Results State ---
-  const [showRecap, setShowRecap] = useState("");
-  const [showRating, setShowRating] = useState(0);
+  const [showResultsData, setShowResultsData] = useState(null);
 
   // --- Storyline State ---
   const [showStorylineModal, setShowStorylineModal] = useState(false);
@@ -743,6 +737,7 @@ const handleGetAIAdvice = async () => {
   const handleRunShow = async () => {
     setGameState('BUSY');
     setLoadingMessage('Calculating segment ratings...');
+    setShowResultsData(null);
 
     try {
       let ratedSegments = [];
@@ -777,7 +772,6 @@ const handleGetAIAdvice = async () => {
       }
 
       const finalShowRating = totalWeight > 0 ? Math.floor(totalWeightedRating / totalWeight) : 0;
-      setShowRating(finalShowRating);
 
       setLoadingMessage('Logging career events...');
       await logCareerEvents(ratedSegments, finalShowRating);
@@ -785,30 +779,16 @@ const handleGetAIAdvice = async () => {
       setLoadingMessage('Simulating backstage changes...');
       await runShowSimulation(ratedSegments, currentShow);
 
-      setLoadingMessage('Generating show recap...');
-      const recapText = await generateShowRecap(currentShow, ratedSegments, finalShowRating);
-      setShowRecap(recapText);
+      setLoadingMessage('Preparing show recap...');
 
-      setLoadingMessage('Saving show results...');
-      const showRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_shows'), currentShow.id);
-
-      const showUpdateData = {
-        status: "Complete",
+      setShowResultsData({
+        id: currentShow.id,
+        eventName: currentShow.eventName,
+        date: activeSave.currentDate,
+        overallRating: finalShowRating,
         segments: ratedSegments,
-        rating: finalShowRating,
-        recap: recapText
-      };
-
-      await setDoc(showRef, showUpdateData, { merge: true });
-
-      setGameData(prevData => ({
-        ...prevData,
-        save_shows: prevData.save_shows.map(show =>
-          show.id === currentShow.id
-            ? { ...show, ...showUpdateData }
-            : show
-        )
-      }));
+        recap: null
+      });
 
       setGameState('SHOW_RESULTS');
 
@@ -819,42 +799,51 @@ const handleGetAIAdvice = async () => {
     }
   };
 
-  const generateShowRecap = async (show, ratedSegments, rating) => {
-    console.log(`AI Engine: Generating recap for ${show.eventName}`);
-    setLoadingMessage(`Generating show recap for ${show.eventName}...`);
+  const handleRecapGenerated = async (recapText) => {
+    const currentResults = showResultsData;
+    if (!currentResults || currentResults.recap) {
+      return;
+    }
 
-    const cardForAI = ratedSegments
-      .filter(s => s)
-      .map((s, index) => {
-        const participants = s.participants.map(p => p.name).join(' vs. ');
-        const storyline = s.storylineId ? gameData.save_storylines.find(story => story.id === s.storylineId) : null;
-        const storylineContext = storyline ? ` (Storyline: ${storyline.name})` : "";
-        const ratingContext = `(Rating: ${s.rating}/100)`;
+    setShowResultsData(prev => prev ? { ...prev, recap: recapText } : prev);
 
-        if (s.type === 'Match') {
-          const winner = s.winnerId ? s.participants.find(p => p.id === s.winnerId)?.name : 'N/A';
-          const result = winner !== 'N/A' ? ` (Winner: ${winner})` : " (Result: Draw/No Contest)";
-          return `${index + 1}. Match${storylineContext}: ${participants}${result} ${ratingContext}`;
-        } else {
-          return `Segment ${index + 1} (Angle)${storylineContext}: ${s.participants.map(p => p.name).join(', ')} ${ratingContext}`;
-        }
-      }).join('\n');
+    if (!db || !userId || !appId || !activeSave || !currentShow) {
+      return;
+    }
 
-    const payload = {
-      showName: show.eventName,
-      overallRating: rating,
-      segments: ratedSegments.map(s => s ? {
-        ...s,
-        participants: s.participants.map(p => ({ id: p.id, name: p.name }))
-      } : null)
+    const showRef = doc(
+      db,
+      paths.playerSaveCollection(appId, userId, activeSave.id, 'save_shows'),
+      currentResults.id
+    );
+
+    const showUpdateData = {
+      status: "Complete",
+      segments: currentResults.segments,
+      rating: currentResults.overallRating,
+      recap: recapText
     };
 
     try {
-      const result = await callAI('show-recap', payload);
-      return result.text || "An error occurred while generating the show recap. The show is still saved.";
+      await setDoc(showRef, showUpdateData, { merge: true });
+
+      setGameData(prevData => {
+        const existingShows = prevData.save_shows || [];
+        const updatedShows = existingShows.some(show => show.id === currentResults.id)
+          ? existingShows.map(show =>
+              show.id === currentResults.id
+                ? { ...show, ...showUpdateData }
+                : show
+            )
+          : [...existingShows, { ...currentShow, ...showUpdateData }];
+
+        return {
+          ...prevData,
+          save_shows: updatedShows
+        };
+      });
     } catch (error) {
-      console.error("Error generating AI recap: ", error);
-      return "An error occurred while generating the show recap. The show is still saved.";
+      console.error("Error saving show recap:", error);
     }
   };
 
@@ -1579,53 +1568,6 @@ const handleGetAIAdvice = async () => {
     );
   };
 
-  const renderShowResultsScreen = () => {
-    return (
-      <div className="max-w-4xl mx-auto p-4 md:p-8 text-white">
-        <div className="p-4 bg-gray-800 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Show Results: {currentShow.eventName}</h1>
-              <p className="text-indigo-300">
-                {activeSave.currentDate.toDate().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Overall Rating</p>
-              <p className="text-4xl font-bold text-yellow-400 flex items-center">
-                <StarIcon className="w-8 h-8 mr-1" />
-                {showRating}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg min-h-[200px]">
-          <h2 className="text-2xl font-semibold mb-4 text-white">Dirt Sheet Recap</h2>
-          {showRecap ? (
-            <p className="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed">
-              {showRecap}
-            </p>
-          ) : (
-            <div className="flex items-center justify-center p-8">
-              <LoadingIcon />
-              <span className="ml-3 text-lg">Generating AI recap...</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={handleNextDay}
-            className="px-12 py-4 bg-green-600 text-white text-lg font-bold rounded-lg shadow-lg hover:bg-green-500 transition-all"
-          >
-            Continue (Next Day)
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   const renderCareerHistoryScreen = () => {
     if (!viewingWrestler || !gameData.save_career_events) return renderLoadingScreen();
 
@@ -1972,7 +1914,14 @@ const handleGetAIAdvice = async () => {
             case 'ROSTER_SCREEN':
               return <RosterScreen />;
             case 'SHOW_RESULTS':
-              return renderShowResultsScreen();
+              return (
+                <ShowResults
+                  show={showResultsData}
+                  onBackToDashboard={() => setGameState('IN_GAME')}
+                  onContinue={handleNextDay}
+                  onRecapGenerated={handleRecapGenerated}
+                />
+              );
             case 'STORYLINE_SCREEN':
               return (
                 <StorylineScreen
