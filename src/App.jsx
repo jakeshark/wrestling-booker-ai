@@ -26,6 +26,7 @@ import RosterScreen from './components/RosterScreen';
 import StorylineScreen from './components/StorylineScreen';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
+import paths from './utils/firestorePaths';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -285,7 +286,7 @@ function App() {
   // --- Dataset Seeder ---
   const seedDefaultDataset = async (db, userId, appId) => {
     const datasetId = 'default-fiction';
-    const datasetRef = doc(db, `/artifacts/${appId}/public/data/datasets`, datasetId);
+    const datasetRef = doc(db, paths.publicDataCollection(appId, 'datasets'), datasetId);
 
     try {
       const docSnap = await getDoc(datasetRef);
@@ -303,7 +304,7 @@ function App() {
         createdAt: Timestamp.now()
       });
 
-      const companyRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_companies`));
+      const companyRef = doc(collection(db, paths.publicDataCollection(appId, 'dataset_companies')));
       const companyId = companyRef.id;
       batch.set(companyRef, {
         datasetId: datasetId,
@@ -330,19 +331,19 @@ function App() {
 
       const wrestlerRefs = {};
       for (const wrestler of wrestlers) {
-        const wrestlerRef = doc(collection(db, `/artifacts/${appId}/public/data/dataset_wrestlers`));
+        const wrestlerRef = doc(collection(db, paths.publicDataCollection(appId, 'dataset_wrestlers')));
         wrestlerRefs[wrestler.name] = wrestlerRef.id;
         batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
       }
 
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
         datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
       });
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_titles`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
         datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
       });
 
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_tv_shows`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_tv_shows'))), {
         datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
       });
 
@@ -354,7 +355,7 @@ function App() {
         if (i === 7) { tier = "Major_Event"; name = "Summer Scorcher"; }
         if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
 
-        batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_events`)), {
+        batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_events'))), {
           datasetId: datasetId,
           companyId: companyId,
           month: i + 1,
@@ -363,7 +364,7 @@ function App() {
         });
       }
 
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_relationships'))), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
         personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
@@ -371,7 +372,7 @@ function App() {
         status: 'Strongly Dislike',
         notes: "Real-life rivalry from their training days."
       });
-      batch.set(doc(collection(db, `/artifacts/${appId}/public/data/dataset_relationships`)), {
+      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_relationships'))), {
         datasetId: datasetId,
         personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
         personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
@@ -390,7 +391,7 @@ function App() {
 
   const fetchDatasets = async (db, userId, appId) => {
     try {
-      const q = query(collection(db, `/artifacts/${appId}/public/data/datasets`));
+      const q = query(collection(db, paths.publicDataCollection(appId, 'datasets')));
       const querySnapshot = await getDocs(q);
       const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setDatasets(datasetsData);
@@ -402,7 +403,7 @@ function App() {
   const fetchPlayerSaves = async (db, userId, appId) => {
     if (!userId) return;
     try {
-      const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`));
+      const q = query(collection(db, paths.playerSavesCollection(appId, userId)));
       const querySnapshot = await getDocs(q);
       const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPlayerSaves(savesData);
@@ -428,7 +429,7 @@ function App() {
         playerCompanyId: null
       };
 
-      const newSaveRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves`), newSaveData);
+      const newSaveRef = await addDoc(collection(db, paths.playerSavesCollection(appId, userId)), newSaveData);
       const newSaveId = newSaveRef.id;
 
       const batch = writeBatch(db);
@@ -440,14 +441,14 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const q = query(collection(db, paths.publicDataCollection(appId, datasetCollectionName)), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
           const oldDocId = docSnap.id;
           const docData = docSnap.data();
 
-          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          const newDocRef = doc(collection(db, paths.playerSaveCollection(appId, userId, newSaveId, saveCollectionName)));
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
@@ -465,7 +466,7 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const q = query(collection(db, `/artifacts/${appId}/public/data/${datasetCollectionName}`), where("datasetId", "==", datasetId));
+        const q = query(collection(db, paths.publicDataCollection(appId, datasetCollectionName)), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
@@ -495,7 +496,7 @@ function App() {
             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
 
-          const newDocRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${newSaveId}/${saveCollectionName}`));
+          const newDocRef = doc(collection(db, paths.playerSaveCollection(appId, userId, newSaveId, saveCollectionName)));
           batch.set(newDocRef, newDocData);
         }
       }
@@ -521,7 +522,7 @@ function App() {
     setLoadingMessage('Loading your save game...');
 
     try {
-      const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, saveId);
+      const saveRef = doc(db, paths.playerSavesCollection(appId, userId), saveId);
       const saveSnap = await getDoc(saveRef);
 
       if (!saveSnap.exists()) {
@@ -534,7 +535,7 @@ function App() {
       let loadedGameData = {};
 
       for (const collectionName of SAVE_COLLECTION_NAMES) {
-        const q = query(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/${collectionName}`));
+        const q = query(collection(db, paths.playerSaveCollection(appId, userId, saveId, collectionName)));
         const querySnapshot = await getDocs(q);
 
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -574,7 +575,7 @@ function App() {
       const nextDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
       const newTimestamp = Timestamp.fromDate(nextDate);
 
-      const saveRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves`, activeSave.id);
+      const saveRef = doc(db, paths.playerSavesCollection(appId, userId), activeSave.id);
       await setDoc(saveRef, {
         currentDate: newTimestamp,
         lastPlayed: Timestamp.now()
@@ -636,7 +637,7 @@ function App() {
       replyOptions: replyOptions
     };
 
-    const messagesRef = collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${saveId}/save_messages`);
+    const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, saveId, 'save_messages'));
     const newDocRef = await addDoc(messagesRef, messageData);
 
     const newMessage = { id: newDocRef.id, ...messageData };
@@ -788,7 +789,7 @@ const handleGetAIAdvice = async () => {
       setShowRecap(recapText);
 
       setLoadingMessage('Saving show results...');
-      const showRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_shows`, currentShow.id);
+      const showRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_shows'), currentShow.id);
 
       const showUpdateData = {
         status: "Complete",
@@ -839,7 +840,6 @@ const handleGetAIAdvice = async () => {
       }).join('\n');
 
     const payload = {
-      type: 'show-recap',
       showName: show.eventName,
       overallRating: rating,
       segments: ratedSegments.map(s => s ? {
@@ -849,17 +849,7 @@ const handleGetAIAdvice = async () => {
     };
 
     try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`API call failed with status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      const result = await callAI('show-recap', payload);
       return result.text || "An error occurred while generating the show recap. The show is still saved.";
     } catch (error) {
       console.error("Error generating AI recap: ", error);
@@ -989,7 +979,7 @@ const handleGetAIAdvice = async () => {
 
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
-          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_wrestlers`, id);
+          const docRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_wrestlers'), id);
           batch.update(docRef, { morale: wrestler.morale });
         });
         updatesMade = true;
@@ -997,7 +987,7 @@ const handleGetAIAdvice = async () => {
 
       if (storylineUpdates.size > 0) {
         storylineUpdates.forEach((storyline, id) => {
-          const docRef = doc(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`, id);
+          const docRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_storylines'), id);
           batch.update(docRef, { heat: storyline.heat });
         });
         updatesMade = true;
@@ -1086,7 +1076,7 @@ const handleGetAIAdvice = async () => {
             showId: currentShow.id
           };
 
-          const newEventRef = doc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_career_events`));
+          const newEventRef = doc(collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_career_events')));
           batch.set(newEventRef, careerEventData);
 
           newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
@@ -1217,7 +1207,7 @@ const handleGetAIAdvice = async () => {
         beats: []
       };
 
-      const docRef = await addDoc(collection(db, `/artifacts/${appId}/users/${userId}/player_saves/${activeSave.id}/save_storylines`), newStorylineData);
+      const docRef = await addDoc(collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_storylines')), newStorylineData);
 
       const newStoryline = { id: docRef.id, ...newStorylineData };
 
