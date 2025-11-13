@@ -29,6 +29,12 @@ export const playerRoot = (appId, userId) =>
 export const playerSaveCollection = (appId, userId) =>
   `${playerRoot(appId, userId)}/player_saves`;
 
+export const playerSaveCollection = (appId, userId) =>
+  `${playerRoot(appId, userId)}/player_saves`;
+
+// 🔧 NEW: alias for older code that expects “playerSavesCollection”
+export const playerSavesCollection = playerSaveCollection;
+
 export const playerSaveDoc = (appId, userId, saveId) =>
   `${playerSaveCollection(appId, userId)}/${saveId}`;
 
@@ -78,6 +84,7 @@ export const paths = {
 
   // player save side
   playerSaveCollection,
+  playerSavesCollection, // 🔧 NEW
   playerSaveDoc,
   wrestlersCol,
   messagesCol,
