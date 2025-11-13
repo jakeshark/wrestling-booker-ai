@@ -861,8 +861,8 @@ const handleGetAIAdvice = async () => {
 
     setAssistantResponse(data.text || "The AI assistant couldn't come up with a response. Try rephrasing your question.");
   } catch (error) {
-    console.error("Error getting AI advice: ", error);
-    setAssistantResponse("There was an error connecting to the AI assistant. Please try again.");
+    console.error('[Assistant] Error getting AI advice:', error);
+    setAssistantResponse('There was an error connecting to the AI assistant. Please try again.');
   } finally {
     setIsAssistantLoading(false);
   }
