@@ -514,6 +514,31 @@ function App() {
     }
   };
 
+  const getTimestampMillis = (timestamp) => {
+    if (timestamp && typeof timestamp.toMillis === 'function') {
+      try {
+        return timestamp.toMillis();
+      } catch (error) {
+        console.warn('Failed to read timestamp millis', error);
+        return 0;
+      }
+    }
+
+    return 0;
+  };
+
+  const getLastPlayedLabel = (timestamp) => {
+    if (timestamp && typeof timestamp.toDate === 'function') {
+      try {
+        return timestamp.toDate().toLocaleString();
+      } catch (error) {
+        console.warn('Failed to format lastPlayed timestamp', error);
+      }
+    }
+
+    return 'Never';
+  };
+
   // --- New Game ---
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
@@ -1450,13 +1475,15 @@ const handleGetAIAdvice = async () => {
           ) : (
             <div className="space-y-3">
               {playerSaves
-                .sort((a, b) => b.lastPlayed.toMillis() - a.lastPlayed.toMillis())
+                .slice()
+                .sort((a, b) => getTimestampMillis(b.lastPlayed) - getTimestampMillis(a.lastPlayed))
                 .map(save => {
                   const deletingThisSave = isDeletingSave && deleteTargetSaveId === save.id;
                   const currentDateLabel =
                     typeof save.currentDate?.toDate === 'function'
                       ? save.currentDate.toDate().toLocaleDateString()
                       : 'Unknown Date';
+                  const lastPlayedLabel = getLastPlayedLabel(save.lastPlayed);
 
                   return (
                     <div
@@ -1474,7 +1501,7 @@ const handleGetAIAdvice = async () => {
                           In-Game Date: {currentDateLabel}
                         </p>
                         <p className="text-gray-400 text-xs">
-                          Last Played: {save.lastPlayed.toDate().toLocaleString()}
+                          Last Played: {lastPlayedLabel}
                         </p>
                       </button>
                       <button
