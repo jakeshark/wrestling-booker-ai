@@ -1,9 +1,88 @@
 import { addDoc, collection, doc, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
-import { saveJournalEntries as saveJournalEntriesPath } from './firestorePaths';
+import paths, { saveJournalEntries as saveJournalEntriesPath } from './firestorePaths';
 
 export const journalPaths = {
   saveJournalEntries: (appId, userId, saveId) => saveJournalEntriesPath(appId, userId, saveId)
 };
+
+/**
+ * Minimal journal entry writer.
+ * @param {object} db
+ * @param {string} appId
+ * @param {string} userId
+ * @param {string} saveId
+ * @param {object} entry   See schema below.
+ * @returns {Promise<string>} new doc id
+ */
+export async function addJournalEntry(db, appId, userId, saveId, entry) {
+  const colRef = collection(db, paths.journal(appId, userId, saveId));
+  const docRef = await addDoc(colRef, {
+    createdAt: Timestamp.now(),
+    status: 'open',     // 'open' | 'completed' | 'cancelled' | 'broken'
+    source: 'message',  // origin: 'message' for now
+    ...entry
+  });
+  return docRef.id;
+}
+
+/**
+ * Heuristic extractor that tries to detect a promise/commitment in free text.
+ * Returns null if nothing confident enough is found.
+ * VERY conservative—only fires on obvious phrases.
+ */
+export function extractPromiseFromReply({ replyText, wrestlerName, gameDateISO }) {
+  if (!replyText) return null;
+  const text = replyText.trim().toLowerCase();
+
+  // Quick “commitment” cues
+  const commitCues = [
+    /\bi(?:'| wi)ll\b/,            // "I'll", "I will"
+    /\bwe(?:'| wi)ll\b/,           // "we'll", "we will"
+    /\bpromise\b/,
+    /\bcommit\b/,
+    /\bguarantee\b/,
+    /\b(count|hold)\s+me\s+to\b/
+  ];
+
+  const soundsCommitted = commitCues.some((rx) => rx.test(text));
+  if (!soundsCommitted) return null;
+
+  // Rough topic sniffers (extendable)
+  let promiseType = null;
+  if (/\b(title|championship)\b/.test(text)) promiseType = 'title_program';
+  else if (/\bpush\b/.test(text)) promiseType = 'push';
+  else if (/\b(hire|sign)\b/.test(text)) promiseType = 'talent_signing';
+  else if (/\b(time\s*off|vacation|leave)\b/.test(text)) promiseType = 'grant_time_off';
+  else if (/\bmatch\b/.test(text)) promiseType = 'book_match';
+  else if (/\b(feud|story( ?line)?)\b/.test(text)) promiseType = 'storyline_program';
+  else promiseType = 'unspecified';
+
+  // Due-date sniffers (very conservative)
+  // Examples it will catch: "by May 2026", "before 2026", "this summer", "next month"
+  // For now, we store a text hint; later we can NLP it to a real date.
+  let dueHint = null;
+  const byBefore = text.match(/\bby\s+([a-z]+\s+\d{4}|\d{4})/) || text.match(/\bbefore\s+(\d{4})/);
+  if (byBefore) dueHint = byBefore[0];
+
+  const seasonal = text.match(/\b(this|next)\s+(spring|summer|fall|autumn|winter|month|quarter|year)\b/);
+  if (!dueHint && seasonal) dueHint = seasonal[0];
+
+  // Build the entry payload
+  return {
+    kind: 'promise',
+    who: wrestlerName || 'Unknown',
+    textOriginal: replyText,
+    promise: {
+      type: promiseType,          // e.g., 'title_program'
+      dueHint: dueHint || null,   // store raw text like "by May 2026"
+      madeOn: gameDateISO || null // string ISO from in-game date if available
+    },
+    // lightweight audit anchor so we can link the originating thread later if needed
+    anchors: {
+      context: 'message_reply',
+    }
+  };
+}
 
 const ensureArray = (value) => {
   if (Array.isArray(value)) return value.filter((item) => item !== undefined && item !== null);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, doc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import { callAI } from '../utils/aiClient';
 import paths from '../utils/firestorePaths';
+import { addJournalEntry, extractPromiseFromReply } from "../utils/journal";
 
 const buildMessageContacts = (messages, wrestlers) => {
   if (!messages) return [];
@@ -290,6 +291,21 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         ...prevData,
         save_messages: [...(prevData.save_messages || []), playerMsgWithId]
       }));
+
+      try {
+        const gameDateISO = activeSave?.currentDate?.toDate?.().toISOString?.() ?? null;
+        const maybeEntry = extractPromiseFromReply({
+          replyText: trimmedReply,
+          wrestlerName: contact?.name || selectedContact?.name || null,
+          gameDateISO
+        });
+
+        if (maybeEntry) {
+          await addJournalEntry(db, appId, userId, activeSave.id, maybeEntry);
+        }
+      } catch (e) {
+        console.warn('Journal capture failed (non-fatal):', e);
+      }
 
       const wrestler = contact;
       const latestTopicMessage = [...conversationMessages]
