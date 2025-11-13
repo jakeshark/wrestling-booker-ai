@@ -4,7 +4,7 @@
 
 // Root for public data
 export const publicRoot = (appId) =>
-  `/artifacts/${appId}/users/public/data`; // <-- if your public path is different, adjust this
+  `/artifacts/${appId}/public/data`;
 
 // Generic helper – this is what App.jsx expects to call as a FUNCTION.
 // Example usage: publicDataCollection(appId, 'dataset_wrestlers')
