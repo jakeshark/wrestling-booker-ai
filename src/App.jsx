@@ -785,12 +785,24 @@ function App() {
   const runSimulationAndEvents = async (saveId) => {
     console.log("Sim Engine: Running daily simulation...");
 
-    const wrestlers = gameData.save_wrestlers;
-    if (!wrestlers || wrestlers.length === 0) return;
+    const wrestlers = (gameData.save_wrestlers || []).filter(
+      (w) => w && w.id && w.name
+    );
+
+    if (wrestlers.length === 0) {
+      console.warn("Sim Engine: no wrestlers available for events");
+      return;
+    }
 
     if (Math.random() < 0.25) {
       console.log("Sim Engine: Event triggered!");
       const randomWrestler = wrestlers[Math.floor(Math.random() * wrestlers.length)];
+
+      if (!randomWrestler) {
+        console.warn("Sim Engine: Unable to select a valid wrestler for event");
+        return;
+      }
+
       const topics = ['unhappy_booking', 'excited_push', 'request_time_off', 'contract_renewal', 'creative_pitch'];
       const randomTopic = topics[Math.floor(Math.random() * topics.length)];
       await generateAndSaveMessage(saveId, randomWrestler, randomTopic);
@@ -798,49 +810,54 @@ function App() {
   };
 
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
-  console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
-  setLoadingMessage(`Generating event for ${wrestler.name}...`);
+    if (!wrestler || !wrestler.id || !wrestler.name) {
+      console.warn("AI Engine: Tried to generate message for invalid wrestler:", wrestler);
+      return;
+    }
 
-  try {
-    const result = await callAI('wrestler-message', {
-      wrestler: {
-        id: wrestler.id,
-        name: wrestler.name,
-        disposition: wrestler.disposition,
-        gimmick: wrestler.gimmick,
-        morale: wrestler.morale
-      },
-      topic
-    });
+    console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
+    setLoadingMessage(`Generating event for ${wrestler.name}...`);
 
-    const messageText = result.message;
-    const replyOptions = result.replyOptions || [];
+    try {
+      const result = await callAI('wrestler-message', {
+        wrestler: {
+          id: wrestler.id,
+          name: wrestler.name,
+          disposition: wrestler.disposition,
+          gimmick: wrestler.gimmick,
+          morale: wrestler.morale
+        },
+        topic
+      });
 
-    const messageData = {
-      senderId: wrestler.id,
-      senderName: wrestler.name,
-      recipientId: 'booker', // so we can isolate convo
-      body: messageText,
-      timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
-      type: 'Text',
-      isRead: false,
-      replyOptions: replyOptions,
-      canReply: true,
-      topic
-    };
+      const messageText = result.message;
+      const replyOptions = result.replyOptions || [];
 
-    const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, saveId, 'save_messages'));
-    const newDocRef = await addDoc(messagesRef, messageData);
+      const messageData = {
+        senderId: wrestler.id,
+        senderName: wrestler.name,
+        recipientId: 'booker', // so we can isolate convo
+        body: messageText,
+        timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
+        type: 'Text',
+        isRead: false,
+        replyOptions: replyOptions,
+        canReply: true,
+        topic
+      };
 
-    const newMessage = { id: newDocRef.id, ...messageData };
-    setGameData(prevData => ({
-      ...prevData,
-      save_messages: [...(prevData.save_messages || []), newMessage]
-    }));
-  } catch (error) {
-    console.error("Error generating AI message: ", error);
-  }
-};
+      const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, saveId, 'save_messages'));
+      const newDocRef = await addDoc(messagesRef, messageData);
+
+      const newMessage = { id: newDocRef.id, ...messageData };
+      setGameData(prevData => ({
+        ...prevData,
+        save_messages: [...(prevData.save_messages || []), newMessage]
+      }));
+    } catch (error) {
+      console.error("Error generating AI message: ", error);
+    }
+  };
 
  // --- AI Assistant ---
 const handleGetAIAdvice = async () => {
