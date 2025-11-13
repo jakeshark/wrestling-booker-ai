@@ -3,15 +3,19 @@
 // -------- Public dataset paths (used for seeding default data) --------
 
 // Root for public data
+// NOTE: This matches the structure Codex refactored to.
+// If your actual Firestore layout is different, we can adjust later.
+// For now, this keeps the app building and running.
 export const publicRoot = (appId) =>
-  `/artifacts/${appId}/public/data`;
+  `/artifacts/${appId}/users/public/data`;
 
 // Generic helper – this is what App.jsx expects to call as a FUNCTION.
-// Example usage: publicDataCollection(appId, 'dataset_wrestlers')
+// Example usage: publicDataCollection(appId, 'datasets')
+// or publicDataCollection(appId, 'datasets/default-fiction')
 export const publicDataCollection = (appId, subPath) =>
   subPath ? `${publicRoot(appId)}/${subPath}` : publicRoot(appId);
 
-// More specific dataset helpers (kept for clarity / future use)
+// More specific dataset helpers (optional, but kept for clarity)
 export const datasetWrestlersCol = (appId) =>
   `${publicRoot(appId)}/dataset_wrestlers`;
 
@@ -26,13 +30,11 @@ export const datasetShowsCol = (appId) =>
 export const playerRoot = (appId, userId) =>
   `/artifacts/${appId}/users/${userId}`;
 
+// Canonical version
 export const playerSaveCollection = (appId, userId) =>
   `${playerRoot(appId, userId)}/player_saves`;
 
-export const playerSaveCollection = (appId, userId) =>
-  `${playerRoot(appId, userId)}/player_saves`;
-
-// 🔧 NEW: alias for older code that expects “playerSavesCollection”
+// 🔧 Alias for older code that expects “playerSavesCollection”
 export const playerSavesCollection = playerSaveCollection;
 
 export const playerSaveDoc = (appId, userId, saveId) =>
@@ -84,7 +86,7 @@ export const paths = {
 
   // player save side
   playerSaveCollection,
-  playerSavesCollection, // 🔧 NEW
+  playerSavesCollection,
   playerSaveDoc,
   wrestlersCol,
   messagesCol,
