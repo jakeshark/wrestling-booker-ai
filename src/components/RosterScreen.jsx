@@ -24,7 +24,25 @@ const RosterScreen = () => {
     }
   };
 
-  const sortedWrestlers = [...wrestlers].sort((a, b) => a.name.localeCompare(b.name));
+  const rosterList = Array.isArray(wrestlers) ? wrestlers : [];
+  const cleanedWrestlers = rosterList.filter(
+    (w) => w && typeof w.name === 'string' && w.name.trim().length > 0
+  );
+
+  if (cleanedWrestlers.length !== rosterList.length) {
+    console.warn(
+      'RosterScreen: Dropped',
+      rosterList.length - cleanedWrestlers.length,
+      'invalid roster entries'
+    );
+  }
+
+  const safeName = (wrestler) =>
+    wrestler && typeof wrestler.name === 'string' ? wrestler.name : '';
+
+  const sortedWrestlers = [...cleanedWrestlers].sort((a, b) =>
+    safeName(a).localeCompare(safeName(b))
+  );
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
