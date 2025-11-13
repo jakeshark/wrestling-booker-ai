@@ -43,7 +43,16 @@ const SegmentModal = ({ open, segment, onChange, onSave, onCancel }) => {
     }
 
     const participants = segment?.participants || [];
-    const results = wrestlers
+    const results = (wrestlers || [])
+      .filter(w => {
+        if (!w || typeof w.name !== 'string') {
+          console.warn('Skipping malformed wrestler in search:', w);
+          return false;
+        }
+
+        const name = w.name.trim();
+        return name !== '';
+      })
       .filter(w => w.name.toLowerCase().includes(query))
       .filter(w => !participants.some(p => p.id === w.id))
       .slice(0, 5);

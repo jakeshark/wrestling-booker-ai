@@ -1372,12 +1372,22 @@ const handleGetAIAdvice = async () => {
 
   const handleStorylineParticipantSearch = (query) => {
     setStorylineParticipantSearch(query);
-    if (query.length < 1) {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.length < 1) {
       setStorylineParticipantResults([]);
       return;
     }
-    const results = gameData.save_wrestlers
-      .filter(w => w.name.toLowerCase().includes(query.toLowerCase()))
+    const results = (gameData.save_wrestlers || [])
+      .filter(w => {
+        if (!w || typeof w.name !== 'string') {
+          console.warn('Skipping malformed wrestler in search:', w);
+          return false;
+        }
+
+        const name = w.name.trim();
+        return name !== '';
+      })
+      .filter(w => w.name.toLowerCase().includes(normalizedQuery))
       .filter(w => !storylineFormData.participants.find(p => p.id === w.id));
     setStorylineParticipantResults(results.slice(0, 5));
   };
