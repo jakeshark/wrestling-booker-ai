@@ -1,6 +1,28 @@
 // src/utils/firestorePaths.js
 
-// ── Base path builders ─────────────────────────────────────────────────────────
+// -------- Public dataset paths (used for seeding default data) --------
+
+// Root for public data
+export const publicRoot = (appId) =>
+  `/artifacts/${appId}/public/data`;
+
+// Generic helper – this is what App.jsx expects to call as a FUNCTION.
+// Example usage: publicDataCollection(appId, 'dataset_wrestlers')
+export const publicDataCollection = (appId, subPath) =>
+  subPath ? `${publicRoot(appId)}/${subPath}` : publicRoot(appId);
+
+// More specific dataset helpers (kept for clarity / future use)
+export const datasetWrestlersCol = (appId) =>
+  `${publicRoot(appId)}/dataset_wrestlers`;
+
+export const datasetCompaniesCol = (appId) =>
+  `${publicRoot(appId)}/dataset_companies`;
+
+export const datasetShowsCol = (appId) =>
+  `${publicRoot(appId)}/dataset_shows`;
+
+// -------- Player save paths (per-user game state) --------
+
 export const playerRoot = (appId, userId) =>
   `/artifacts/${appId}/users/${userId}`;
 
@@ -10,7 +32,7 @@ export const playerSaveCollection = (appId, userId) =>
 export const playerSaveDoc = (appId, userId, saveId) =>
   `${playerSaveCollection(appId, userId)}/${saveId}`;
 
-// ── Save-scoped collections ────────────────────────────────────────────────────
+// Save-scoped collections
 export const wrestlersCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_wrestlers`;
 
@@ -29,27 +51,22 @@ export const careerEventsCol = (appId, userId, saveId) =>
 export const journalEntriesCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_journal_entries`;
 
-// ── Aliases expected by older modules (journal.js, deleteSave.js, etc.) ────────
-
-// journal.js uses this helper name:
+// Alias expected by journal.js
 export const saveJournalEntries = (appId, userId, saveId) =>
   journalEntriesCol(appId, userId, saveId);
 
-// small namespace helper used by journal utils
-export const journal = {
-  entries: journalEntriesCol,
-};
+export const journal = { entries: journalEntriesCol };
 
-// deleteSave.js (and maybe other legacy code) still imports these:
-export const saveDoc         = playerSaveDoc;
-export const saveMessages    = messagesCol;
-export const saveWrestlers   = wrestlersCol;
-export const saveShows       = showsCol;
-export const saveStorylines  = storylinesCol;
-export const saveCareerEvents = careerEventsCol;
-
-// ── Aggregated default export (for `import paths, {...} from './firestorePaths'`) ─
+// A grouped object some callers import as `paths`
 export const paths = {
+  // public side
+  publicRoot,
+  publicDataCollection,
+  datasetWrestlersCol,
+  datasetCompaniesCol,
+  datasetShowsCol,
+
+  // player save side
   playerSaveCollection,
   playerSaveDoc,
   wrestlersCol,
@@ -58,14 +75,8 @@ export const paths = {
   storylinesCol,
   careerEventsCol,
   journalEntriesCol,
-  // legacy aliases:
-  saveDoc,
-  saveMessages,
-  saveWrestlers,
-  saveShows,
-  saveStorylines,
-  saveCareerEvents,
   journal,
 };
 
+// Default export to satisfy `import paths, { ... } from './firestorePaths'`
 export default paths;
