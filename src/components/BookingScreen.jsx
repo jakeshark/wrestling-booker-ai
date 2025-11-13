@@ -17,7 +17,7 @@ const BookingScreen = ({
 }) => {
   if (!currentShow) return null;
 
-  const formattedDate = currentDate
+  const formattedDate = typeof currentDate?.toDate === 'function'
     ? currentDate.toDate().toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
