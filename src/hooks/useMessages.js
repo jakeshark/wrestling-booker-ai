@@ -4,48 +4,111 @@ import { callAI } from '../utils/aiClient';
 import paths from '../utils/firestorePaths';
 import { addJournalEntry, extractPromiseFromReply } from "../utils/journal";
 
+const timestampToMillis = (timestamp) => {
+  if (!timestamp) return 0;
+  if (typeof timestamp === 'number') return timestamp;
+  if (typeof timestamp === 'string') {
+    const parsed = new Date(timestamp).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  if (typeof timestamp.toMillis === 'function') return timestamp.toMillis();
+  if (typeof timestamp.seconds === 'number') {
+    const nanos = typeof timestamp.nanoseconds === 'number' ? timestamp.nanoseconds : 0;
+    return (timestamp.seconds * 1000) + Math.floor(nanos / 1e6);
+  }
+  return 0;
+};
+
+const fallbackContactId = (msg) => msg?.senderId || msg?.senderName || 'unknown';
+const fallbackDisplayName = (msg) => msg?.senderName || 'Unknown';
+
+const resolveContactId = (msg) => {
+  if (!msg) return 'unknown';
+  if (msg.senderId && msg.senderId !== 'booker') return msg.senderId;
+  if (msg.recipientId && msg.recipientId !== 'booker') return msg.recipientId;
+  if (
+    msg.recipientName &&
+    (msg.senderId === 'booker' || (typeof msg.senderName === 'string' && msg.senderName.toLowerCase() === 'booker'))
+  ) {
+    return msg.recipientName;
+  }
+  return fallbackContactId(msg);
+};
+
+const resolveContactName = (msg, wrestlers) => {
+  if (!msg) return 'Unknown';
+  const contactId = resolveContactId(msg);
+  const wrestler = wrestlers.find(w => w.id === contactId);
+  if (wrestler) return wrestler.name;
+
+  if (msg.senderId && msg.senderId !== 'booker') {
+    return msg.senderName || fallbackDisplayName(msg);
+  }
+
+  if (msg.recipientId && msg.recipientId !== 'booker') {
+    return msg.recipientName || fallbackDisplayName(msg);
+  }
+
+  if (msg.recipientName && (msg.senderId === 'booker' || (msg.senderName || '').toLowerCase() === 'booker')) {
+    return msg.recipientName;
+  }
+
+  return fallbackDisplayName(msg);
+};
+
+const normalizeMessages = (rawMessages) => {
+  if (!Array.isArray(rawMessages)) return [];
+
+  return rawMessages.reduce((acc, msg) => {
+    if (!msg || typeof msg !== 'object') return acc;
+    if (!msg.senderId && !msg.senderName) return acc;
+
+    const normalizedMsg = { ...msg };
+
+    if (!normalizedMsg.type) {
+      normalizedMsg.type = 'Text';
+    }
+
+    if (!Array.isArray(normalizedMsg.replyOptions)) {
+      normalizedMsg.replyOptions = Array.isArray(msg.replyOptions) ? msg.replyOptions : [];
+    }
+
+    acc.push(normalizedMsg);
+    return acc;
+  }, []);
+};
+
 const buildMessageContacts = (messages, wrestlers) => {
-  if (!messages) return [];
+  if (!Array.isArray(messages) || messages.length === 0) return [];
   const contactsMap = new Map();
 
   for (const msg of messages) {
-    let otherId = null;
-    let otherName = null;
+    const otherId = resolveContactId(msg);
+    if (!otherId || otherId === 'booker') continue;
 
-    if (msg.senderId && msg.senderId !== 'booker') {
-      otherId = msg.senderId;
-    } else if (msg.recipientId && msg.recipientId !== 'booker') {
-      otherId = msg.recipientId;
-    }
+    const otherName = resolveContactName(msg, wrestlers);
+    const existing = contactsMap.get(otherId);
+    const msgMillis = timestampToMillis(msg.timestamp);
 
-    if (!otherId) continue;
-
-    const wrestler = wrestlers.find(w => w.id === otherId);
-    otherName = wrestler ? wrestler.name : (msg.senderName || 'Unknown');
-
-    if (!contactsMap.has(otherId)) {
+    if (!existing) {
       contactsMap.set(otherId, {
         id: otherId,
         name: otherName,
         latestTimestamp: msg.timestamp,
         latestSnippet: msg.body
       });
-    } else {
-      const existing = contactsMap.get(otherId);
-      if (msg.timestamp && existing.latestTimestamp && msg.timestamp.toMillis() > existing.latestTimestamp.toMillis()) {
-        contactsMap.set(otherId, {
-          ...existing,
-          latestTimestamp: msg.timestamp,
-          latestSnippet: msg.body
-        });
-      }
+    } else if (msgMillis > timestampToMillis(existing.latestTimestamp)) {
+      contactsMap.set(otherId, {
+        ...existing,
+        latestTimestamp: msg.timestamp,
+        latestSnippet: msg.body
+      });
     }
   }
 
-  return Array.from(contactsMap.values()).sort((a, b) => {
-    if (!a.latestTimestamp || !b.latestTimestamp) return 0;
-    return b.latestTimestamp.toMillis() - a.latestTimestamp.toMillis();
-  });
+  return Array.from(contactsMap.values()).sort((a, b) => (
+    timestampToMillis(b.latestTimestamp) - timestampToMillis(a.latestTimestamp)
+  ));
 };
 
 const detectToneFromReply = (text) => {
@@ -101,13 +164,22 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
   const [selectedReplyTone, setSelectedReplyTone] = useState(null);
   const [isSending, setIsSending] = useState(false);
 
+  const normalizedMessages = useMemo(() => (
+    normalizeMessages(gameData?.save_messages)
+  ), [gameData?.save_messages]);
+
+  useEffect(() => {
+    const rawMessages = Array.isArray(gameData?.save_messages) ? gameData.save_messages : [];
+    console.log(`Messages: loaded ${rawMessages.length} raw, ${normalizedMessages.length} usable after normalization`);
+  }, [gameData?.save_messages, normalizedMessages.length]);
+
   const contacts = useMemo(() => (
-    buildMessageContacts(gameData.save_messages || [], gameData.save_wrestlers || [])
-  ), [gameData.save_messages, gameData.save_wrestlers]);
+    buildMessageContacts(normalizedMessages, gameData.save_wrestlers || [])
+  ), [normalizedMessages, gameData.save_wrestlers]);
 
   const unreadMessages = useMemo(() => (
-    (gameData.save_messages || []).filter(msg => !msg.isRead).length
-  ), [gameData.save_messages]);
+    normalizedMessages.filter(msg => msg && !msg.isRead).length
+  ), [normalizedMessages]);
 
   useEffect(() => {
     if (contacts.length === 0) {
@@ -143,26 +215,17 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     const wrestlers = gameData.save_wrestlers || [];
     const wrestler = wrestlers.find(w => w.id === selectedContactId);
     if (wrestler) return wrestler;
+    const contact = contacts.find(c => c.id === selectedContactId);
+    if (contact) return { id: contact.id, name: contact.name };
     return { id: selectedContactId, name: 'Unknown Talent' };
-  }, [gameData.save_wrestlers, selectedContactId]);
+  }, [contacts, gameData.save_wrestlers, selectedContactId]);
 
   const conversationMessages = useMemo(() => {
     if (!selectedContactId) return [];
-    const allMsgs = gameData.save_messages || [];
-
-    return allMsgs
-      .filter(msg => {
-        if (msg.senderId === selectedContactId) return true;
-        if (msg.recipientId === selectedContactId) return true;
-        if (msg.senderId === selectedContactId && !msg.recipientId) return true;
-        return false;
-      })
-      .sort((a, b) => {
-        const aTime = a.timestamp ? a.timestamp.toMillis() : 0;
-        const bTime = b.timestamp ? b.timestamp.toMillis() : 0;
-        return aTime - bTime;
-      });
-  }, [gameData.save_messages, selectedContactId]);
+    return normalizedMessages
+      .filter(msg => resolveContactId(msg) === selectedContactId)
+      .sort((a, b) => timestampToMillis(a.timestamp) - timestampToMillis(b.timestamp));
+  }, [normalizedMessages, selectedContactId]);
 
   const latestThreadMessage = useMemo(() => (
     conversationMessages.length > 0
@@ -201,12 +264,14 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     setSelectedReplyTone(null);
     setIsSending(false);
 
-    const unreadCount = (gameData.save_messages || []).filter(msg => !msg.isRead).length;
+    const unreadCount = normalizedMessages.filter(msg => msg && !msg.isRead).length;
     if (!activeSave || !db || !appId || !userId || unreadCount === 0) return;
 
     setGameData(prevData => ({
       ...prevData,
-      save_messages: (prevData.save_messages || []).map(msg => ({ ...msg, isRead: true }))
+      save_messages: (prevData.save_messages || []).map(msg => (
+        msg && typeof msg === 'object' ? { ...msg, isRead: true } : msg
+      ))
     }));
 
     try {
@@ -214,7 +279,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_messages'));
 
       (gameData.save_messages || []).forEach(msg => {
-        if (!msg.isRead) {
+        if (msg && !msg.isRead && msg.id) {
           const docRef = doc(messagesRef, msg.id);
           batch.update(docRef, { isRead: true });
         }
@@ -224,7 +289,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     } catch (error) {
       console.error('Error marking messages as read: ', error);
     }
-  }, [activeSave, appId, db, gameData.save_messages, setGameData, userId]);
+  }, [activeSave, appId, db, gameData.save_messages, normalizedMessages, setGameData, userId]);
 
   const handleContactClick = useCallback((contactId) => {
     setSelectedContactId(contactId);
