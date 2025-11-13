@@ -7,7 +7,7 @@
 // If your actual Firestore layout is different, we can adjust later.
 // For now, this keeps the app building and running.
 export const publicRoot = (appId) =>
-  `/artifacts/${appId}/users/public/data`;
+  `/artifacts/${appId}/public/data`;
 
 // Generic helper – this is what App.jsx expects to call as a FUNCTION.
 // Example usage: publicDataCollection(appId, 'datasets')
