@@ -29,23 +29,26 @@ export const careerEventsCol = (appId, userId, saveId) =>
 export const journalEntriesCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_journal_entries`;
 
-// Alias expected by journal.js
+// ── Aliases expected by older modules (journal.js, deleteSave.js, etc.) ────────
+
+// journal.js uses this helper name:
 export const saveJournalEntries = (appId, userId, saveId) =>
   journalEntriesCol(appId, userId, saveId);
 
-// Small namespace helper (used by some callers)
+// small namespace helper used by journal utils
 export const journal = {
   entries: journalEntriesCol,
 };
 
-// ── Legacy-name aliases for older code (e.g., deleteSave.js) ──────────────────
-// Keep these until all imports are migrated to the new helpers.
-export const saveDoc       = playerSaveDoc;
-export const saveMessages  = messagesCol;
-export const saveWrestlers = wrestlersCol;
-export const saveShows     = showsCol;
+// deleteSave.js (and maybe other legacy code) still imports these:
+export const saveDoc         = playerSaveDoc;
+export const saveMessages    = messagesCol;
+export const saveWrestlers   = wrestlersCol;
+export const saveShows       = showsCol;
+export const saveStorylines  = storylinesCol;
+export const saveCareerEvents = careerEventsCol;
 
-// ── Aggregated default export (for callers using `import paths from ...`) ─────
+// ── Aggregated default export (for `import paths, {...} from './firestorePaths'`) ─
 export const paths = {
   playerSaveCollection,
   playerSaveDoc,
@@ -55,12 +58,13 @@ export const paths = {
   storylinesCol,
   careerEventsCol,
   journalEntriesCol,
-  // legacy aliases exposed on the object as well:
+  // legacy aliases:
   saveDoc,
   saveMessages,
   saveWrestlers,
   saveShows,
-  // mini-namespace
+  saveStorylines,
+  saveCareerEvents,
   journal,
 };
 
