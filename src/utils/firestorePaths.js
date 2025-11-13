@@ -4,7 +4,7 @@
 
 // Root for public data
 export const publicRoot = (appId) =>
-  `/artifacts/${appId}/public/data`;
+  `/artifacts/${appId}/users/public/data`; // <-- if your public path is different, adjust this
 
 // Generic helper – this is what App.jsx expects to call as a FUNCTION.
 // Example usage: publicDataCollection(appId, 'dataset_wrestlers')
@@ -51,6 +51,16 @@ export const careerEventsCol = (appId, userId, saveId) =>
 export const journalEntriesCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_journal_entries`;
 
+// -------- Alias exports to match older utility names --------
+
+// Used by deleteSave.js and possibly other helpers
+export const saveDoc = playerSaveDoc;
+export const saveMessages = messagesCol;
+export const saveWrestlers = wrestlersCol;
+export const saveShows = showsCol;
+export const saveStorylines = storylinesCol;
+export const saveCareerEvents = careerEventsCol;
+
 // Alias expected by journal.js
 export const saveJournalEntries = (appId, userId, saveId) =>
   journalEntriesCol(appId, userId, saveId);
@@ -75,6 +85,16 @@ export const paths = {
   storylinesCol,
   careerEventsCol,
   journalEntriesCol,
+
+  // alias helpers
+  saveDoc,
+  saveMessages,
+  saveWrestlers,
+  saveShows,
+  saveStorylines,
+  saveCareerEvents,
+  saveJournalEntries,
+
   journal,
 };
 
