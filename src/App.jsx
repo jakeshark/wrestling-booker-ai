@@ -508,7 +508,38 @@ function App() {
       const q = query(collection(db, paths.playerSavesCollection(appId, userId)));
       const querySnapshot = await getDocs(q);
       const savesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPlayerSaves(savesData);
+
+      const validSaves = savesData.filter(save => {
+        const hasIdentifier = (
+          (typeof save.saveName === 'string' && save.saveName.trim() !== '') ||
+          (typeof save.companyName === 'string' && save.companyName.trim() !== '') ||
+          Boolean(save.playerCompanyId)
+        );
+
+        const hasTimeline = (() => {
+          const timestampLike = (value) => {
+            if (!value) return false;
+            return (
+              typeof value.toDate === 'function' ||
+              typeof value.toMillis === 'function' ||
+              value instanceof Date ||
+              typeof value === 'number' ||
+              typeof value === 'string'
+            );
+          };
+
+          return timestampLike(save.currentDate) || timestampLike(save.lastPlayed);
+        })();
+
+        if (!hasIdentifier || !hasTimeline) {
+          console.warn('Skipping corrupt save doc', save.id, save);
+          return false;
+        }
+
+        return true;
+      });
+
+      setPlayerSaves(validSaves);
     } catch (error) {
       console.error("Error fetching player saves: ", error);
     }
@@ -575,7 +606,7 @@ function App() {
           const oldDocId = docSnap.id;
           const docData = docSnap.data();
 
-          const newDocRef = doc(collection(db, paths.playerSaveCollection(appId, userId, newSaveId, saveCollectionName)));
+          const newDocRef = doc(collection(db, paths.saveSubcollection(appId, userId, newSaveId, saveCollectionName)));
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
@@ -623,7 +654,7 @@ function App() {
             newDocData.companyId = idMap.get(docData.companyId) || docData.companyId;
           }
 
-          const newDocRef = doc(collection(db, paths.playerSaveCollection(appId, userId, newSaveId, saveCollectionName)));
+          const newDocRef = doc(collection(db, paths.saveSubcollection(appId, userId, newSaveId, saveCollectionName)));
           batch.set(newDocRef, newDocData);
         }
       }
@@ -681,7 +712,7 @@ function App() {
       let loadedGameData = {};
 
       for (const collectionName of SAVE_COLLECTION_NAMES) {
-        const q = query(collection(db, paths.playerSaveCollection(appId, userId, saveId, collectionName)));
+        const q = query(collection(db, paths.saveSubcollection(appId, userId, saveId, collectionName)));
         const querySnapshot = await getDocs(q);
 
         const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -874,7 +905,7 @@ function App() {
         topic
       };
 
-      const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, saveId, 'save_messages'));
+      const messagesRef = collection(db, paths.saveMessages(appId, userId, saveId));
       const newDocRef = await addDoc(messagesRef, messageData);
 
       const newMessage = { id: newDocRef.id, ...messageData };
@@ -1071,7 +1102,7 @@ const handleGetAIAdvice = async () => {
 
     const showRef = doc(
       db,
-      paths.playerSaveCollection(appId, userId, activeSave.id, 'save_shows'),
+      paths.saveShows(appId, userId, activeSave.id),
       currentResults.id
     );
 
@@ -1227,7 +1258,7 @@ const handleGetAIAdvice = async () => {
 
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
-          const docRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_wrestlers'), id);
+          const docRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), id);
           batch.update(docRef, { morale: wrestler.morale });
         });
         updatesMade = true;
@@ -1235,7 +1266,7 @@ const handleGetAIAdvice = async () => {
 
       if (storylineUpdates.size > 0) {
         storylineUpdates.forEach((storyline, id) => {
-          const docRef = doc(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_storylines'), id);
+          const docRef = doc(db, paths.saveStorylines(appId, userId, activeSave.id), id);
           batch.update(docRef, { heat: storyline.heat });
         });
         updatesMade = true;
@@ -1324,7 +1355,7 @@ const handleGetAIAdvice = async () => {
             showId: currentShow.id
           };
 
-          const newEventRef = doc(collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_career_events')));
+          const newEventRef = doc(collection(db, paths.saveCareerEvents(appId, userId, activeSave.id)));
           batch.set(newEventRef, careerEventData);
 
           newCareerEvents.push({ id: newEventRef.id, ...careerEventData });
@@ -1454,7 +1485,7 @@ const handleGetAIAdvice = async () => {
         beats: []
       };
 
-      const docRef = await addDoc(collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_storylines')), newStorylineData);
+      const docRef = await addDoc(collection(db, paths.saveStorylines(appId, userId, activeSave.id)), newStorylineData);
 
       const newStoryline = { id: docRef.id, ...newStorylineData };
 
