@@ -1,5 +1,6 @@
 import { addDoc, collection, doc, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
-import paths, { saveJournalEntries as saveJournalEntriesPath } from './firestorePaths';
+import paths, { saveJournalEntries as saveJournalEntriesPath } from '@/utils/firestorePaths';
+import { callAI } from '@/utils/aiClient';
 
 export const journalPaths = {
   saveJournalEntries: (appId, userId, saveId) => saveJournalEntriesPath(appId, userId, saveId)
@@ -14,7 +15,23 @@ export const journalPaths = {
  * @param {object} entry   See schema below.
  * @returns {Promise<string>} new doc id
  */
-export async function addJournalEntry(db, appId, userId, saveId, entry) {
+export async function addJournalEntry(...args) {
+  let db;
+  let appId;
+  let userId;
+  let saveId;
+  let entry;
+
+  if (args.length === 1 && args[0] && typeof args[0] === 'object') {
+    ({ db, appId, userId, saveId, ...entry } = args[0]);
+  } else {
+    [db, appId, userId, saveId, entry] = args;
+  }
+
+  if (!db || !appId || !userId || !saveId || !entry) {
+    throw new Error('[journal] addJournalEntry missing required data');
+  }
+
   const colRef = collection(db, paths.journal(appId, userId, saveId));
   const docRef = await addDoc(colRef, {
     createdAt: Timestamp.now(),
@@ -23,6 +40,36 @@ export async function addJournalEntry(db, appId, userId, saveId, entry) {
     ...entry
   });
   return docRef.id;
+}
+
+export async function detectPromiseWithAI({ requestText, replyText, replyType }) {
+  if (!replyText) return null;
+
+  console.log('[journal] AI: checking reply for promise', { replyType });
+
+  try {
+    const result = await callAI('journal-promise-detector', {
+      requestText,
+      replyText,
+      replyType,
+    });
+
+    if (!result || !result.madePromise) {
+      console.log('[journal] AI: no promise detected');
+      return null;
+    }
+
+    console.log('[journal] AI detected promise:', result.promiseSummary);
+
+    return {
+      type: 'promise',
+      subject: result.promiseSummary || replyText,
+      original: replyText,
+    };
+  } catch (err) {
+    console.error('[journal] AI promise detection failed:', err);
+    return null;
+  }
 }
 
 /**

@@ -383,6 +383,79 @@ ${(segments || [])
       return res.status(200).json({ text });
     }
 
+    //
+    // 4) JOURNAL PROMISE DETECTOR
+    //
+    if (type === 'journal-promise-detector') {
+      const { requestText = '', replyText = '', replyType = '' } = req.body || {};
+
+      const systemPrompt = `
+You analyze a wrestler's request and the booker's reply. Determine if the booker is making a concrete, constructive promise.
+Only respond with strict JSON in the shape { "madePromise": boolean, "promiseSummary": string | null }.
+Guidelines:
+- Only mark madePromise true if the reply cooperatively agrees to or accommodates the request (or offers a clear constructive alternative) AND contains a specific future action.
+- Refusals, threats, or hostile replies ("no", "forget it", "I'll fire you") must be treated as madePromise: false even if they contain words like "promise" or "swear".
+- If no concrete follow-up action is described, madePromise must be false.
+`.trim();
+
+      const userPrompt = `
+Wrestler request:
+"""
+${requestText || '(no request text)'}
+"""
+
+Booker reply (type: ${replyType || 'unspecified'}):
+"""
+${replyText || '(no reply text)'}
+"""
+
+Respond with strict JSON only.
+`.trim();
+
+      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!openaiRes.ok) {
+        const errText = await openaiRes.text();
+        console.error("OpenAI error (journal-promise-detector):", errText);
+        return res.status(500).json({ error: 'OpenAI request failed', details: errText });
+      }
+
+      const data = await openaiRes.json();
+      let raw = data.choices?.[0]?.message?.content?.trim() || "";
+
+      if (raw.startsWith('```')) {
+        raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (parseError) {
+        console.warn('Failed to parse AI promise detector response, defaulting to no promise.');
+        return res.status(200).json({ madePromise: false, promiseSummary: null });
+      }
+
+      const madePromise = Boolean(parsed?.madePromise);
+      const promiseSummary = typeof parsed?.promiseSummary === 'string' ? parsed.promiseSummary : null;
+
+      return res.status(200).json({ madePromise, promiseSummary });
+    }
+
     return res.status(400).json({ error: 'Unknown AI request type' });
   } catch (err) {
     console.error("AI handler error:", err);

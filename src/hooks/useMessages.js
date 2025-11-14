@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, doc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
-import { callAI } from '../utils/aiClient';
-import paths from '../utils/firestorePaths';
-import { addJournalEntry, extractPromiseFromReply } from "../utils/journal";
+import { callAI } from '@/utils/aiClient';
+import paths from '@/utils/firestorePaths';
+import { detectPromiseWithAI, extractPromiseFromReply, addJournalEntry } from '@/utils/journal';
 
 const timestampToMillis = (timestamp) => {
   if (!timestamp) return 0;
@@ -334,6 +334,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
     if (!contact) return;
     const nowTs = activeSave.currentDate ? activeSave.currentDate : Timestamp.now();
     const trimmedReply = replyDraft.trim();
+    const replyTone = detectReplyTone(trimmedReply, selectedReplyTone);
 
     const playerMessage = {
       senderId: 'booker',
@@ -359,14 +360,41 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
 
       try {
         const gameDateISO = activeSave?.currentDate?.toDate?.().toISOString?.() ?? null;
-        const maybeEntry = extractPromiseFromReply({
+        const originalMessageBody = latestThreadMessage?.body || '';
+
+        const aiPromise = await detectPromiseWithAI({
+          requestText: originalMessageBody,
           replyText: trimmedReply,
-          wrestlerName: contact?.name || selectedContact?.name || null,
-          gameDateISO
+          replyType: replyTone,
         });
 
-        if (maybeEntry) {
-          await addJournalEntry(db, appId, userId, activeSave.id, maybeEntry);
+        let promiseEntry = null;
+
+        if (aiPromise) {
+          promiseEntry = {
+            type: 'promise',
+            subject: aiPromise.subject,
+            originalText: aiPromise.original,
+            createdAt: nowTs,
+          };
+        }
+
+        if (!promiseEntry) {
+          const legacyFallback = extractPromiseFromReply({
+            replyText: trimmedReply,
+            wrestlerName: contact?.name || selectedContact?.name || null,
+            gameDateISO
+          });
+
+          if (legacyFallback) {
+            console.log('[journal] legacy fallback detected promise:', legacyFallback);
+            promiseEntry = legacyFallback;
+          }
+        }
+
+        if (promiseEntry) {
+          console.log('[journal] creating journal entry for promise:', promiseEntry.subject || promiseEntry.title || promiseEntry.textOriginal || trimmedReply);
+          await addJournalEntry(db, appId, userId, activeSave.id, promiseEntry);
         }
       } catch (e) {
         console.warn('Journal capture failed (non-fatal):', e);
@@ -385,7 +413,6 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         .reverse()
         .find(message => message.senderId === selectedContactId && message.topic);
       const topic = latestTopicMessage?.topic || 'general';
-      const replyTone = detectReplyTone(trimmedReply, selectedReplyTone);
       const moraleDelta = REPLY_TONE_DELTAS[replyTone] ?? 0;
       const currentMorale = typeof wrestler.morale === 'number' ? wrestler.morale : 50;
       const clampedMorale = Math.max(0, Math.min(100, currentMorale + moraleDelta));
