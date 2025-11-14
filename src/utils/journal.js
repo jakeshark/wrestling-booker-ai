@@ -295,70 +295,143 @@ const evaluateQuestStatus = ({
   return null;
 };
 
-export const evaluateQuests = async (db, { appId, userId, saveId, gameData }) => {
+export const evaluateQuests = async (
+  db,
+  { appId, userId, saveId, currentDate, gameData } = {}
+) => {
   if (!db || !appId || !userId || !saveId) {
     console.warn('[Journal] Missing data when evaluating quests.');
-    return { quests: [], succeeded: [], failed: [] };
+    return { quests: [], succeeded: [], failed: [], summary: { evaluated: 0, failed: 0, succeeded: 0 } };
   }
+
+  const pickTimestamp = (value) => {
+    if (!value) return null;
+    try {
+      return resolveGameTimestamp(value);
+    } catch (error) {
+      console.warn('[Journal] Unable to resolve timestamp', error);
+      return null;
+    }
+  };
 
   try {
     const questsRef = collection(db, saveJournalEntriesPath(appId, userId, saveId));
     const snapshot = await getDocs(questsRef);
-    const quests = snapshot.docs
-      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
-      .sort((a, b) => {
-        const aCreated = toMillis(a.createdAt) || 0;
-        const bCreated = toMillis(b.createdAt) || 0;
-        return bCreated - aCreated;
-      });
 
-    const roster = gameData?.save_wrestlers || [];
+    if (snapshot.empty) {
+      return { quests: [], succeeded: [], failed: [], summary: { evaluated: 0, failed: 0, succeeded: 0 } };
+    }
+
+    const allQuests = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) || [];
+
+    const roster = Array.isArray(gameData?.save_wrestlers) ? gameData.save_wrestlers : [];
     const rosterById = buildRosterMaps(roster);
-    const titles = gameData?.save_titles || [];
-    const currentTimestamp = resolveGameTimestamp(gameData?.currentDate || gameData?.currentGameDate || Timestamp.now());
-    const currentDate = currentTimestamp.toDate();
 
-    const activeQuests = quests.filter((quest) => quest.status === 'active');
+    const currentGameTimestamp =
+      pickTimestamp(currentDate)
+      || pickTimestamp(gameData?.currentDate)
+      || pickTimestamp(gameData?.currentGameDate)
+      || Timestamp.now();
 
-    const succeeded = [];
+    const currentMillis = toMillis(currentGameTimestamp);
+    const evaluationTimestamp = Timestamp.now();
+
+    const updatedQuests = new Map(allQuests.map((quest) => [quest.id, quest]));
     const failed = [];
-    const updatedQuests = new Map(quests.map((quest) => [quest.id, quest]));
+    const succeeded = [];
 
-    for (const quest of activeQuests) {
-      const evaluation = evaluateQuestStatus({
-        quest,
-        roster,
-        rosterById,
-        titles,
-        currentDate,
-        currentTimestamp,
-      });
+    const normalizeStatus = (status) => (status ? status.toString().toLowerCase() : '');
+    const isQuestOpen = (status) => {
+      const normalized = normalizeStatus(status);
+      if (!normalized) return true;
+      return ['active', 'open', 'pending', 'in_progress'].includes(normalized);
+    };
 
-      if (!evaluation) continue;
+    const resolveDueMillis = (quest) => {
+      const dueCandidate =
+        quest?.deadline
+        ?? quest?.dueDate
+        ?? quest?.due_date
+        ?? quest?.dueBy
+        ?? quest?.promise?.deadline
+        ?? quest?.promise?.dueDate;
+      return toMillis(dueCandidate);
+    };
 
-      const noteText = evaluation.note;
-      const updatedNotes = [...ensureArray(quest.notes), noteText];
-      const nextQuestState = {
-        ...quest,
-        status: evaluation.status,
-        updatedAt: currentTimestamp,
+    const firstLinkedWrestlerName = (quest) => {
+      const ids = ensureArray(quest?.linkedEntities?.wrestlerIds);
+      if (ids.length === 0) return null;
+      for (const wrestlerId of ids) {
+        const wrestler = rosterById.get(wrestlerId);
+        if (wrestler?.name) return wrestler.name;
+      }
+      return ids[0] || null;
+    };
+
+    for (const quest of allQuests) {
+      if (!quest || !isQuestOpen(quest.status)) {
+        continue;
+      }
+
+      const dueMillis = resolveDueMillis(quest);
+
+      if (dueMillis === null || currentMillis === null) {
+        continue;
+      }
+
+      if (dueMillis >= currentMillis) {
+        continue;
+      }
+
+      const questRef = doc(db, saveJournalEntriesPath(appId, userId, saveId), quest.id);
+
+      const updatedNotes = [...ensureArray(quest.notes)];
+      const dueDateLabel = formatGameDate(Timestamp.fromMillis(dueMillis));
+      const wrestlerName = firstLinkedWrestlerName(quest);
+      const questTitle = quest?.title || 'Untitled Quest';
+      const failureMessage = wrestlerName
+        ? `You didn't follow through on your promise to ${wrestlerName} by ${dueDateLabel}, so the quest has failed.`
+        : `You didn't follow through on "${questTitle}" by ${dueDateLabel}, so the quest has failed.`;
+
+      updatedNotes.push(`Automatically failed on ${formatGameDate(currentGameTimestamp)} because the due date passed.`);
+
+      const questUpdate = {
+        status: 'failed',
+        resolvedAt: currentGameTimestamp,
+        evaluatedAt: evaluationTimestamp,
+        updatedAt: evaluationTimestamp,
         notes: updatedNotes,
       };
 
-      const questRef = doc(db, saveJournalEntriesPath(appId, userId, saveId), quest.id);
-      await updateDoc(questRef, {
-        status: evaluation.status,
-        updatedAt: currentTimestamp,
-        notes: updatedNotes,
-      });
+      try {
+        await updateDoc(questRef, questUpdate);
+      } catch (updateError) {
+        console.error('[Journal] Failed to update quest during evaluation', updateError);
+        continue;
+      }
+
+      try {
+        await addJournalEntry(db, appId, userId, saveId, {
+          title: `Quest failed: ${questTitle}`,
+          description: failureMessage,
+          status: 'failed',
+          source: 'system',
+          category: quest?.category || 'Quest',
+          linkedEntities: quest?.linkedEntities || null,
+          relatedQuestId: quest.id,
+          resolvedAt: currentGameTimestamp,
+        });
+      } catch (entryError) {
+        console.error('[Journal] Failed to append quest failure entry', entryError);
+      }
+
+      const nextQuestState = {
+        ...quest,
+        ...questUpdate,
+      };
 
       updatedQuests.set(quest.id, nextQuestState);
-
-      if (evaluation.status === 'succeeded') {
-        succeeded.push({ quest: nextQuestState, note: noteText });
-      } else if (evaluation.status === 'failed') {
-        failed.push({ quest: nextQuestState, note: noteText, reason: evaluation.reason });
-      }
+      failed.push({ quest: nextQuestState, reason: 'deadline' });
     }
 
     const finalQuests = Array.from(updatedQuests.values()).sort((a, b) => {
@@ -367,16 +440,21 @@ export const evaluateQuests = async (db, { appId, userId, saveId, gameData }) =>
       return bCreated - aCreated;
     });
 
-    console.log(`[Journal] evaluate: ${activeQuests.length} active -> ${succeeded.length} succeeded, ${failed.length} failed`);
-
     return {
       quests: finalQuests,
       succeeded,
       failed,
+      summary: {
+        evaluated: failed.length + succeeded.length,
+        failed: failed.length,
+        succeeded: succeeded.length,
+      },
     };
   } catch (error) {
+    const wrapped = new Error(`Failed to evaluate quests: ${error?.message || error}`);
+    wrapped.cause = error;
     console.error('[Journal] Failed to evaluate quests', error);
-    return { quests: [], succeeded: [], failed: [] };
+    throw wrapped;
   }
 };
 

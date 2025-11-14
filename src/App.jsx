@@ -762,12 +762,18 @@ function App() {
         lastPlayed: Timestamp.now()
       }, { merge: true });
 
-      const evaluationResult = await evaluateQuests(db, {
-        appId,
-        userId,
-        saveId: activeSave.id,
-        gameData: { ...gameData, currentDate: newTimestamp }
-      });
+      let evaluationResult = null;
+      try {
+        evaluationResult = await evaluateQuests(db, {
+          appId,
+          userId,
+          saveId: activeSave.id,
+          currentDate: newTimestamp,
+          gameData: { ...gameData, currentDate: newTimestamp }
+        });
+      } catch (questError) {
+        console.error('Error evaluating quests for next day:', questError);
+      }
 
       if (evaluationResult?.quests) {
         setGameData(prevData => ({
