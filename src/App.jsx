@@ -35,8 +35,8 @@ import paths, { datasetCompaniesCol, datasetWrestlersCol } from './utils/firesto
 import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
 import { evaluateQuests } from './utils/journal';
-import normalizeWrestler, { prepareWrestlerForStorage, slugifyWrestlerName } from './utils/wrestlerSchema';
-import DEFAULT_WRESTLER_SEEDS from './utils/defaultWrestlers';
+import normalizeWrestler, { prepareWrestlerForStorage } from './utils/wrestlerSchema';
+import { DEFAULT_COMPANY, DEFAULT_WRESTLERS, DEFAULT_DATASET_ID } from './utils/defaultDataset';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -388,106 +388,108 @@ function App() {
   }, [isAuthReady, db, userId, appId]);
 
   // --- Dataset Seeder ---
-  const seedDefaultDataset = async (db, userId, appId) => {
-    const datasetId = 'default-fiction';
+  const seedDefaultDataset = async (db, _userId, appId) => {
+    const datasetId = DEFAULT_DATASET_ID;
     const datasetRef = doc(db, paths.publicDataCollection(appId, 'datasets'), datasetId);
+    const wrestlersCollection = collection(db, datasetWrestlersCol(appId));
+    const companiesCollection = collection(db, datasetCompaniesCol(appId));
 
     try {
-      const docSnap = await getDoc(datasetRef);
-      if (docSnap.exists()) {
-        console.log("Default dataset already exists.");
+      const [datasetSnap, wrestlersSnapshot, companiesSnapshot] = await Promise.all([
+        getDoc(datasetRef),
+        getDocs(wrestlersCollection),
+        getDocs(companiesCollection)
+      ]);
+
+      const existingCreatedAt = (datasetSnap.exists() && datasetSnap.data()?.createdAt)
+        ? datasetSnap.data().createdAt
+        : Timestamp.now();
+
+      const datasetDocument = {
+        name: 'Default Fiction',
+        description: 'Proving Ground Wrestling default universe.',
+        companyName: DEFAULT_COMPANY.name,
+        defaultCompanyId: DEFAULT_COMPANY.id,
+        updatedAt: Timestamp.now(),
+        createdAt: existingCreatedAt
+      };
+
+      await setDoc(datasetRef, datasetDocument, { merge: true });
+
+      const targetWrestlerDocs = wrestlersSnapshot.docs.filter((docSnap) => {
+        const data = docSnap.data() || {};
+        return !data.datasetId || data.datasetId === datasetId;
+      });
+
+      const targetCompanyDocs = companiesSnapshot.docs.filter((docSnap) => {
+        const data = docSnap.data() || {};
+        return !data.datasetId || data.datasetId === datasetId;
+      });
+
+      const wrestlerCount = targetWrestlerDocs.length;
+      const companyCount = targetCompanyDocs.length;
+      const hasPGWCompany = targetCompanyDocs.some((docSnap) => {
+        const data = docSnap.data() || {};
+        return (
+          data.name === DEFAULT_COMPANY.name ||
+          data.shortName === DEFAULT_COMPANY.shortName ||
+          docSnap.id === DEFAULT_COMPANY.id
+        );
+      });
+
+      const needsReseed = wrestlerCount < DEFAULT_WRESTLERS.length || !hasPGWCompany;
+
+      if (!needsReseed) {
+        console.log(
+          '[DEFAULT DATA] Reusing existing public dataset:',
+          `${wrestlerCount} wrestlers, ${companyCount} companies`
+        );
         return;
       }
 
       setLoadingMessage('Creating default dataset...');
-      const batch = writeBatch(db);
 
-      batch.set(datasetRef, {
-        name: "Default Fiction",
-        description: "A balanced, fictional universe to start your booking career.",
-        createdAt: Timestamp.now()
-      });
+      if (targetWrestlerDocs.length > 0 || targetCompanyDocs.length > 0) {
+        const deleteBatch = writeBatch(db);
+        for (const docSnap of targetWrestlerDocs) {
+          deleteBatch.delete(docSnap.ref);
+        }
+        for (const docSnap of targetCompanyDocs) {
+          deleteBatch.delete(docSnap.ref);
+        }
+        await deleteBatch.commit();
+      }
 
-      const companyRef = doc(collection(db, datasetCompaniesCol(appId)));
-      const companyId = companyRef.id;
-      batch.set(companyRef, {
-        datasetId: datasetId,
-        name: "Federation X",
-        prestige: 60,
-        finances: 5000000,
-        publicImage: 50,
-        riskLevel: 50,
-        size: "National"
-      });
+      const seedBatch = writeBatch(db);
 
-      const wrestlerSeeds = DEFAULT_WRESTLER_SEEDS;
-      const wrestlersCollection = collection(db, datasetWrestlersCol(appId));
-      const wrestlerRefs = {};
-      const preparedWrestlers = wrestlerSeeds.map(seed => {
-        const slug = slugifyWrestlerName(seed.name);
-        const wrestlerRef = doc(wrestlersCollection, slug);
-        wrestlerRefs[seed.name] = wrestlerRef.id;
-        return { seed, ref: wrestlerRef };
-      });
+      seedBatch.set(datasetRef, datasetDocument, { merge: true });
 
-      for (const { seed, ref } of preparedWrestlers) {
+      const companyRef = doc(companiesCollection, DEFAULT_COMPANY.id);
+      seedBatch.set(companyRef, { ...DEFAULT_COMPANY });
+
+      const nameToId = DEFAULT_WRESTLERS.reduce((acc, wrestler) => {
+        acc[wrestler.name] = wrestler.id;
+        return acc;
+      }, {});
+
+      for (const wrestler of DEFAULT_WRESTLERS) {
+        const wrestlerRef = doc(wrestlersCollection, wrestler.id);
         const storageReady = prepareWrestlerForStorage(
-          { ...seed },
-          { id: ref.id, datasetId, nameToId: wrestlerRefs }
+          { ...wrestler },
+          { id: wrestler.id, datasetId, nameToId }
         );
-        batch.set(ref, storageReady);
+        seedBatch.set(wrestlerRef, storageReady);
       }
 
-      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
-        datasetId: datasetId, companyId: companyId, titleName: "FX World Championship", prestige: 80, isTagTeam: false, initialHolderId: null
-      });
-      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
-        datasetId: datasetId, companyId: companyId, titleName: "FX Women's Championship", prestige: 70, isTagTeam: false, initialHolderId: null
-      });
+      await seedBatch.commit();
 
-      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_tv_shows'))), {
-        datasetId: datasetId, companyId: companyId, showName: "FX Voltage", dayOfWeek: "Monday"
-      });
-
-      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      for (let i = 0; i < months.length; i++) {
-        let tier = "Monthly_Event";
-        let name = `${months[i]} Mayhem`;
-        if (i === 3) { tier = "Major_Event"; name = "Spring Stampede"; }
-        if (i === 7) { tier = "Major_Event"; name = "Summer Scorcher"; }
-        if (i === 11) { tier = "Flagship_Event"; name = "Final Conflict"; }
-
-        batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_events'))), {
-          datasetId: datasetId,
-          companyId: companyId,
-          month: i + 1,
-          eventName: name,
-          eventTier: tier,
-        });
-      }
-
-      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_relationships'))), {
-        datasetId: datasetId,
-        personA_Id: wrestlerRefs["Alex 'The Ace' Valour"],
-        personB_Id: wrestlerRefs["Jax 'The Juggernaut' Stone"],
-        relationshipType: 'Rivalry',
-        status: 'Strongly Dislike',
-        notes: "Real-life rivalry from their training days."
-      });
-      batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_relationships'))), {
-        datasetId: datasetId,
-        personA_Id: wrestlerRefs["Leo 'Lionheart' Cruz"],
-        personB_Id: wrestlerRefs["Eliza 'High-Flyer' Hayes"],
-        relationshipType: 'Friendship',
-        status: 'Friends',
-        notes: "Came up on the indies together."
-      });
-
-      await batch.commit();
-      console.log(`Seeded default PGW dataset: ${wrestlerSeeds.length} wrestlers, 1 companies into public/data`);
+      console.log(
+        '[DEFAULT DATA] Seeded PGW public dataset:',
+        `${DEFAULT_WRESTLERS.length} wrestlers, 1 company`
+      );
     } catch (error) {
-      console.error("Error seeding dataset: ", error);
-      setLoadingMessage("Error creating default data. Please refresh.");
+      console.error('Error seeding dataset: ', error);
+      setLoadingMessage('Error creating default data. Please refresh.');
     }
   };
 
@@ -735,7 +737,10 @@ function App() {
         }
       }
 
-      console.log(`Creating new save from public dataset: loaded ${loadedDatasetWrestlersCount} wrestlers and ${loadedDatasetCompaniesCount} companies`);
+      console.log(
+        '[NEW GAME] Creating new save from public dataset:',
+        `${loadedDatasetWrestlersCount} wrestlers, ${loadedDatasetCompaniesCount} companies`
+      );
       await batch.commit();
 
       await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
