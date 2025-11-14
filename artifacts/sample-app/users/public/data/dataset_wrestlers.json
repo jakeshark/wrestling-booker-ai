@@ -1,0 +1,1957 @@
+[
+  {
+    "name": "Alex 'The Ace' Valour",
+    "gender": "Male",
+    "age": 32,
+    "weightClass": "Middleweight",
+    "nationality": "United States",
+    "alignment": "Face",
+    "gimmick": "Franchise Player",
+    "alternateNames": [
+      "The Golden Boy"
+    ],
+    "charisma": 90,
+    "speakingAbility": 88,
+    "starPower": 92,
+    "inRing": {
+      "brawl": 80,
+      "speed": 75,
+      "technical": 85,
+      "aerial": 70,
+      "psychology": 88,
+      "safety": 85
+    },
+    "physical": {
+      "condition": 85,
+      "momentum": 70,
+      "durability": 78
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Valor Driver",
+          "moveType": "Slam"
+        },
+        {
+          "name": "Ace in the Hole",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 36,
+      "monthlySalary": 45000
+    },
+    "personality": {
+      "professionalism": 90,
+      "motivation": 88,
+      "friendliness": 80,
+      "behaviorNotes": [
+        "Locker room leader",
+        "Mentors younger talent"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "leo-lionheart-cruz",
+        "big-country-buck-donovan",
+        "trevor-the-technician-reid"
+      ],
+      "rivals": [
+        "jax-the-juggernaut-stone",
+        "silas-the-serpent-retch",
+        "bishop-graves"
+      ],
+      "tagPartner": null,
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 88,
+      "debutYear": 2010,
+      "bio": "Homegrown ace who carries the PGW banner with pride and calm leadership."
+    },
+    "id": "alex-the-ace-valour",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Franchise Player",
+      "charisma": 90,
+      "speakingAbility": 88,
+      "starPower": 92
+    },
+    "finishers": [
+      {
+        "name": "Valor Driver",
+        "moveType": "Slam"
+      },
+      {
+        "name": "Ace in the Hole",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 75,
+    "popularity": 88,
+    "stats": {
+      "brawling": 80,
+      "speed": 75,
+      "technical": 85,
+      "charisma": 90
+    }
+  },
+  {
+    "name": "Eliza 'High-Flyer' Hayes",
+    "gender": "Female",
+    "age": 27,
+    "weightClass": "Cruiserweight",
+    "nationality": "United States",
+    "alignment": "Face",
+    "gimmick": "Daredevil",
+    "charisma": 75,
+    "speakingAbility": 68,
+    "starPower": 80,
+    "inRing": {
+      "brawl": 50,
+      "speed": 95,
+      "technical": 80,
+      "aerial": 96,
+      "psychology": 72,
+      "safety": 83
+    },
+    "physical": {
+      "condition": 88,
+      "momentum": 82,
+      "durability": 70
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Skyline Spiral",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "Starfall Clutch",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 30,
+      "monthlySalary": 27000
+    },
+    "personality": {
+      "professionalism": 78,
+      "motivation": 92,
+      "friendliness": 86,
+      "behaviorNotes": [
+        "Lives for high spots",
+        "Constantly studies aerial innovators"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "mia-showtime-evans",
+        "wildcard-wade-ripley",
+        "zara-storm"
+      ],
+      "rivals": [
+        "cassidy-quinn"
+      ],
+      "tagPartner": "mia-showtime-evans",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 82,
+      "debutYear": 2016,
+      "bio": "Aerial daredevil who thrives on outdoing herself every time the lights hit."
+    },
+    "id": "eliza-high-flyer-hayes",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Daredevil",
+      "charisma": 75,
+      "speakingAbility": 68,
+      "starPower": 80
+    },
+    "finishers": [
+      {
+        "name": "Skyline Spiral",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "Starfall Clutch",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 75,
+    "popularity": 82,
+    "stats": {
+      "brawling": 50,
+      "speed": 95,
+      "technical": 80,
+      "charisma": 75
+    }
+  },
+  {
+    "name": "Goliath",
+    "gender": "Male",
+    "age": 38,
+    "weightClass": "Super Heavyweight",
+    "nationality": "Canada",
+    "alignment": "Heel",
+    "gimmick": "Monster",
+    "charisma": 60,
+    "speakingAbility": 55,
+    "starPower": 74,
+    "inRing": {
+      "brawl": 90,
+      "speed": 50,
+      "technical": 50,
+      "aerial": 30,
+      "psychology": 70,
+      "safety": 68
+    },
+    "physical": {
+      "condition": 80,
+      "momentum": 65,
+      "durability": 92
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Titan's Wrath",
+          "moveType": "Slam"
+        },
+        {
+          "name": "Cataclysm Elbow",
+          "moveType": "Strike"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 24,
+      "monthlySalary": 38000
+    },
+    "personality": {
+      "professionalism": 68,
+      "motivation": 70,
+      "friendliness": 35,
+      "behaviorNotes": [
+        "Demands dominant booking",
+        "Prefers short matches"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "jax-the-juggernaut-stone",
+        "silas-the-serpent-retch"
+      ],
+      "rivals": [
+        "big-country-buck-donovan",
+        "alex-the-ace-valour"
+      ],
+      "tagPartner": "jax-the-juggernaut-stone",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 70,
+      "debutYear": 2006,
+      "bio": "An unstoppable wall of power who believes fear is the best form of crowd control."
+    },
+    "id": "goliath",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Monster",
+      "charisma": 60,
+      "speakingAbility": 55,
+      "starPower": 74
+    },
+    "finishers": [
+      {
+        "name": "Titan's Wrath",
+        "moveType": "Slam"
+      },
+      {
+        "name": "Cataclysm Elbow",
+        "moveType": "Strike"
+      }
+    ],
+    "morale": 75,
+    "popularity": 70,
+    "stats": {
+      "brawling": 90,
+      "speed": 50,
+      "technical": 50,
+      "charisma": 60
+    }
+  },
+  {
+    "name": "Jax 'The Juggernaut' Stone",
+    "gender": "Male",
+    "age": 34,
+    "weightClass": "Heavyweight",
+    "nationality": "United States",
+    "alignment": "Heel",
+    "gimmick": "Monster",
+    "charisma": 70,
+    "speakingAbility": 64,
+    "starPower": 78,
+    "inRing": {
+      "brawl": 95,
+      "speed": 60,
+      "technical": 65,
+      "aerial": 40,
+      "psychology": 76,
+      "safety": 72
+    },
+    "physical": {
+      "condition": 84,
+      "momentum": 68,
+      "durability": 90
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Juggernaut Bomb",
+          "moveType": "Slam"
+        },
+        {
+          "name": "Stonebreaker Spear",
+          "moveType": "Strike"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 30,
+      "monthlySalary": 36000
+    },
+    "personality": {
+      "professionalism": 72,
+      "motivation": 82,
+      "friendliness": 42,
+      "behaviorNotes": [
+        "Thrives on intimidation",
+        "Demands main-event spotlight"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "goliath",
+        "silas-the-serpent-retch"
+      ],
+      "rivals": [
+        "alex-the-ace-valour",
+        "leo-lionheart-cruz",
+        "big-country-buck-donovan"
+      ],
+      "tagPartner": "goliath",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 76,
+      "debutYear": 2008,
+      "bio": "A wrecking ball of aggression who wants every show built around his dominance."
+    },
+    "id": "jax-the-juggernaut-stone",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Monster",
+      "charisma": 70,
+      "speakingAbility": 64,
+      "starPower": 78
+    },
+    "finishers": [
+      {
+        "name": "Juggernaut Bomb",
+        "moveType": "Slam"
+      },
+      {
+        "name": "Stonebreaker Spear",
+        "moveType": "Strike"
+      }
+    ],
+    "morale": 75,
+    "popularity": 76,
+    "stats": {
+      "brawling": 95,
+      "speed": 60,
+      "technical": 65,
+      "charisma": 70
+    }
+  },
+  {
+    "name": "Johnny Spade",
+    "gender": "Male",
+    "age": 31,
+    "weightClass": "Middleweight",
+    "nationality": "United States",
+    "alignment": "Tweener",
+    "gimmick": "No Gimmick Needed",
+    "charisma": 70,
+    "speakingAbility": 72,
+    "starPower": 74,
+    "inRing": {
+      "brawl": 70,
+      "speed": 70,
+      "technical": 70,
+      "aerial": 68,
+      "psychology": 74,
+      "safety": 80
+    },
+    "physical": {
+      "condition": 82,
+      "momentum": 66,
+      "durability": 76
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Spade Splash",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "No Limit Necklock",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Per Appearance",
+      "durationMonths": 12,
+      "monthlySalary": 12000
+    },
+    "personality": {
+      "professionalism": 80,
+      "motivation": 70,
+      "friendliness": 78,
+      "behaviorNotes": [
+        "Versatile utility player",
+        "Keeps morale loose backstage"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "kenji-codebreak-tanaka",
+        "magic-marcus-flint"
+      ],
+      "rivals": [
+        "silas-the-serpent-retch"
+      ],
+      "tagPartner": "magic-marcus-flint",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 72,
+      "debutYear": 2011,
+      "bio": "Adaptable workhorse who can slide anywhere on the card and deliver."
+    },
+    "id": "johnny-spade",
+    "datasetId": "default-fiction",
+    "disposition": "Tweener",
+    "character": {
+      "alignment": "Tweener",
+      "gimmick": "No Gimmick Needed",
+      "charisma": 70,
+      "speakingAbility": 72,
+      "starPower": 74
+    },
+    "finishers": [
+      {
+        "name": "Spade Splash",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "No Limit Necklock",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 75,
+    "popularity": 72,
+    "stats": {
+      "brawling": 70,
+      "speed": 70,
+      "technical": 70,
+      "charisma": 70
+    }
+  },
+  {
+    "name": "Kenji 'Codebreak' Tanaka",
+    "gender": "Male",
+    "age": 29,
+    "weightClass": "Cruiserweight",
+    "nationality": "Japan",
+    "alignment": "Face",
+    "gimmick": "Show Stealer",
+    "charisma": 80,
+    "speakingAbility": 74,
+    "starPower": 86,
+    "inRing": {
+      "brawl": 70,
+      "speed": 90,
+      "technical": 95,
+      "aerial": 88,
+      "psychology": 90,
+      "safety": 94
+    },
+    "physical": {
+      "condition": 90,
+      "momentum": 78,
+      "durability": 82
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Codebreak Kick",
+          "moveType": "Strike"
+        },
+        {
+          "name": "Neon Armbar",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 36,
+      "monthlySalary": 42000
+    },
+    "personality": {
+      "professionalism": 92,
+      "motivation": 94,
+      "friendliness": 76,
+      "behaviorNotes": [
+        "Meticulous planner",
+        "Inspires younger high-flyers"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "trevor-the-technician-reid",
+        "mia-showtime-evans"
+      ],
+      "rivals": [
+        "dante-ironjaw-morales"
+      ],
+      "tagPartner": "trevor-the-technician-reid",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 84,
+      "debutYear": 2012,
+      "bio": "Precision striker who obsesses over delivering match-of-the-night performances."
+    },
+    "id": "kenji-codebreak-tanaka",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Show Stealer",
+      "charisma": 80,
+      "speakingAbility": 74,
+      "starPower": 86
+    },
+    "finishers": [
+      {
+        "name": "Codebreak Kick",
+        "moveType": "Strike"
+      },
+      {
+        "name": "Neon Armbar",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 75,
+    "popularity": 84,
+    "stats": {
+      "brawling": 70,
+      "speed": 90,
+      "technical": 95,
+      "charisma": 80
+    }
+  },
+  {
+    "name": "Leo 'Lionheart' Cruz",
+    "gender": "Male",
+    "age": 30,
+    "weightClass": "Middleweight",
+    "nationality": "Mexico",
+    "alignment": "Face",
+    "gimmick": "Hero",
+    "charisma": 85,
+    "speakingAbility": 82,
+    "starPower": 88,
+    "inRing": {
+      "brawl": 85,
+      "speed": 80,
+      "technical": 75,
+      "aerial": 78,
+      "psychology": 86,
+      "safety": 88
+    },
+    "physical": {
+      "condition": 88,
+      "momentum": 76,
+      "durability": 84
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Lionheart Lariat",
+          "moveType": "Strike"
+        },
+        {
+          "name": "Roaring Lion Tamer",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 30,
+      "monthlySalary": 33000
+    },
+    "personality": {
+      "professionalism": 86,
+      "motivation": 90,
+      "friendliness": 88,
+      "behaviorNotes": [
+        "Beloved locker-room glue",
+        "Always thanks the crew"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "alex-the-ace-valour",
+        "big-country-buck-donovan",
+        "lightning-luke-lawson"
+      ],
+      "rivals": [
+        "silas-the-serpent-retch",
+        "dante-ironjaw-morales"
+      ],
+      "tagPartner": null,
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 86,
+      "debutYear": 2011,
+      "bio": "Fiery crowd favorite whose heart-on-sleeve promos rally the audience."
+    },
+    "id": "leo-lionheart-cruz",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Hero",
+      "charisma": 85,
+      "speakingAbility": 82,
+      "starPower": 88
+    },
+    "finishers": [
+      {
+        "name": "Lionheart Lariat",
+        "moveType": "Strike"
+      },
+      {
+        "name": "Roaring Lion Tamer",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 75,
+    "popularity": 86,
+    "stats": {
+      "brawling": 85,
+      "speed": 80,
+      "technical": 75,
+      "charisma": 85
+    }
+  },
+  {
+    "name": "Mia 'Showtime' Evans",
+    "gender": "Female",
+    "age": 26,
+    "weightClass": "Lightweight",
+    "nationality": "United States",
+    "alignment": "Face",
+    "gimmick": "Teen Idol",
+    "charisma": 90,
+    "speakingAbility": 88,
+    "starPower": 89,
+    "inRing": {
+      "brawl": 65,
+      "speed": 85,
+      "technical": 80,
+      "aerial": 86,
+      "psychology": 78,
+      "safety": 84
+    },
+    "physical": {
+      "condition": 87,
+      "momentum": 88,
+      "durability": 72
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Showtime Stunner",
+          "moveType": "Strike"
+        },
+        {
+          "name": "Spotlight Moonsault",
+          "moveType": "Top Rope"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 30,
+      "monthlySalary": 32000
+    },
+    "personality": {
+      "professionalism": 84,
+      "motivation": 93,
+      "friendliness": 90,
+      "behaviorNotes": [
+        "Runs fan outreach events",
+        "Embraces media obligations"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "eliza-high-flyer-hayes",
+        "zara-storm",
+        "big-country-buck-donovan"
+      ],
+      "rivals": [
+        "cassidy-quinn",
+        "victoria-the-queen-black"
+      ],
+      "tagPartner": "zara-storm",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 90,
+      "debutYear": 2014,
+      "bio": "Pop-culture phenom who balances flashy performances with heartfelt fan connection."
+    },
+    "id": "mia-showtime-evans",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Teen Idol",
+      "charisma": 90,
+      "speakingAbility": 88,
+      "starPower": 89
+    },
+    "finishers": [
+      {
+        "name": "Showtime Stunner",
+        "moveType": "Strike"
+      },
+      {
+        "name": "Spotlight Moonsault",
+        "moveType": "Top Rope"
+      }
+    ],
+    "morale": 75,
+    "popularity": 90,
+    "stats": {
+      "brawling": 65,
+      "speed": 85,
+      "technical": 80,
+      "charisma": 90
+    }
+  },
+  {
+    "name": "Silas 'The Serpent' Retch",
+    "gender": "Male",
+    "age": 35,
+    "weightClass": "Middleweight",
+    "nationality": "United Kingdom",
+    "alignment": "Heel",
+    "gimmick": "Evil",
+    "charisma": 85,
+    "speakingAbility": 80,
+    "starPower": 83,
+    "inRing": {
+      "brawl": 80,
+      "speed": 70,
+      "technical": 80,
+      "aerial": 62,
+      "psychology": 89,
+      "safety": 86
+    },
+    "physical": {
+      "condition": 82,
+      "momentum": 74,
+      "durability": 80
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Serpent's Fang",
+          "moveType": "Submission"
+        },
+        {
+          "name": "Venom Strike",
+          "moveType": "Strike"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 24,
+      "monthlySalary": 34000
+    },
+    "personality": {
+      "professionalism": 74,
+      "motivation": 88,
+      "friendliness": 30,
+      "behaviorNotes": [
+        "Mind-game specialist",
+        "Keeps personal circle tight"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "jax-the-juggernaut-stone",
+        "riot-reynolds",
+        "bishop-graves"
+      ],
+      "rivals": [
+        "alex-the-ace-valour",
+        "big-country-buck-donovan",
+        "leo-lionheart-cruz"
+      ],
+      "tagPartner": "riot-reynolds",
+      "stable": "Night Shift"
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 78,
+      "debutYear": 2009,
+      "bio": "Scheming manipulator who weaponizes whispers and paranoia."
+    },
+    "id": "silas-the-serpent-retch",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Evil",
+      "charisma": 85,
+      "speakingAbility": 80,
+      "starPower": 83
+    },
+    "finishers": [
+      {
+        "name": "Serpent's Fang",
+        "moveType": "Submission"
+      },
+      {
+        "name": "Venom Strike",
+        "moveType": "Strike"
+      }
+    ],
+    "morale": 75,
+    "popularity": 78,
+    "stats": {
+      "brawling": 80,
+      "speed": 70,
+      "technical": 80,
+      "charisma": 85
+    }
+  },
+  {
+    "name": "Victoria 'The Queen' Black",
+    "gender": "Female",
+    "age": 33,
+    "weightClass": "Middleweight",
+    "nationality": "United Kingdom",
+    "alignment": "Heel",
+    "gimmick": "Rich Snob",
+    "alternateNames": [
+      "Vicky Black"
+    ],
+    "charisma": 95,
+    "speakingAbility": 92,
+    "starPower": 91,
+    "inRing": {
+      "brawl": 75,
+      "speed": 70,
+      "technical": 85,
+      "aerial": 65,
+      "psychology": 88,
+      "safety": 87
+    },
+    "physical": {
+      "condition": 84,
+      "momentum": 86,
+      "durability": 78
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Royal Decree",
+          "moveType": "Slam"
+        },
+        {
+          "name": "Crown Jewel Clutch",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 36,
+      "monthlySalary": 41000
+    },
+    "personality": {
+      "professionalism": 82,
+      "motivation": 85,
+      "friendliness": 38,
+      "behaviorNotes": [
+        "Demands luxurious travel",
+        "Sharp political instincts"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "cassidy-quinn",
+        "dante-ironjaw-morales"
+      ],
+      "rivals": [
+        "mia-showtime-evans",
+        "zara-storm"
+      ],
+      "tagPartner": "cassidy-quinn",
+      "stable": "Glamour Syndicate"
+    },
+    "metadata": {
+      "morale": 75,
+      "popularity": 88,
+      "debutYear": 2007,
+      "bio": "Aristocratic tactician who rules the division through ego and strategy."
+    },
+    "id": "victoria-the-queen-black",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Rich Snob",
+      "charisma": 95,
+      "speakingAbility": 92,
+      "starPower": 91
+    },
+    "finishers": [
+      {
+        "name": "Royal Decree",
+        "moveType": "Slam"
+      },
+      {
+        "name": "Crown Jewel Clutch",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 75,
+    "popularity": 88,
+    "stats": {
+      "brawling": 75,
+      "speed": 70,
+      "technical": 85,
+      "charisma": 95
+    }
+  },
+  {
+    "name": "\"Wildcard\" Wade Ripley",
+    "gender": "Male",
+    "age": 29,
+    "weightClass": "Cruiserweight",
+    "nationality": "United States",
+    "alignment": "Tweener",
+    "gimmick": "Reckless Daredevil",
+    "charisma": 78,
+    "speakingAbility": 65,
+    "starPower": 80,
+    "inRing": {
+      "brawl": 68,
+      "speed": 92,
+      "technical": 74,
+      "aerial": 95,
+      "psychology": 60,
+      "safety": 55
+    },
+    "physical": {
+      "condition": 82,
+      "momentum": 76,
+      "durability": 62
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Crash Landing",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "Wild Shot Knee",
+          "moveType": "Strike"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 18,
+      "monthlySalary": 22000
+    },
+    "personality": {
+      "professionalism": 55,
+      "motivation": 82,
+      "friendliness": 70,
+      "behaviorNotes": [
+        "Thrill seeker",
+        "Needs agent oversight to stay on script"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "eliza-high-flyer-hayes",
+        "zara-storm"
+      ],
+      "rivals": [
+        "riot-reynolds"
+      ],
+      "tagPartner": "zara-storm",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 70,
+      "popularity": 72,
+      "debutYear": 2015,
+      "bio": "Unpredictable stunt machine who can steal the show or derail it in equal measure."
+    },
+    "id": "wildcard-wade-ripley",
+    "datasetId": "default-fiction",
+    "disposition": "Tweener",
+    "character": {
+      "alignment": "Tweener",
+      "gimmick": "Reckless Daredevil",
+      "charisma": 78,
+      "speakingAbility": 65,
+      "starPower": 80
+    },
+    "finishers": [
+      {
+        "name": "Crash Landing",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "Wild Shot Knee",
+        "moveType": "Strike"
+      }
+    ],
+    "morale": 70,
+    "popularity": 72,
+    "stats": {
+      "brawling": 68,
+      "speed": 92,
+      "technical": 74,
+      "charisma": 78
+    }
+  },
+  {
+    "name": "Dante \"Ironjaw\" Morales",
+    "gender": "Male",
+    "age": 34,
+    "weightClass": "Middleweight",
+    "nationality": "Brazil",
+    "alignment": "Heel",
+    "gimmick": "Submission Shooter",
+    "charisma": 65,
+    "speakingAbility": 70,
+    "starPower": 78,
+    "inRing": {
+      "brawl": 82,
+      "speed": 68,
+      "technical": 92,
+      "aerial": 40,
+      "psychology": 88,
+      "safety": 90
+    },
+    "physical": {
+      "condition": 90,
+      "momentum": 68,
+      "durability": 85
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Ironjaw Clutch",
+          "moveType": "Submission"
+        },
+        {
+          "name": "Mercy Breaker",
+          "moveType": "Strike"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 30,
+      "monthlySalary": 38000
+    },
+    "personality": {
+      "professionalism": 88,
+      "motivation": 86,
+      "friendliness": 50,
+      "behaviorNotes": [
+        "Intense training regimen",
+        "Keeps to himself on the road"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "victoria-the-queen-black",
+        "bishop-graves"
+      ],
+      "rivals": [
+        "trevor-the-technician-reid",
+        "leo-lionheart-cruz",
+        "lightning-luke-lawson"
+      ],
+      "tagPartner": null,
+      "stable": null
+    },
+    "metadata": {
+      "morale": 68,
+      "popularity": 66,
+      "debutYear": 2008,
+      "bio": "Cold-blooded technician who twists limbs and minds with equal intensity."
+    },
+    "id": "dante-ironjaw-morales",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Submission Shooter",
+      "charisma": 65,
+      "speakingAbility": 70,
+      "starPower": 78
+    },
+    "finishers": [
+      {
+        "name": "Ironjaw Clutch",
+        "moveType": "Submission"
+      },
+      {
+        "name": "Mercy Breaker",
+        "moveType": "Strike"
+      }
+    ],
+    "morale": 68,
+    "popularity": 66,
+    "stats": {
+      "brawling": 82,
+      "speed": 68,
+      "technical": 92,
+      "charisma": 65
+    }
+  },
+  {
+    "name": "\"Big Country\" Buck Donovan",
+    "gender": "Male",
+    "age": 36,
+    "weightClass": "Heavyweight",
+    "nationality": "United States",
+    "alignment": "Face",
+    "gimmick": "Blue-Collar Powerhouse",
+    "charisma": 82,
+    "speakingAbility": 78,
+    "starPower": 84,
+    "inRing": {
+      "brawl": 88,
+      "speed": 55,
+      "technical": 68,
+      "aerial": 35,
+      "psychology": 75,
+      "safety": 82
+    },
+    "physical": {
+      "condition": 83,
+      "momentum": 80,
+      "durability": 88
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Country Hammer",
+          "moveType": "Slam"
+        },
+        {
+          "name": "Rustic Lock",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 24,
+      "monthlySalary": 32000
+    },
+    "personality": {
+      "professionalism": 92,
+      "motivation": 85,
+      "friendliness": 88,
+      "behaviorNotes": [
+        "Community outreach staple",
+        "Eats losses gracefully to help talent"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "alex-the-ace-valour",
+        "mia-showtime-evans"
+      ],
+      "rivals": [
+        "silas-the-serpent-retch",
+        "riot-reynolds",
+        "bishop-graves"
+      ],
+      "tagPartner": null,
+      "stable": null
+    },
+    "metadata": {
+      "morale": 80,
+      "popularity": 82,
+      "debutYear": 2007,
+      "bio": "Working-class hero whose handshake and haymaker carry equal weight."
+    },
+    "id": "big-country-buck-donovan",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Blue-Collar Powerhouse",
+      "charisma": 82,
+      "speakingAbility": 78,
+      "starPower": 84
+    },
+    "finishers": [
+      {
+        "name": "Country Hammer",
+        "moveType": "Slam"
+      },
+      {
+        "name": "Rustic Lock",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 80,
+    "popularity": 82,
+    "stats": {
+      "brawling": 88,
+      "speed": 55,
+      "technical": 68,
+      "charisma": 82
+    }
+  },
+  {
+    "name": "Cassidy Quinn",
+    "gender": "Female",
+    "age": 25,
+    "weightClass": "Lightweight",
+    "nationality": "United States",
+    "alignment": "Heel",
+    "gimmick": "Influencer Supreme",
+    "charisma": 94,
+    "speakingAbility": 92,
+    "starPower": 90,
+    "inRing": {
+      "brawl": 55,
+      "speed": 78,
+      "technical": 70,
+      "aerial": 60,
+      "psychology": 74,
+      "safety": 68
+    },
+    "physical": {
+      "condition": 86,
+      "momentum": 88,
+      "durability": 60
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Filter Drop",
+          "moveType": "Strike"
+        },
+        {
+          "name": "Cancel Clutch",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 24,
+      "monthlySalary": 30000
+    },
+    "personality": {
+      "professionalism": 70,
+      "motivation": 83,
+      "friendliness": 40,
+      "behaviorNotes": [
+        "Demands spotlight",
+        "Live-streams from gorilla position"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "victoria-the-queen-black",
+        "dante-ironjaw-morales"
+      ],
+      "rivals": [
+        "mia-showtime-evans",
+        "zara-storm",
+        "lightning-luke-lawson"
+      ],
+      "tagPartner": "victoria-the-queen-black",
+      "stable": "Glamour Syndicate"
+    },
+    "metadata": {
+      "morale": 77,
+      "popularity": 79,
+      "debutYear": 2018,
+      "bio": "Social-media maven who weaponizes trend cycles to get under everyone’s skin."
+    },
+    "id": "cassidy-quinn",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Influencer Supreme",
+      "charisma": 94,
+      "speakingAbility": 92,
+      "starPower": 90
+    },
+    "finishers": [
+      {
+        "name": "Filter Drop",
+        "moveType": "Strike"
+      },
+      {
+        "name": "Cancel Clutch",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 77,
+    "popularity": 79,
+    "stats": {
+      "brawling": 55,
+      "speed": 78,
+      "technical": 70,
+      "charisma": 94
+    }
+  },
+  {
+    "name": "Trevor \"The Technician\" Reid",
+    "gender": "Male",
+    "age": 30,
+    "weightClass": "Middleweight",
+    "nationality": "United States",
+    "alignment": "Face",
+    "gimmick": "Pure Wrestling Expert",
+    "charisma": 72,
+    "speakingAbility": 68,
+    "starPower": 76,
+    "inRing": {
+      "brawl": 70,
+      "speed": 82,
+      "technical": 94,
+      "aerial": 65,
+      "psychology": 88,
+      "safety": 92
+    },
+    "physical": {
+      "condition": 90,
+      "momentum": 74,
+      "durability": 80
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Precision Lock",
+          "moveType": "Submission"
+        },
+        {
+          "name": "Snapdragon Finale",
+          "moveType": "Slam"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 36,
+      "monthlySalary": 34000
+    },
+    "personality": {
+      "professionalism": 95,
+      "motivation": 90,
+      "friendliness": 75,
+      "behaviorNotes": [
+        "Tape-study junkie",
+        "Always volunteering for clinics"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "Kenji \"Codebreak\" Tanaka",
+        "alex-the-ace-valour"
+      ],
+      "rivals": [
+        "dante-ironjaw-morales",
+        "silas-the-serpent-retch"
+      ],
+      "tagPartner": "Kenji \"Codebreak\" Tanaka",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 76,
+      "popularity": 74,
+      "debutYear": 2012,
+      "bio": "Precision grappler obsessed with elevating the company’s in-ring reputation."
+    },
+    "id": "trevor-the-technician-reid",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Pure Wrestling Expert",
+      "charisma": 72,
+      "speakingAbility": 68,
+      "starPower": 76
+    },
+    "finishers": [
+      {
+        "name": "Precision Lock",
+        "moveType": "Submission"
+      },
+      {
+        "name": "Snapdragon Finale",
+        "moveType": "Slam"
+      }
+    ],
+    "morale": 76,
+    "popularity": 74,
+    "stats": {
+      "brawling": 70,
+      "speed": 82,
+      "technical": 94,
+      "charisma": 72
+    }
+  },
+  {
+    "name": "Riot Reynolds",
+    "gender": "Male",
+    "age": 31,
+    "weightClass": "Middleweight",
+    "nationality": "United States",
+    "alignment": "Heel",
+    "gimmick": "Hardcore Punk Brawler",
+    "charisma": 68,
+    "speakingAbility": 62,
+    "starPower": 72,
+    "inRing": {
+      "brawl": 88,
+      "speed": 70,
+      "technical": 60,
+      "aerial": 55,
+      "psychology": 62,
+      "safety": 50
+    },
+    "physical": {
+      "condition": 78,
+      "momentum": 70,
+      "durability": 82
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Stage Dive",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "Concrete Riot",
+          "moveType": "Strike"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Per Appearance",
+      "durationMonths": 12,
+      "monthlySalary": 12000
+    },
+    "personality": {
+      "professionalism": 60,
+      "motivation": 75,
+      "friendliness": 45,
+      "behaviorNotes": [
+        "Prefers hardcore spots",
+        "Needs producer to rein in chaos"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "silas-the-serpent-retch",
+        "bishop-graves"
+      ],
+      "rivals": [
+        "big-country-buck-donovan",
+        "wildcard-wade-ripley"
+      ],
+      "tagPartner": "silas-the-serpent-retch",
+      "stable": "Night Shift"
+    },
+    "metadata": {
+      "morale": 72,
+      "popularity": 68,
+      "debutYear": 2010,
+      "bio": "Hardcore lifer who treats every bout like the main event of a punk festival."
+    },
+    "id": "riot-reynolds",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Hardcore Punk Brawler",
+      "charisma": 68,
+      "speakingAbility": 62,
+      "starPower": 72
+    },
+    "finishers": [
+      {
+        "name": "Stage Dive",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "Concrete Riot",
+        "moveType": "Strike"
+      }
+    ],
+    "morale": 72,
+    "popularity": 68,
+    "stats": {
+      "brawling": 88,
+      "speed": 70,
+      "technical": 60,
+      "charisma": 68
+    }
+  },
+  {
+    "name": "\"Magic\" Marcus Flint",
+    "gender": "Male",
+    "age": 33,
+    "weightClass": "Lightweight",
+    "nationality": "United States",
+    "alignment": "Tweener",
+    "gimmick": "Illusionist Showman",
+    "charisma": 88,
+    "speakingAbility": 90,
+    "starPower": 78,
+    "inRing": {
+      "brawl": 60,
+      "speed": 82,
+      "technical": 72,
+      "aerial": 85,
+      "psychology": 70,
+      "safety": 76
+    },
+    "physical": {
+      "condition": 85,
+      "momentum": 66,
+      "durability": 60
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Prestige Trick",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "Sleight of Pain",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Per Appearance",
+      "durationMonths": 12,
+      "monthlySalary": 9000
+    },
+    "personality": {
+      "professionalism": 75,
+      "motivation": 70,
+      "friendliness": 85,
+      "behaviorNotes": [
+        "Keeps locker room loose",
+        "Always pitching comedic skits"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "johnny-spade",
+        "lightning-luke-lawson"
+      ],
+      "rivals": [
+        "bishop-graves"
+      ],
+      "tagPartner": "johnny-spade",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 74,
+      "popularity": 70,
+      "debutYear": 2011,
+      "bio": "Charismatic trickster blending comedy, athleticism, and fourth-wall breaking."
+    },
+    "id": "magic-marcus-flint",
+    "datasetId": "default-fiction",
+    "disposition": "Tweener",
+    "character": {
+      "alignment": "Tweener",
+      "gimmick": "Illusionist Showman",
+      "charisma": 88,
+      "speakingAbility": 90,
+      "starPower": 78
+    },
+    "finishers": [
+      {
+        "name": "Prestige Trick",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "Sleight of Pain",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 74,
+    "popularity": 70,
+    "stats": {
+      "brawling": 60,
+      "speed": 82,
+      "technical": 72,
+      "charisma": 88
+    }
+  },
+  {
+    "name": "Zara Storm",
+    "gender": "Female",
+    "age": 24,
+    "weightClass": "Lightweight",
+    "nationality": "Australia",
+    "alignment": "Face",
+    "gimmick": "Pop Idol High Flyer",
+    "charisma": 92,
+    "speakingAbility": 85,
+    "starPower": 88,
+    "inRing": {
+      "brawl": 58,
+      "speed": 94,
+      "technical": 78,
+      "aerial": 97,
+      "psychology": 68,
+      "safety": 80
+    },
+    "physical": {
+      "condition": 91,
+      "momentum": 90,
+      "durability": 64
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Storm Surge",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "Idol Lock",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 30,
+      "monthlySalary": 28000
+    },
+    "personality": {
+      "professionalism": 82,
+      "motivation": 95,
+      "friendliness": 90,
+      "behaviorNotes": [
+        "Maintains intense choreography schedule",
+        "Always media ready"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "mia-showtime-evans",
+        "wildcard-wade-ripley"
+      ],
+      "rivals": [
+        "cassidy-quinn",
+        "bishop-graves"
+      ],
+      "tagPartner": "wildcard-wade-ripley",
+      "stable": null
+    },
+    "metadata": {
+      "morale": 82,
+      "popularity": 85,
+      "debutYear": 2019,
+      "bio": "Chart-topping idol whose athleticism and charisma are equal parts dazzling."
+    },
+    "id": "zara-storm",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Pop Idol High Flyer",
+      "charisma": 92,
+      "speakingAbility": 85,
+      "starPower": 88
+    },
+    "finishers": [
+      {
+        "name": "Storm Surge",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "Idol Lock",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 82,
+    "popularity": 85,
+    "stats": {
+      "brawling": 58,
+      "speed": 94,
+      "technical": 78,
+      "charisma": 92
+    }
+  },
+  {
+    "name": "Bishop Graves",
+    "gender": "Male",
+    "age": 37,
+    "weightClass": "Middleweight",
+    "nationality": "United States",
+    "alignment": "Heel",
+    "gimmick": "Cult Mastermind",
+    "charisma": 86,
+    "speakingAbility": 93,
+    "starPower": 85,
+    "inRing": {
+      "brawl": 72,
+      "speed": 60,
+      "technical": 75,
+      "aerial": 50,
+      "psychology": 95,
+      "safety": 88
+    },
+    "physical": {
+      "condition": 82,
+      "momentum": 78,
+      "durability": 79
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Requiem Driver",
+          "moveType": "Slam"
+        },
+        {
+          "name": "Graves Consecration",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Written",
+      "durationMonths": 36,
+      "monthlySalary": 40000
+    },
+    "personality": {
+      "professionalism": 82,
+      "motivation": 76,
+      "friendliness": 30,
+      "behaviorNotes": [
+        "Manipulative backstage politicking",
+        "Keeps disciples close"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "silas-the-serpent-retch",
+        "riot-reynolds",
+        "dante-ironjaw-morales"
+      ],
+      "rivals": [
+        "alex-the-ace-valour",
+        "magic-marcus-flint",
+        "lightning-luke-lawson"
+      ],
+      "tagPartner": null,
+      "stable": "Night Shift"
+    },
+    "metadata": {
+      "morale": 73,
+      "popularity": 81,
+      "debutYear": 2005,
+      "bio": "Sinister manipulator orchestrating chaos through whispers and indoctrination."
+    },
+    "id": "bishop-graves",
+    "datasetId": "default-fiction",
+    "disposition": "Heel",
+    "character": {
+      "alignment": "Heel",
+      "gimmick": "Cult Mastermind",
+      "charisma": 86,
+      "speakingAbility": 93,
+      "starPower": 85
+    },
+    "finishers": [
+      {
+        "name": "Requiem Driver",
+        "moveType": "Slam"
+      },
+      {
+        "name": "Graves Consecration",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 73,
+    "popularity": 81,
+    "stats": {
+      "brawling": 72,
+      "speed": 60,
+      "technical": 75,
+      "charisma": 86
+    }
+  },
+  {
+    "name": "\"Lightning\" Luke Lawson",
+    "gender": "Male",
+    "age": 22,
+    "weightClass": "Lightweight",
+    "nationality": "United States",
+    "alignment": "Face",
+    "gimmick": "Underdog Prospect",
+    "charisma": 79,
+    "speakingAbility": 74,
+    "starPower": 80,
+    "inRing": {
+      "brawl": 60,
+      "speed": 93,
+      "technical": 75,
+      "aerial": 88,
+      "psychology": 65,
+      "safety": 78
+    },
+    "physical": {
+      "condition": 94,
+      "momentum": 68,
+      "durability": 60
+    },
+    "moveSet": {
+      "finishers": [
+        {
+          "name": "Flashpoint Splash",
+          "moveType": "Top Rope"
+        },
+        {
+          "name": "Quickstrike Clutch",
+          "moveType": "Submission"
+        }
+      ]
+    },
+    "contract": {
+      "contractType": "Per Appearance",
+      "durationMonths": 12,
+      "monthlySalary": 6000
+    },
+    "personality": {
+      "professionalism": 85,
+      "motivation": 97,
+      "friendliness": 92,
+      "behaviorNotes": [
+        "Always early to training",
+        "Soaks up advice from veterans"
+      ]
+    },
+    "relationships": {
+      "allies": [
+        "alex-the-ace-valour",
+        "zara-storm",
+        "magic-marcus-flint"
+      ],
+      "rivals": [
+        "bishop-graves",
+        "dante-ironjaw-morales"
+      ],
+      "tagPartner": null,
+      "stable": null
+    },
+    "metadata": {
+      "morale": 78,
+      "popularity": 74,
+      "debutYear": 2021,
+      "bio": "High-voltage upstart determined to prove he belongs in the main-event conversation."
+    },
+    "id": "lightning-luke-lawson",
+    "datasetId": "default-fiction",
+    "disposition": "Face",
+    "character": {
+      "alignment": "Face",
+      "gimmick": "Underdog Prospect",
+      "charisma": 79,
+      "speakingAbility": 74,
+      "starPower": 80
+    },
+    "finishers": [
+      {
+        "name": "Flashpoint Splash",
+        "moveType": "Top Rope"
+      },
+      {
+        "name": "Quickstrike Clutch",
+        "moveType": "Submission"
+      }
+    ],
+    "morale": 78,
+    "popularity": 74,
+    "stats": {
+      "brawling": 60,
+      "speed": 93,
+      "technical": 75,
+      "charisma": 79
+    }
+  }
+]

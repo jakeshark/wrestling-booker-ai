@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, doc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import { callAI } from '@/utils/aiClient';
+import normalizeWrestler from '@/utils/wrestlerSchema';
 import paths from '@/utils/firestorePaths';
 import { detectPromiseWithAI, extractPromiseFromReply, addJournalEntry } from '@/utils/journal';
 
@@ -490,14 +491,29 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       const moraleDelta = REPLY_TONE_DELTAS[replyTone] ?? 0;
       const currentMorale = typeof wrestler.morale === 'number' ? wrestler.morale : 50;
       const clampedMorale = Math.max(0, Math.min(100, currentMorale + moraleDelta));
+      const updatedMetadata = {
+        ...(wrestler?.metadata || {}),
+        morale: clampedMorale
+      };
       const wrestlerDocRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), sanitizedWrestlerId);
-      await setDoc(wrestlerDocRef, { morale: clampedMorale }, { merge: true });
+      await setDoc(wrestlerDocRef, { morale: clampedMorale, metadata: updatedMetadata }, { merge: true });
 
       setGameData(prevData => ({
         ...prevData,
-        save_wrestlers: (prevData.save_wrestlers || []).map(w => (
-          w.id === sanitizedWrestlerId ? { ...w, morale: clampedMorale } : w
-        ))
+        save_wrestlers: Array.isArray(prevData.save_wrestlers)
+          ? prevData.save_wrestlers.map(w => (
+            w.id === sanitizedWrestlerId
+              ? normalizeWrestler({
+                ...w,
+                morale: clampedMorale,
+                metadata: {
+                  ...(w.metadata || {}),
+                  morale: clampedMorale
+                }
+              })
+              : w
+          ))
+          : prevData.save_wrestlers
       }));
 
       const toastMessage = `${sanitizedWrestlerName}: Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`;
@@ -521,11 +537,18 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         console.error('Error logging reply effect career event:', careerEventError);
       }
 
-      const updatedWrestler = { ...wrestler, id: sanitizedWrestlerId, name: sanitizedWrestlerName, morale: clampedMorale };
+      const updatedWrestler = normalizeWrestler({
+        ...wrestler,
+        id: sanitizedWrestlerId,
+        name: sanitizedWrestlerName,
+        morale: clampedMorale,
+        metadata: updatedMetadata
+      });
       const reactionData = await callAI('wrestler-reaction', {
         wrestler: {
           id: updatedWrestler.id,
           name: updatedWrestler.name,
+          alignment: updatedWrestler.alignment,
           disposition: updatedWrestler.disposition,
           gimmick: updatedWrestler.gimmick,
           morale: updatedWrestler.morale
