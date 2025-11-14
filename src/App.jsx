@@ -2280,6 +2280,7 @@ const handleGetAIAdvice = async () => {
   const gameContextValue = {
     wrestlers: gameData.save_wrestlers || [],
     storylines: gameData.save_storylines || [],
+    relationships: gameData.save_relationships || [],
     journalEntries: gameData.save_journal_entries || [],
     goToDashboard: () => setGameState('IN_GAME'),
     handleViewCareerHistory,
