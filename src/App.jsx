@@ -35,6 +35,8 @@ import paths from './utils/firestorePaths';
 import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
 import { evaluateQuests } from './utils/journal';
+import normalizeWrestler, { prepareWrestlerForStorage, slugifyWrestlerName } from './utils/wrestlerSchema';
+import DEFAULT_WRESTLER_SEEDS from './utils/defaultWrestlers';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -418,24 +420,22 @@ function App() {
         size: "National"
       });
 
-      const wrestlers = [
-        { name: "Alex 'The Ace' Valour", stats: { brawling: 80, speed: 75, technical: 85, charisma: 90 }, disposition: 'Face', gimmick: 'Franchise Player', alternateNames: ['The Golden Boy'], morale: 75 },
-        { name: "Jax 'The Juggernaut' Stone", stats: { brawling: 95, speed: 60, technical: 65, charisma: 70 }, disposition: 'Heel', gimmick: 'Monster', morale: 75 },
-        { name: "Kenji 'Codebreak' Tanaka", stats: { brawling: 70, speed: 90, technical: 95, charisma: 80 }, disposition: 'Face', gimmick: 'Show Stealer', morale: 75 },
-        { name: "Mia 'Showtime' Evans", stats: { brawling: 65, speed: 85, technical: 80, charisma: 90 }, disposition: 'Face', gimmick: 'Teen Idol', morale: 75 },
-        { name: "Victoria 'The Queen' Black", stats: { brawling: 75, speed: 70, technical: 85, charisma: 95 }, disposition: 'Heel', gimmick: 'Rich Snob', alternateNames: ['Vicky Black'], morale: 75 },
-        { name: "Leo 'Lionheart' Cruz", stats: { brawling: 85, speed: 80, technical: 75, charisma: 85 }, disposition: 'Face', gimmick: 'Hero', morale: 75 },
-        { name: "Silas 'The Serpent' Retch", stats: { brawling: 80, speed: 70, technical: 80, charisma: 85 }, disposition: 'Heel', gimmick: 'Evil', morale: 75 },
-        { name: "Eliza 'High-Flyer' Hayes", stats: { brawling: 50, speed: 95, technical: 80, charisma: 75 }, disposition: 'Face', gimmick: 'Daredevil', morale: 75 },
-        { name: "Goliath", stats: { brawling: 90, speed: 50, technical: 50, charisma: 60 }, disposition: 'Heel', gimmick: 'Monster', morale: 75 },
-        { name: "Johnny Spade", stats: { brawling: 70, speed: 70, technical: 70, charisma: 70 }, disposition: 'Tweener', gimmick: 'No Gimmick Needed', morale: 75 }
-      ];
-
+      const wrestlerSeeds = DEFAULT_WRESTLER_SEEDS;
+      const wrestlersCollection = collection(db, paths.publicDataCollection(appId, 'dataset_wrestlers'));
       const wrestlerRefs = {};
-      for (const wrestler of wrestlers) {
-        const wrestlerRef = doc(collection(db, paths.publicDataCollection(appId, 'dataset_wrestlers')));
-        wrestlerRefs[wrestler.name] = wrestlerRef.id;
-        batch.set(wrestlerRef, { ...wrestler, datasetId: datasetId });
+      const preparedWrestlers = wrestlerSeeds.map(seed => {
+        const slug = slugifyWrestlerName(seed.name);
+        const wrestlerRef = doc(wrestlersCollection, slug);
+        wrestlerRefs[seed.name] = wrestlerRef.id;
+        return { seed, ref: wrestlerRef };
+      });
+
+      for (const { seed, ref } of preparedWrestlers) {
+        const storageReady = prepareWrestlerForStorage(
+          { ...seed },
+          { id: ref.id, datasetId, nameToId: wrestlerRefs }
+        );
+        batch.set(ref, storageReady);
       }
 
       batch.set(doc(collection(db, paths.publicDataCollection(appId, 'dataset_titles'))), {
@@ -593,6 +593,7 @@ function App() {
       const batch = writeBatch(db);
       const idMap = new Map();
       let playerCompanyId = null;
+      const pendingDatasetWrestlers = [];
 
       setLoadingMessage('Copying core data...');
       for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
@@ -610,11 +611,61 @@ function App() {
           const newDocId = newDocRef.id;
 
           idMap.set(oldDocId, newDocId);
-          batch.set(newDocRef, docData);
+
+          if (datasetCollectionName === 'dataset_wrestlers') {
+            pendingDatasetWrestlers.push({ newDocRef, docData });
+          } else {
+            batch.set(newDocRef, docData);
+          }
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
             playerCompanyId = newDocId;
           }
+        }
+
+        if (datasetCollectionName === 'dataset_wrestlers' && pendingDatasetWrestlers.length > 0) {
+          const remapRelationships = (relationships) => {
+            const safe = relationships && typeof relationships === 'object' ? relationships : {};
+            const mapList = (list) => {
+              if (!Array.isArray(list)) return [];
+              return list
+                .map(id => {
+                  if (typeof id !== 'string') return null;
+                  return idMap.get(id) || id;
+                })
+                .filter(Boolean);
+            };
+            const tagPartner = typeof safe.tagPartner === 'string'
+              ? (idMap.get(safe.tagPartner) || safe.tagPartner)
+              : null;
+
+            return {
+              allies: mapList(safe.allies),
+              rivals: mapList(safe.rivals),
+              tagPartner: tagPartner || null,
+              stable: typeof safe.stable === 'string' && safe.stable.trim().length > 0
+                ? safe.stable.trim()
+                : null
+            };
+          };
+
+          for (const { newDocRef, docData } of pendingDatasetWrestlers) {
+            const normalized = normalizeWrestler({
+              ...docData,
+              id: newDocRef.id,
+              relationships: remapRelationships(docData.relationships),
+              metadata: {
+                ...(docData.metadata || {}),
+                morale: docData.metadata?.morale ?? docData.morale
+              }
+            });
+            if (docData.datasetId) {
+              normalized.datasetId = docData.datasetId;
+            }
+            batch.set(newDocRef, normalized);
+          }
+
+          pendingDatasetWrestlers.length = 0;
         }
       }
 
@@ -715,7 +766,10 @@ function App() {
         const q = query(collection(db, paths.saveSubcollection(appId, userId, saveId, collectionName)));
         const querySnapshot = await getDocs(q);
 
-        const collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let collectionData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (collectionName === 'save_wrestlers') {
+          collectionData = collectionData.map(normalizeWrestler);
+        }
         loadedGameData[collectionName] = collectionData;
 
       }
@@ -855,12 +909,14 @@ function App() {
       return;
     }
 
+    const normalizedForMessage = normalizeWrestler(wrestler || {});
     const sanitizedWrestler = {
       id: sanitizedId,
       name: sanitizedName,
-      disposition: wrestler?.disposition,
-      gimmick: wrestler?.gimmick,
-      morale: typeof wrestler?.morale === 'number' ? wrestler.morale : undefined
+      alignment: normalizedForMessage.alignment,
+      disposition: normalizedForMessage.disposition,
+      gimmick: normalizedForMessage.gimmick,
+      morale: normalizedForMessage.morale
     };
 
     const playerPromotion = (() => {
@@ -877,6 +933,7 @@ function App() {
         wrestler: {
           id: sanitizedWrestler.id,
           name: sanitizedWrestler.name,
+          alignment: sanitizedWrestler.alignment,
           disposition: sanitizedWrestler.disposition,
           gimmick: sanitizedWrestler.gimmick,
           morale: sanitizedWrestler.morale
@@ -931,9 +988,23 @@ const handleGetAIAdvice = async () => {
   setIsAssistantLoading(true);
   setAssistantResponse("");
 
-  const rosterContext = gameData.save_wrestlers.map(w => (
-    `${w.name} (Disposition: ${w.disposition}, Gimmick: ${w.gimmick}, Morale: ${w.morale}, Charisma: ${w.stats.charisma})`
-  )).join('\n');
+  const rosterContext = (gameData.save_wrestlers || []).map(w => {
+    const alignment = w?.alignment || w?.disposition || 'Unknown';
+    const gimmick = w?.gimmick || w?.character?.gimmick || 'Unknown';
+    const morale = typeof w?.morale === 'number'
+      ? w.morale
+      : typeof w?.metadata?.morale === 'number'
+        ? w.metadata.morale
+        : 75;
+    const charismaStat = typeof w?.stats?.charisma === 'number'
+      ? w.stats.charisma
+      : typeof w?.charisma === 'number'
+        ? w.charisma
+        : typeof w?.character?.charisma === 'number'
+          ? w.character.charisma
+          : 50;
+    return `${w?.name || 'Unknown'} (Alignment: ${alignment}, Gimmick: ${gimmick}, Morale: ${morale}, Charisma: ${charismaStat})`;
+  }).join('\n');
 
   try {
     const data = await callAI('booker-assistant', {
@@ -993,17 +1064,35 @@ const handleGetAIAdvice = async () => {
   };
 
   const calculateSegmentRating = (segment, allWrestlers) => {
-    if (!segment || segment.participants.length === 0) return 0;
+    if (!segment || !Array.isArray(segment.participants) || segment.participants.length === 0) {
+      return 0;
+    }
+
+    const resolveCharisma = (wrestler) => {
+      if (!wrestler) return 50;
+      if (typeof wrestler?.stats?.charisma === 'number') return wrestler.stats.charisma;
+      if (typeof wrestler?.charisma === 'number') return wrestler.charisma;
+      if (typeof wrestler?.character?.charisma === 'number') return wrestler.character.charisma;
+      return 50;
+    };
+
+    const resolveRingStat = (wrestler, key, legacyKey) => {
+      if (!wrestler) return 50;
+      if (typeof wrestler?.inRing?.[key] === 'number') return wrestler.inRing[key];
+      if (legacyKey && typeof wrestler?.stats?.[legacyKey] === 'number') return wrestler.stats[legacyKey];
+      if (typeof wrestler?.stats?.[key] === 'number') return wrestler.stats[key];
+      return 50;
+    };
 
     let totalCharisma = 0;
     let totalWorkrate = 0;
     const participants = [];
 
-    for (const p of segment.participants) {
-      const wrestler = allWrestlers.find(w => w.id === p.id);
+    for (const participant of segment.participants) {
+      const wrestler = allWrestlers.find(w => w.id === participant.id);
       if (wrestler) {
         participants.push(wrestler);
-        totalCharisma += wrestler.stats.charisma;
+        totalCharisma += resolveCharisma(wrestler);
       }
     }
 
@@ -1018,7 +1107,10 @@ const handleGetAIAdvice = async () => {
 
     if (segment.type === 'Match') {
       for (const wrestler of participants) {
-        totalWorkrate += (wrestler.stats.brawling + wrestler.stats.speed + wrestler.stats.technical) / 3;
+        const brawling = resolveRingStat(wrestler, 'brawl', 'brawling');
+        const speed = resolveRingStat(wrestler, 'speed', 'speed');
+        const technical = resolveRingStat(wrestler, 'technical', 'technical');
+        totalWorkrate += (brawling + speed + technical) / 3;
       }
       const avgWorkrate = totalWorkrate / numParticipants;
 
@@ -1253,7 +1345,15 @@ const handleGetAIAdvice = async () => {
 
             if (moraleChange !== 0) {
               const finalMorale = Math.max(0, Math.min(100, baseMorale + (moraleChange * moraleMultiplier)));
-              wrestlerUpdates.set(participant.id, { ...wrestler, morale: finalMorale });
+              const updatedWrestler = normalizeWrestler({
+                ...wrestler,
+                morale: finalMorale,
+                metadata: {
+                  ...(wrestler.metadata || {}),
+                  morale: finalMorale
+                }
+              });
+              wrestlerUpdates.set(participant.id, updatedWrestler);
               console.log(`Sim Update: ${wrestler.name} morale ${baseMorale} -> ${finalMorale} (Multiplier: ${moraleMultiplier}x)`);
             }
           }
@@ -1265,7 +1365,10 @@ const handleGetAIAdvice = async () => {
       if (wrestlerUpdates.size > 0) {
         wrestlerUpdates.forEach((wrestler, id) => {
           const docRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), id);
-          batch.update(docRef, { morale: wrestler.morale });
+          batch.update(docRef, {
+            morale: wrestler.morale,
+            ['metadata.morale']: wrestler.morale
+          });
         });
         updatesMade = true;
       }
@@ -1283,18 +1386,16 @@ const handleGetAIAdvice = async () => {
 
         setGameData(prevData => ({
           ...prevData,
-          save_wrestlers: prevData.save_wrestlers.map(w => {
-            if (wrestlerUpdates.has(w.id)) {
-              return wrestlerUpdates.get(w.id);
-            }
-            return w;
-          }),
-          save_storylines: prevData.save_storylines.map(s => {
-            if (storylineUpdates.has(s.id)) {
-              return storylineUpdates.get(s.id);
-            }
-            return s;
-          })
+          save_wrestlers: Array.isArray(prevData.save_wrestlers)
+            ? prevData.save_wrestlers.map(w => (
+              wrestlerUpdates.has(w.id) ? wrestlerUpdates.get(w.id) : w
+            ))
+            : prevData.save_wrestlers,
+          save_storylines: Array.isArray(prevData.save_storylines)
+            ? prevData.save_storylines.map(s => (
+              storylineUpdates.has(s.id) ? storylineUpdates.get(s.id) : s
+            ))
+            : prevData.save_storylines
         }));
         console.log("Sim Engine v2: Morale and Storyline updates saved and local state updated.");
       } else {
