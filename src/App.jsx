@@ -31,7 +31,7 @@ import QuestBadge from './components/QuestBadge';
 import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
-import paths from './utils/firestorePaths';
+import paths, { datasetCompaniesCol, datasetWrestlersCol } from './utils/firestorePaths';
 import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
 import { evaluateQuests } from './utils/journal';
@@ -408,7 +408,7 @@ function App() {
         createdAt: Timestamp.now()
       });
 
-      const companyRef = doc(collection(db, paths.publicDataCollection(appId, 'dataset_companies')));
+      const companyRef = doc(collection(db, datasetCompaniesCol(appId)));
       const companyId = companyRef.id;
       batch.set(companyRef, {
         datasetId: datasetId,
@@ -421,7 +421,7 @@ function App() {
       });
 
       const wrestlerSeeds = DEFAULT_WRESTLER_SEEDS;
-      const wrestlersCollection = collection(db, paths.publicDataCollection(appId, 'dataset_wrestlers'));
+      const wrestlersCollection = collection(db, datasetWrestlersCol(appId));
       const wrestlerRefs = {};
       const preparedWrestlers = wrestlerSeeds.map(seed => {
         const slug = slugifyWrestlerName(seed.name);
@@ -484,7 +484,7 @@ function App() {
       });
 
       await batch.commit();
-      console.log("Default dataset created successfully.");
+      console.log(`Seeded default PGW dataset: ${wrestlerSeeds.length} wrestlers, 1 companies into public/data`);
     } catch (error) {
       console.error("Error seeding dataset: ", error);
       setLoadingMessage("Error creating default data. Please refresh.");
@@ -570,6 +570,17 @@ function App() {
     return 'Never';
   };
 
+  const getPublicDatasetCollectionPath = (collectionName) => {
+    if (!appId) return null;
+    if (collectionName === 'dataset_wrestlers') {
+      return datasetWrestlersCol(appId);
+    }
+    if (collectionName === 'dataset_companies') {
+      return datasetCompaniesCol(appId);
+    }
+    return paths.publicDataCollection(appId, collectionName);
+  };
+
   // --- New Game ---
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
@@ -594,14 +605,26 @@ function App() {
       const idMap = new Map();
       let playerCompanyId = null;
       const pendingDatasetWrestlers = [];
+      let loadedDatasetWrestlersCount = 0;
+      let loadedDatasetCompaniesCount = 0;
 
       setLoadingMessage('Copying core data...');
       for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const q = query(collection(db, paths.publicDataCollection(appId, datasetCollectionName)), where("datasetId", "==", datasetId));
+        const datasetCollectionPath = getPublicDatasetCollectionPath(datasetCollectionName);
+        if (!datasetCollectionPath) continue;
+        const q = query(collection(db, datasetCollectionPath), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
+
+        if (datasetCollectionName === 'dataset_wrestlers') {
+          loadedDatasetWrestlersCount = querySnapshot.size;
+        }
+
+        if (datasetCollectionName === 'dataset_companies') {
+          loadedDatasetCompaniesCount = querySnapshot.size;
+        }
 
         for (const docSnap of querySnapshot.docs) {
           const oldDocId = docSnap.id;
@@ -675,7 +698,9 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const q = query(collection(db, paths.publicDataCollection(appId, datasetCollectionName)), where("datasetId", "==", datasetId));
+        const datasetCollectionPath = getPublicDatasetCollectionPath(datasetCollectionName);
+        if (!datasetCollectionPath) continue;
+        const q = query(collection(db, datasetCollectionPath), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
         for (const docSnap of querySnapshot.docs) {
@@ -710,6 +735,7 @@ function App() {
         }
       }
 
+      console.log(`Creating new save from public dataset: loaded ${loadedDatasetWrestlersCount} wrestlers and ${loadedDatasetCompaniesCount} companies`);
       await batch.commit();
 
       await setDoc(newSaveRef, { playerCompanyId: playerCompanyId }, { merge: true });
