@@ -1796,9 +1796,9 @@ const handleGetAIAdvice = async () => {
 
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
 
-    const companyName = playerCompany?.name ?? 'Your Company';
-    const displayCompanyName = playerCompany?.shortName
-      ? `${companyName} (${playerCompany.shortName})`
+    const companyName = playerCompany?.name || playerCompany?.shortName || 'Your Company';
+    const displayCompanyName = playerCompany?.name && playerCompany?.shortName
+      ? `${playerCompany.name} (${playerCompany.shortName})`
       : companyName;
 
     const currentDateValue = activeSave?.currentDate?.toDate?.();
