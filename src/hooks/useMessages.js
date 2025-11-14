@@ -276,7 +276,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
 
     try {
       const batch = writeBatch(db);
-      const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_messages'));
+      const messagesRef = collection(db, paths.saveMessages(appId, userId, activeSave.id));
 
       (gameData.save_messages || []).forEach(msg => {
         if (msg && !msg.isRead && msg.id) {
@@ -348,7 +348,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
 
     try {
       setIsSending(true);
-      const messagesRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_messages'));
+      const messagesRef = collection(db, paths.saveMessages(appId, userId, activeSave.id));
       const newMsgRef = await addDoc(messagesRef, playerMessage);
       const playerMsgWithId = { id: newMsgRef.id, ...playerMessage };
 
@@ -409,7 +409,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       };
 
       try {
-        const careerEventsRef = collection(db, paths.playerSaveCollection(appId, userId, activeSave.id, 'save_career_events'));
+        const careerEventsRef = collection(db, paths.saveCareerEvents(appId, userId, activeSave.id));
         const careerEventRef = await addDoc(careerEventsRef, careerEventData);
         const careerEventWithId = { id: careerEventRef.id, ...careerEventData };
         setGameData(prevData => ({

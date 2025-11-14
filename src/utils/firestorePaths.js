@@ -59,6 +59,9 @@ export const careerEventsCol = (appId, userId, saveId) =>
 export const journalEntriesCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_journal_entries`;
 
+export const saveSubcollection = (appId, userId, saveId, subcollection) =>
+  `${playerSaveDoc(appId, userId, saveId)}/${subcollection}`;
+
 // -------- Alias exports to match older utility names --------
 
 // Used by deleteSave.js and possibly other helpers
@@ -103,6 +106,7 @@ export const paths = {
   saveStorylines,
   saveCareerEvents,
   saveJournalEntries,
+  saveSubcollection,
 
   journal,
 };
