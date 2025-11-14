@@ -155,6 +155,21 @@ const REPLY_TONE_DELTAS = {
   no: -5
 };
 
+const humanizePromiseType = (value) => {
+  if (!value) return null;
+  try {
+    return value
+      .toString()
+      .split(/[_\s]+/)
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  } catch (error) {
+    console.warn('[journal] Failed to humanize promise type', error);
+    return value;
+  }
+};
+
 const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, addToast }) => {
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState(null);
@@ -370,31 +385,90 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
 
         let promiseEntry = null;
 
+        const contactIdForEntry = contact?.id || selectedContactId || null;
+        const contactNameForEntry = typeof contact?.name === 'string'
+          ? contact.name
+          : (selectedContact?.name || null);
+
         if (aiPromise) {
+          const summary = aiPromise.promiseSummary || aiPromise.subject || trimmedReply;
           promiseEntry = {
             type: 'promise',
-            subject: aiPromise.subject,
-            originalText: aiPromise.original,
+            title: summary || `Promise to ${contactNameForEntry || 'talent'}`,
+            subject: summary || trimmedReply,
+            description: trimmedReply,
+            originalText: trimmedReply,
             createdAt: nowTs,
+            status: 'active',
+            category: 'Talent',
+            source: 'message',
+            resolved: false,
+            done: false,
+            promiseDetails: {
+              summary,
+              detectedBy: aiPromise.metadata?.detectedBy || 'ai',
+              replyTone,
+              aiReplyType: aiPromise.metadata?.replyType || replyTone,
+              originalMessage: originalMessageBody || null,
+              wrestlerId: contactIdForEntry || null,
+              wrestlerName: contactNameForEntry || null,
+            },
+            linkedEntities: contactIdForEntry ? { wrestlerIds: [contactIdForEntry] } : null,
           };
         }
 
         if (!promiseEntry) {
           const legacyFallback = extractPromiseFromReply({
             replyText: trimmedReply,
-            wrestlerName: contact?.name || selectedContact?.name || null,
+            wrestlerName: contactNameForEntry,
             gameDateISO
           });
 
           if (legacyFallback) {
             console.log('[journal] legacy fallback detected promise:', legacyFallback);
-            promiseEntry = legacyFallback;
+            const fallbackSummary = humanizePromiseType(legacyFallback?.promise?.type) || trimmedReply;
+            promiseEntry = {
+              type: 'promise',
+              title: fallbackSummary || `Promise to ${contactNameForEntry || legacyFallback.who || 'talent'}`,
+              subject: fallbackSummary,
+              description: legacyFallback.textOriginal || trimmedReply,
+              originalText: legacyFallback.textOriginal || trimmedReply,
+              createdAt: nowTs,
+              status: 'active',
+              category: 'Talent',
+              source: 'message',
+              resolved: false,
+              done: false,
+              promiseDetails: {
+                summary: fallbackSummary,
+                detectedBy: 'heuristic',
+                dueHint: legacyFallback?.promise?.dueHint || null,
+                madeOn: legacyFallback?.promise?.madeOn || null,
+                replyTone,
+                wrestlerId: contactIdForEntry || null,
+                wrestlerName: contactNameForEntry || legacyFallback?.who || null,
+              },
+              linkedEntities: contactIdForEntry ? { wrestlerIds: [contactIdForEntry] } : null,
+            };
           }
         }
 
         if (promiseEntry) {
-          console.log('[journal] creating journal entry for promise:', promiseEntry.subject || promiseEntry.title || promiseEntry.textOriginal || trimmedReply);
-          await addJournalEntry(db, appId, userId, activeSave.id, promiseEntry);
+          console.log('[journal] creating journal entry for promise:', promiseEntry);
+          const savedEntry = await addJournalEntry(db, appId, userId, activeSave.id, promiseEntry);
+          if (savedEntry) {
+            setGameData(prevData => {
+              const previousEntries = Array.isArray(prevData.save_journal_entries)
+                ? prevData.save_journal_entries
+                : [];
+              const nextEntries = [...previousEntries, savedEntry];
+              console.log('[journal] journal entries in state:', nextEntries.length);
+              return {
+                ...prevData,
+                save_journal_entries: nextEntries,
+              };
+            });
+          }
         }
       } catch (e) {
         console.warn('Journal capture failed (non-fatal):', e);
