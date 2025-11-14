@@ -1,5 +1,5 @@
 import { addDoc, collection, doc, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
-import paths, { saveJournalEntries as saveJournalEntriesPath } from '@/utils/firestorePaths';
+import { saveJournalEntries as saveJournalEntriesPath } from '@/utils/firestorePaths';
 import { callAI } from '@/utils/aiClient';
 
 export const journalPaths = {
@@ -32,14 +32,76 @@ export async function addJournalEntry(...args) {
     throw new Error('[journal] addJournalEntry missing required data');
   }
 
-  const colRef = collection(db, paths.journal(appId, userId, saveId));
-  const docRef = await addDoc(colRef, {
-    createdAt: Timestamp.now(),
-    status: 'open',     // 'open' | 'completed' | 'cancelled' | 'broken'
-    source: 'message',  // origin: 'message' for now
-    ...entry
-  });
-  return docRef.id;
+  const normalizeTimestamp = (value) => {
+    if (!value) return Timestamp.now();
+    try {
+      if (value instanceof Timestamp) return value;
+      if (typeof value.toMillis === 'function' && typeof value.toDate === 'function') return value;
+      if (value instanceof Date) return Timestamp.fromDate(value);
+      if (typeof value === 'number') return Timestamp.fromMillis(value);
+      if (typeof value === 'string') {
+        const parsed = Date.parse(value);
+        if (!Number.isNaN(parsed)) {
+          return Timestamp.fromMillis(parsed);
+        }
+      }
+    } catch (error) {
+      console.warn('[journal] Failed to normalize timestamp, using now()', error);
+    }
+    return Timestamp.now();
+  };
+
+  const createdAt = normalizeTimestamp(entry.createdAt);
+  const updatedAt = entry.updatedAt ? normalizeTimestamp(entry.updatedAt) : createdAt;
+
+  const textSource = entry.description || entry.body || entry.originalText || entry.textOriginal || entry.original || null;
+  const title = entry.title || entry.subject || (textSource ? textSource.slice(0, 80) : 'Untitled Entry');
+  const normalizeStatus = (status) => {
+    if (!status) return 'active';
+    try {
+      const lowered = status.toString().toLowerCase();
+      if (lowered === 'open') return 'active';
+      return lowered;
+    } catch (error) {
+      console.warn('[journal] Failed to normalize status', error);
+      return 'active';
+    }
+  };
+
+  const normalizedCategory = (() => {
+    if (entry.category) return entry.category;
+    if ((entry.type || '').toLowerCase() === 'promise') return 'Talent';
+    return 'Other';
+  })();
+
+  const normalizedEntry = {
+    type: entry.type || 'note',
+    status: normalizeStatus(entry.status),
+    category: normalizedCategory,
+    source: entry.source || 'message',
+    subject: entry.subject || title,
+    title,
+    description: textSource,
+    originalText: entry.originalText || entry.textOriginal || entry.original || entry.body || null,
+    createdAt,
+    updatedAt,
+    resolved: entry.resolved ?? entry.done ?? false,
+    done: entry.done ?? entry.resolved ?? false,
+    promiseDetails: entry.promiseDetails || null,
+    linkedEntities: entry.linkedEntities || null,
+  };
+
+  const payload = {
+    ...entry,
+    ...normalizedEntry,
+  };
+
+  const colRef = collection(db, saveJournalEntriesPath(appId, userId, saveId));
+  const docRef = await addDoc(colRef, payload);
+
+  const savedEntry = { id: docRef.id, ...payload };
+  console.log('[journal] saved journal entry', docRef.id, payload.type, payload.title);
+  return savedEntry;
 }
 
 export async function detectPromiseWithAI({ requestText, replyText, replyType }) {
@@ -65,6 +127,11 @@ export async function detectPromiseWithAI({ requestText, replyText, replyType })
       type: 'promise',
       subject: result.promiseSummary || replyText,
       original: replyText,
+      promiseSummary: result.promiseSummary || null,
+      metadata: {
+        detectedBy: 'ai',
+        replyType,
+      },
     };
   } catch (err) {
     console.error('[journal] AI promise detection failed:', err);
@@ -369,7 +436,14 @@ export const evaluateQuests = async (
       return { quests: [], succeeded: [], failed: [], summary: { evaluated: 0, failed: 0, succeeded: 0 } };
     }
 
-    const allQuests = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) || [];
+    const rawQuests = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) || [];
+    const allQuests = rawQuests.filter((quest) => {
+      const valid = quest && typeof quest === 'object';
+      if (!valid) {
+        console.warn('[Journal] Skipping malformed quest entry during evaluation', quest);
+      }
+      return valid;
+    });
 
     const roster = Array.isArray(gameData?.save_wrestlers) ? gameData.save_wrestlers : [];
     const rosterById = buildRosterMaps(roster);
@@ -383,7 +457,14 @@ export const evaluateQuests = async (
     const currentMillis = toMillis(currentGameTimestamp);
     const evaluationTimestamp = Timestamp.now();
 
-    const updatedQuests = new Map(allQuests.map((quest) => [quest.id, quest]));
+    const updatedQuests = new Map();
+    for (const quest of allQuests) {
+      if (!quest?.id) {
+        console.warn('[Journal] Encountered quest without id, skipping evaluation entry', quest);
+        continue;
+      }
+      updatedQuests.set(quest.id, quest);
+    }
     const failed = [];
     const succeeded = [];
 
@@ -416,7 +497,11 @@ export const evaluateQuests = async (
     };
 
     for (const quest of allQuests) {
-      if (!quest || !isQuestOpen(quest.status)) {
+      if (!quest || !quest.id) {
+        continue;
+      }
+
+      if (!isQuestOpen(quest.status)) {
         continue;
       }
 
@@ -433,7 +518,12 @@ export const evaluateQuests = async (
       const questRef = doc(db, saveJournalEntriesPath(appId, userId, saveId), quest.id);
 
       const updatedNotes = [...ensureArray(quest.notes)];
-      const dueDateLabel = formatGameDate(Timestamp.fromMillis(dueMillis));
+      let dueDateLabel = 'the deadline';
+      try {
+        dueDateLabel = formatGameDate(Timestamp.fromMillis(dueMillis));
+      } catch (formatError) {
+        console.warn('[Journal] Failed to format quest due date', formatError);
+      }
       const wrestlerName = firstLinkedWrestlerName(quest);
       const questTitle = quest?.title || 'Untitled Quest';
       const failureMessage = wrestlerName

@@ -29,12 +29,27 @@ const formatTimestamp = (value) => {
   }
 };
 
+const sanitizeEntries = (entries) => {
+  if (!Array.isArray(entries)) return [];
+  return entries.filter((entry) => {
+    const valid = entry && typeof entry === 'object';
+    if (!valid) {
+      console.warn('[journal] Skipping malformed entry', entry);
+    }
+    return valid;
+  });
+};
+
 const JournalPanel = ({ quests = [], onClose }) => {
   const [filter, setFilter] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
 
+  const safeEntries = useMemo(() => sanitizeEntries(quests), [quests]);
+
+  console.log('[journal] rendering JournalPanel with', safeEntries.length, 'entries');
+
   const sortedQuests = useMemo(() => {
-    return [...quests].sort((a, b) => {
+    return [...safeEntries].sort((a, b) => {
       const aCreated = typeof a?.createdAt?.toMillis === 'function'
         ? a.createdAt.toMillis()
         : (a?.createdAt instanceof Date ? a.createdAt.getTime() : Date.parse(a?.createdAt || 0) || 0);
@@ -43,7 +58,7 @@ const JournalPanel = ({ quests = [], onClose }) => {
         : (b?.createdAt instanceof Date ? b.createdAt.getTime() : Date.parse(b?.createdAt || 0) || 0);
       return bCreated - aCreated;
     });
-  }, [quests]);
+  }, [safeEntries]);
 
   const filteredQuests = useMemo(() => {
     if (filter === 'All') return sortedQuests;
