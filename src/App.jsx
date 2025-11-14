@@ -36,7 +36,7 @@ import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
 import { evaluateQuests } from './utils/journal';
 import normalizeWrestler, { prepareWrestlerForStorage } from './utils/wrestlerSchema';
-import { DEFAULT_COMPANY, DEFAULT_WRESTLERS, DEFAULT_DATASET_ID } from './utils/defaultDataset';
+import { DEFAULT_COMPANY, DEFAULT_WRESTLERS, DEFAULT_RELATIONSHIPS, DEFAULT_DATASET_ID } from './utils/defaultDataset';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -393,12 +393,14 @@ function App() {
     const datasetRef = doc(db, paths.publicDataCollection(appId, 'datasets'), datasetId);
     const wrestlersCollection = collection(db, datasetWrestlersCol(appId));
     const companiesCollection = collection(db, datasetCompaniesCol(appId));
+    const relationshipsCollection = collection(db, paths.publicDataCollection(appId, 'dataset_relationships'));
 
     try {
-      const [datasetSnap, wrestlersSnapshot, companiesSnapshot] = await Promise.all([
+      const [datasetSnap, wrestlersSnapshot, companiesSnapshot, relationshipsSnapshot] = await Promise.all([
         getDoc(datasetRef),
         getDocs(wrestlersCollection),
-        getDocs(companiesCollection)
+        getDocs(companiesCollection),
+        getDocs(relationshipsCollection)
       ]);
 
       const existingCreatedAt = (datasetSnap.exists() && datasetSnap.data()?.createdAt)
@@ -426,8 +428,14 @@ function App() {
         return !data.datasetId || data.datasetId === datasetId;
       });
 
+      const targetRelationshipDocs = relationshipsSnapshot.docs.filter((docSnap) => {
+        const data = docSnap.data() || {};
+        return !data.datasetId || data.datasetId === datasetId;
+      });
+
       const wrestlerCount = targetWrestlerDocs.length;
       const companyCount = targetCompanyDocs.length;
+      const relationshipCount = targetRelationshipDocs.length;
       const hasPGWCompany = targetCompanyDocs.some((docSnap) => {
         const data = docSnap.data() || {};
         return (
@@ -437,24 +445,30 @@ function App() {
         );
       });
 
-      const needsReseed = wrestlerCount < DEFAULT_WRESTLERS.length || !hasPGWCompany;
+      const needsReseed =
+        wrestlerCount < DEFAULT_WRESTLERS.length ||
+        !hasPGWCompany ||
+        relationshipCount < DEFAULT_RELATIONSHIPS.length;
 
       if (!needsReseed) {
         console.log(
           '[DEFAULT DATA] Reusing existing public dataset:',
-          `${wrestlerCount} wrestlers, ${companyCount} companies`
+          `${wrestlerCount} wrestlers, ${companyCount} companies, ${relationshipCount} relationships`
         );
         return;
       }
 
       setLoadingMessage('Creating default dataset...');
 
-      if (targetWrestlerDocs.length > 0 || targetCompanyDocs.length > 0) {
+      if (targetWrestlerDocs.length > 0 || targetCompanyDocs.length > 0 || targetRelationshipDocs.length > 0) {
         const deleteBatch = writeBatch(db);
         for (const docSnap of targetWrestlerDocs) {
           deleteBatch.delete(docSnap.ref);
         }
         for (const docSnap of targetCompanyDocs) {
+          deleteBatch.delete(docSnap.ref);
+        }
+        for (const docSnap of targetRelationshipDocs) {
           deleteBatch.delete(docSnap.ref);
         }
         await deleteBatch.commit();
@@ -481,11 +495,26 @@ function App() {
         seedBatch.set(wrestlerRef, storageReady);
       }
 
+      for (const relationship of DEFAULT_RELATIONSHIPS) {
+        const relationshipRef = doc(relationshipsCollection, relationship.id);
+        const relationshipData = {
+          ...relationship,
+          datasetId: relationship.datasetId || datasetId,
+          personA_Id: relationship.personA_Id,
+          personB_Id: relationship.personB_Id,
+        };
+        seedBatch.set(relationshipRef, relationshipData);
+      }
+
       await seedBatch.commit();
 
       console.log(
         '[DEFAULT DATA] Seeded PGW public dataset:',
-        `${DEFAULT_WRESTLERS.length} wrestlers, 1 company`
+        `${DEFAULT_WRESTLERS.length} wrestlers, 1 company, ${DEFAULT_RELATIONSHIPS.length} relationships`
+      );
+      console.log(
+        '[DEFAULT DATA] Seeded PGW relationships:',
+        `${DEFAULT_RELATIONSHIPS.length} links`
       );
     } catch (error) {
       console.error('Error seeding dataset: ', error);
@@ -609,6 +638,7 @@ function App() {
       const pendingDatasetWrestlers = [];
       let loadedDatasetWrestlersCount = 0;
       let loadedDatasetCompaniesCount = 0;
+      let loadedDatasetRelationshipsCount = 0;
 
       setLoadingMessage('Copying core data...');
       for (const datasetCollectionName of ID_MAPPED_COLLECTIONS) {
@@ -705,6 +735,10 @@ function App() {
         const q = query(collection(db, datasetCollectionPath), where("datasetId", "==", datasetId));
         const querySnapshot = await getDocs(q);
 
+        if (datasetCollectionName === 'dataset_relationships') {
+          loadedDatasetRelationshipsCount = querySnapshot.size;
+        }
+
         for (const docSnap of querySnapshot.docs) {
           const docData = docSnap.data();
           let newDocData = { ...docData };
@@ -735,11 +769,18 @@ function App() {
           const newDocRef = doc(collection(db, paths.saveSubcollection(appId, userId, newSaveId, saveCollectionName)));
           batch.set(newDocRef, newDocData);
         }
+
+        if (datasetCollectionName === 'dataset_relationships') {
+          console.log(
+            '[NEW GAME] Cloned public relationships into save:',
+            `${querySnapshot.size} links`
+          );
+        }
       }
 
       console.log(
         '[NEW GAME] Creating new save from public dataset:',
-        `${loadedDatasetWrestlersCount} wrestlers, ${loadedDatasetCompaniesCount} companies`
+        `${loadedDatasetWrestlersCount} wrestlers, ${loadedDatasetCompaniesCount} companies, ${loadedDatasetRelationshipsCount} relationships`
       );
       await batch.commit();
 
@@ -1755,6 +1796,11 @@ const handleGetAIAdvice = async () => {
 
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
 
+    const companyName = playerCompany?.name ?? 'Your Company';
+    const displayCompanyName = playerCompany?.shortName
+      ? `${companyName} (${playerCompany.shortName})`
+      : companyName;
+
     const currentDateValue = activeSave?.currentDate?.toDate?.();
     const currentDateStr = currentDateValue?.toISOString?.().split('T')[0] ?? null;
     const plannedShow = gameData.save_shows?.find(show => {
@@ -1774,7 +1820,7 @@ const handleGetAIAdvice = async () => {
       <div className="max-w-7xl mx-auto p-4 md:p-8 text-white">
         <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-800 rounded-lg shadow-lg">
           <div>
-            <h1 className="text-2xl font-bold text-white">{playerCompany?.name || 'Your Company'}</h1>
+            <h1 className="text-2xl font-bold text-white">{displayCompanyName}</h1>
             <p className="text-indigo-300">{activeSave.saveName}</p>
           </div>
           <div className="text-center md:text-right mt-4 md:mt-0">

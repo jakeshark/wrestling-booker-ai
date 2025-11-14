@@ -1948,4 +1948,115 @@ export const DEFAULT_WRESTLERS = [
   }
 ];
 
-export default { DEFAULT_COMPANY, DEFAULT_WRESTLERS, DEFAULT_DATASET_ID };
+export const DEFAULT_RELATIONSHIPS = [
+  {
+    id: 'rel-pgw-alex-leo-allies',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-alex-the-ace-valour',
+    personB_Id: 'pgw-leo-lionheart-cruz',
+    relationshipType: 'Locker Room Allies',
+    status: 'Close Friends',
+    notes: 'Alex mentored Leo through the PGW dojo system, and the two captain the babyface locker room together.'
+  },
+  {
+    id: 'rel-pgw-alex-jax-rivals',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-alex-the-ace-valour',
+    personB_Id: 'pgw-jax-the-juggernaut-stone',
+    relationshipType: 'World Title Rivals',
+    status: 'Hated Rivals',
+    notes: 'Their trilogy of title matches ended with a dangerous ringside brawl that neither has forgiven.'
+  },
+  {
+    id: 'rel-pgw-mia-eliza-tag',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-mia-showtime-evans',
+    personB_Id: 'pgw-eliza-high-flyer-hayes',
+    relationshipType: 'Tag Team Partners',
+    status: 'Tag Partners & Close Friends',
+    notes: 'The Skyline Sirens tore up the indies together and remain PGW’s most electric women’s duo.'
+  },
+  {
+    id: 'rel-pgw-mia-cassidy-heat',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-mia-showtime-evans',
+    personB_Id: 'pgw-cassidy-quinn',
+    relationshipType: 'Backstage Rivals',
+    status: 'Backstage Dislike',
+    notes: 'Cassidy politicked her way into Mia’s spotlight run and the resentment has never cooled.'
+  },
+  {
+    id: 'rel-pgw-kenji-trevor-respect',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-kenji-codebreak-tanaka',
+    personB_Id: 'pgw-trevor-the-technician-reid',
+    relationshipType: 'Technical Sparring Partners',
+    status: 'Friendly Competition',
+    notes: 'Kenji and Trevor spend off-days trading counters in the PGW dojo, pushing each other to innovate.'
+  },
+  {
+    id: 'rel-pgw-silas-bishop-alliance',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-silas-the-serpent-retch',
+    personB_Id: 'pgw-bishop-graves',
+    relationshipType: 'Heel Alliance',
+    status: 'Allies of Convenience',
+    notes: 'A sinister partnership built on mutual greed and mind games at the expense of the PGW faithful.'
+  },
+  {
+    id: 'rel-pgw-silas-riot-blood',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-silas-the-serpent-retch',
+    personB_Id: 'pgw-riot-reynolds',
+    relationshipType: 'Grudge Rivals',
+    status: 'Deep Hatred',
+    notes: 'Riot still carries scars from Silas’ chair-assisted choke that nearly ended his career.'
+  },
+  {
+    id: 'rel-pgw-buck-goliath-hoss',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-big-country-buck-donovan',
+    personB_Id: 'pgw-goliath',
+    relationshipType: 'Powerhouse Rivals',
+    status: 'Mutual Dislike',
+    notes: 'Two titans battling for hoss supremacy after a locker-room scuffle shattered a weight rack.'
+  },
+  {
+    id: 'rel-pgw-dante-johnny-mentor',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-dante-ironjaw-morales',
+    personB_Id: 'pgw-johnny-spade',
+    relationshipType: 'Mentor & Protégé',
+    status: 'Mentor and Friend',
+    notes: 'Johnny took Dante under his wing when Ironjaw first arrived from Mexico, teaching him PGW’s playbook.'
+  },
+  {
+    id: 'rel-pgw-wade-riot-expartners',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-wildcard-wade-ripley',
+    personB_Id: 'pgw-riot-reynolds',
+    relationshipType: 'Former Tag Partners',
+    status: 'Bad Blood & Dislike',
+    notes: 'Their Runaway Renegades team imploded after Wade no-showed the blowoff match, leaving Riot humiliated.'
+  },
+  {
+    id: 'rel-pgw-victoria-zara-mentor',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-victoria-the-queen-black',
+    personB_Id: 'pgw-zara-storm',
+    relationshipType: 'Mentor & Protégé',
+    status: 'Trusted Mentor and Friend',
+    notes: 'Victoria is grooming Zara as the next standard-bearer for PGW’s women’s division.'
+  },
+  {
+    id: 'rel-pgw-luke-marcus-botch',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-lightning-luke-lawson',
+    personB_Id: 'pgw-magic-marcus-flint',
+    relationshipType: 'Accident Fallout',
+    status: 'Resentful Hatred',
+    notes: 'Marcus botched a ladder dive that shattered Luke’s collarbone, and Luke has never trusted him since.'
+  }
+];
+
+export default { DEFAULT_COMPANY, DEFAULT_WRESTLERS, DEFAULT_RELATIONSHIPS, DEFAULT_DATASET_ID };
