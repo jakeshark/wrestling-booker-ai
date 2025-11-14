@@ -1,7 +1,7 @@
 export const DEFAULT_DATASET_ID = "default-fiction";
 
 export const DEFAULT_COMPANY = {
-  id: "pgw-proving-ground-wrestling",
+  id: "pgw",
   datasetId: DEFAULT_DATASET_ID,
   name: "Proving Ground Wrestling",
   shortName: "PGW",
@@ -1959,31 +1959,67 @@ export const DEFAULT_RELATIONSHIPS = [
     notes: 'Alex mentored Leo through the PGW dojo system, and the two captain the babyface locker room together.'
   },
   {
-    id: 'rel-pgw-alex-jax-rivals',
+    id: 'rel-pgw-leo-alex-allies',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-leo-lionheart-cruz',
+    personB_Id: 'pgw-alex-the-ace-valour',
+    relationshipType: 'Locker Room Allies',
+    status: 'Trusted Mentor',
+    notes: 'Leo leans on Alex for guidance on leadership decisions and backs him whenever locker room politics flare up.'
+  },
+  {
+    id: 'rel-pgw-alex-jax-heat',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-alex-the-ace-valour',
     personB_Id: 'pgw-jax-the-juggernaut-stone',
-    relationshipType: 'World Title Rivals',
-    status: 'Hated Rivals',
-    notes: 'Their trilogy of title matches ended with a dangerous ringside brawl that neither has forgiven.'
+    relationshipType: 'High-Pressure Program Fallout',
+    status: 'Has Legit Heat',
+    notes: 'A stiff sequence in their title program led to a scary botch, and the blame game still causes friction between them.'
   },
   {
-    id: 'rel-pgw-mia-eliza-tag',
+    id: 'rel-pgw-jax-alex-heat',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-jax-the-juggernaut-stone',
+    personB_Id: 'pgw-alex-the-ace-valour',
+    relationshipType: 'High-Pressure Program Fallout',
+    status: 'Lingering Resentment',
+    notes: 'Jax feels Alex undercut him after the botched finish of their series and still bristles at production meetings with him.'
+  },
+  {
+    id: 'rel-pgw-mia-eliza-roadpartners',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-mia-showtime-evans',
     personB_Id: 'pgw-eliza-high-flyer-hayes',
-    relationshipType: 'Tag Team Partners',
-    status: 'Tag Partners & Close Friends',
-    notes: 'The Skyline Sirens tore up the indies together and remain PGW’s most electric women’s duo.'
+    relationshipType: 'Road Partners & Tag Team',
+    status: 'Ride-or-Die Partners',
+    notes: 'Mia and Eliza share travel, tape study, and business decisions together after breaking out as an indie duo.'
   },
   {
-    id: 'rel-pgw-mia-cassidy-heat',
+    id: 'rel-pgw-eliza-mia-roadpartners',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-eliza-high-flyer-hayes',
+    personB_Id: 'pgw-mia-showtime-evans',
+    relationshipType: 'Road Partners & Tag Team',
+    status: 'Locker Room Family',
+    notes: 'Eliza credits Mia with teaching her media savvy and keeping her grounded during grueling tour loops.'
+  },
+  {
+    id: 'rel-pgw-mia-cassidy-politics',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-mia-showtime-evans',
     personB_Id: 'pgw-cassidy-quinn',
-    relationshipType: 'Backstage Rivals',
+    relationshipType: 'Spotlight Politics Dispute',
     status: 'Backstage Dislike',
-    notes: 'Cassidy politicked her way into Mia’s spotlight run and the resentment has never cooled.'
+    notes: 'Cassidy politicked into a featured slot Mia was promised, and Mia still refuses to collaborate with her off camera.'
+  },
+  {
+    id: 'rel-pgw-cassidy-mia-politics',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-cassidy-quinn',
+    personB_Id: 'pgw-mia-showtime-evans',
+    relationshipType: 'Spotlight Politics Dispute',
+    status: 'Professional Tension',
+    notes: 'Cassidy believes Mia froze her out of opportunities after the politicking incident and avoids sharing locker room agents.'
   },
   {
     id: 'rel-pgw-kenji-trevor-respect',
@@ -1995,31 +2031,67 @@ export const DEFAULT_RELATIONSHIPS = [
     notes: 'Kenji and Trevor spend off-days trading counters in the PGW dojo, pushing each other to innovate.'
   },
   {
-    id: 'rel-pgw-silas-bishop-alliance',
+    id: 'rel-pgw-trevor-kenji-respect',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-trevor-the-technician-reid',
+    personB_Id: 'pgw-kenji-codebreak-tanaka',
+    relationshipType: 'Technical Sparring Partners',
+    status: 'Mutual Respect',
+    notes: 'Trevor trusts Kenji to stress-test new sequences safely before they debut them on big PGW cards.'
+  },
+  {
+    id: 'rel-pgw-silas-bishop-allies',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-silas-the-serpent-retch',
     personB_Id: 'pgw-bishop-graves',
-    relationshipType: 'Heel Alliance',
-    status: 'Allies of Convenience',
-    notes: 'A sinister partnership built on mutual greed and mind games at the expense of the PGW faithful.'
+    relationshipType: 'Backstage Allies',
+    status: 'Close Friends',
+    notes: 'Silas and Bishop bonded over crafting darker personas and look out for each other when creative politics get messy.'
   },
   {
-    id: 'rel-pgw-silas-riot-blood',
+    id: 'rel-pgw-bishop-silas-allies',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-bishop-graves',
+    personB_Id: 'pgw-silas-the-serpent-retch',
+    relationshipType: 'Backstage Allies',
+    status: 'Protective Partners',
+    notes: 'Bishop appreciates how Silas shields him from executive scrutiny and repays the favor by amplifying Silas’ ideas.'
+  },
+  {
+    id: 'rel-pgw-silas-riot-fallout',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-silas-the-serpent-retch',
     personB_Id: 'pgw-riot-reynolds',
-    relationshipType: 'Grudge Rivals',
-    status: 'Deep Hatred',
-    notes: 'Riot still carries scars from Silas’ chair-assisted choke that nearly ended his career.'
+    relationshipType: 'Career-Threatening Incident',
+    status: 'Severe Backstage Heat',
+    notes: 'Riot still carries scars from Silas’ chair-assisted choke, and Silas knows Riot refuses to forget the real injury scare.'
   },
   {
-    id: 'rel-pgw-buck-goliath-hoss',
+    id: 'rel-pgw-riot-silas-fallout',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-riot-reynolds',
+    personB_Id: 'pgw-silas-the-serpent-retch',
+    relationshipType: 'Career-Threatening Incident',
+    status: 'Keeps Distance',
+    notes: 'Riot maintains professional distance from Silas after the incident that nearly ended his career and insists on agent oversight.'
+  },
+  {
+    id: 'rel-pgw-buck-goliath-clash',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-big-country-buck-donovan',
     personB_Id: 'pgw-goliath',
-    relationshipType: 'Powerhouse Rivals',
+    relationshipType: 'Locker Room Alpha Clash',
     status: 'Mutual Dislike',
-    notes: 'Two titans battling for hoss supremacy after a locker-room scuffle shattered a weight rack.'
+    notes: 'A shattered weight rack from a heated gym confrontation keeps Buck and Goliath eyeing each other warily backstage.'
+  },
+  {
+    id: 'rel-pgw-goliath-buck-clash',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-goliath',
+    personB_Id: 'pgw-big-country-buck-donovan',
+    relationshipType: 'Locker Room Alpha Clash',
+    status: 'Power Struggle',
+    notes: 'Goliath refuses to concede hoss supremacy to Buck and keeps matches heavily agented when they share cards.'
   },
   {
     id: 'rel-pgw-dante-johnny-mentor',
@@ -2031,6 +2103,15 @@ export const DEFAULT_RELATIONSHIPS = [
     notes: 'Johnny took Dante under his wing when Ironjaw first arrived from Mexico, teaching him PGW’s playbook.'
   },
   {
+    id: 'rel-pgw-johnny-dante-mentor',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-johnny-spade',
+    personB_Id: 'pgw-dante-ironjaw-morales',
+    relationshipType: 'Mentor & Protégé',
+    status: 'Proud Coach',
+    notes: 'Johnny sees Dante as proof his training methods work and proudly pitches him for big-match opportunities.'
+  },
+  {
     id: 'rel-pgw-wade-riot-expartners',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-wildcard-wade-ripley',
@@ -2038,6 +2119,15 @@ export const DEFAULT_RELATIONSHIPS = [
     relationshipType: 'Former Tag Partners',
     status: 'Bad Blood & Dislike',
     notes: 'Their Runaway Renegades team imploded after Wade no-showed the blowoff match, leaving Riot humiliated.'
+  },
+  {
+    id: 'rel-pgw-riot-wade-expartners',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-riot-reynolds',
+    personB_Id: 'pgw-wildcard-wade-ripley',
+    relationshipType: 'Former Tag Partners',
+    status: 'Distrustful',
+    notes: 'Riot refuses to trust Wade with big-match responsibilities after being left hanging in their breakup tour.'
   },
   {
     id: 'rel-pgw-victoria-zara-mentor',
@@ -2049,13 +2139,31 @@ export const DEFAULT_RELATIONSHIPS = [
     notes: 'Victoria is grooming Zara as the next standard-bearer for PGW’s women’s division.'
   },
   {
+    id: 'rel-pgw-zara-victoria-mentor',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-zara-storm',
+    personB_Id: 'pgw-victoria-the-queen-black',
+    relationshipType: 'Mentor & Protégé',
+    status: 'Looks Up To Mentor',
+    notes: 'Zara leans on Victoria for agenting advice and credits her for smoothing over locker room politics.'
+  },
+  {
     id: 'rel-pgw-luke-marcus-botch',
     datasetId: DEFAULT_DATASET_ID,
     personA_Id: 'pgw-lightning-luke-lawson',
     personB_Id: 'pgw-magic-marcus-flint',
-    relationshipType: 'Accident Fallout',
-    status: 'Resentful Hatred',
+    relationshipType: 'Injury Fallout',
+    status: 'Resentful Heat',
     notes: 'Marcus botched a ladder dive that shattered Luke’s collarbone, and Luke has never trusted him since.'
+  },
+  {
+    id: 'rel-pgw-marcus-luke-botch',
+    datasetId: DEFAULT_DATASET_ID,
+    personA_Id: 'pgw-magic-marcus-flint',
+    personB_Id: 'pgw-lightning-luke-lawson',
+    relationshipType: 'Injury Fallout',
+    status: 'Guilt-Ridden',
+    notes: 'Marcus still apologizes for the ladder mishap that injured Luke and worries any pairing will reopen old wounds.'
   }
 ];
 
