@@ -373,6 +373,14 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       }
 
       const wrestler = contact;
+      const sanitizedWrestlerId = wrestler?.id;
+      const sanitizedWrestlerName = typeof wrestler?.name === 'string' ? wrestler.name.trim() : '';
+
+      if (!sanitizedWrestlerId || sanitizedWrestlerName.length === 0) {
+        console.warn('Reply aborted: invalid wrestler metadata for backstage message thread.', wrestler);
+        setIsSending(false);
+        return;
+      }
       const latestTopicMessage = [...conversationMessages]
         .reverse()
         .find(message => message.senderId === selectedContactId && message.topic);
@@ -381,21 +389,21 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       const moraleDelta = REPLY_TONE_DELTAS[replyTone] ?? 0;
       const currentMorale = typeof wrestler.morale === 'number' ? wrestler.morale : 50;
       const clampedMorale = Math.max(0, Math.min(100, currentMorale + moraleDelta));
-      const wrestlerDocRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), wrestler.id);
+      const wrestlerDocRef = doc(db, paths.saveWrestlers(appId, userId, activeSave.id), sanitizedWrestlerId);
       await setDoc(wrestlerDocRef, { morale: clampedMorale }, { merge: true });
 
       setGameData(prevData => ({
         ...prevData,
         save_wrestlers: (prevData.save_wrestlers || []).map(w => (
-          w.id === wrestler.id ? { ...w, morale: clampedMorale } : w
+          w.id === sanitizedWrestlerId ? { ...w, morale: clampedMorale } : w
         ))
       }));
 
-      const toastMessage = `${wrestler.name}: Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`;
+      const toastMessage = `${sanitizedWrestlerName}: Morale ${moraleDelta >= 0 ? '+' : ''}${moraleDelta}`;
 
       const careerEventData = {
         type: 'reply_effect',
-        wrestlerId: wrestler.id,
+        wrestlerId: sanitizedWrestlerId,
         moraleDelta,
         date: nowTs
       };
@@ -412,7 +420,7 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
         console.error('Error logging reply effect career event:', careerEventError);
       }
 
-      const updatedWrestler = { ...wrestler, morale: clampedMorale };
+      const updatedWrestler = { ...wrestler, id: sanitizedWrestlerId, name: sanitizedWrestlerName, morale: clampedMorale };
       const reactionData = await callAI('wrestler-reaction', {
         wrestler: {
           id: updatedWrestler.id,
@@ -429,8 +437,8 @@ const useMessages = ({ gameData, setGameData, activeSave, db, appId, userId, add
       let reactionSaved = false;
       if (reactionData && reactionData.message) {
         const followMessage = {
-          senderId: wrestler.id,
-          senderName: wrestler.name,
+          senderId: sanitizedWrestlerId,
+          senderName: sanitizedWrestlerName,
           recipientId: 'booker',
           body: reactionData.message,
           timestamp: nowTs,

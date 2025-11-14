@@ -810,32 +810,60 @@ function App() {
   };
 
   const generateAndSaveMessage = async (saveId, wrestler, topic) => {
-    if (!wrestler || !wrestler.id || !wrestler.name) {
+    const sanitizedId = wrestler?.id;
+    const sanitizedName = typeof wrestler?.name === 'string' ? wrestler.name.trim() : '';
+
+    if (!sanitizedId || sanitizedName.length === 0) {
       console.warn("AI Engine: Tried to generate message for invalid wrestler:", wrestler);
       return;
     }
 
-    console.log(`AI Engine: Generating message for ${wrestler.name} about ${topic}`);
-    setLoadingMessage(`Generating event for ${wrestler.name}...`);
+    const sanitizedWrestler = {
+      id: sanitizedId,
+      name: sanitizedName,
+      disposition: wrestler?.disposition,
+      gimmick: wrestler?.gimmick,
+      morale: typeof wrestler?.morale === 'number' ? wrestler.morale : undefined
+    };
+
+    const playerPromotion = (() => {
+      const promotionId = activeSave?.playerCompanyId;
+      if (!promotionId) return null;
+      return (gameData?.save_companies || []).find(company => company?.id === promotionId) || null;
+    })();
+
+    console.log(`AI Engine: Generating message for ${sanitizedWrestler.name} about ${topic}`);
+    setLoadingMessage(`Generating event for ${sanitizedWrestler.name}...`);
 
     try {
-      const result = await callAI('wrestler-message', {
+      const aiPayload = {
         wrestler: {
-          id: wrestler.id,
-          name: wrestler.name,
-          disposition: wrestler.disposition,
-          gimmick: wrestler.gimmick,
-          morale: wrestler.morale
+          id: sanitizedWrestler.id,
+          name: sanitizedWrestler.name,
+          disposition: sanitizedWrestler.disposition,
+          gimmick: sanitizedWrestler.gimmick,
+          morale: sanitizedWrestler.morale
         },
         topic
-      });
+      };
+
+      if (playerPromotion) {
+        aiPayload.promotion = {
+          id: playerPromotion.id,
+          name: playerPromotion.name,
+          prestige: playerPromotion.prestige,
+          size: playerPromotion.size
+        };
+      }
+
+      const result = await callAI('wrestler-message', aiPayload);
 
       const messageText = result.message;
       const replyOptions = result.replyOptions || [];
 
       const messageData = {
-        senderId: wrestler.id,
-        senderName: wrestler.name,
+        senderId: sanitizedWrestler.id,
+        senderName: sanitizedWrestler.name,
         recipientId: 'booker', // so we can isolate convo
         body: messageText,
         timestamp: activeSave ? activeSave.currentDate : Timestamp.now(),
