@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameProvider';
 import { buildKeyRelationships } from '../utils/relationshipSummary';
+import { calculateOverallRating, getPopularityRating, getSkillRating } from '../utils/ratings';
 
 const alignmentBadgeClass = (alignment) => {
   switch (alignment) {
@@ -44,9 +45,16 @@ const getMoraleValue = (wrestler) => {
 };
 
 const getOverallValue = (wrestler) => {
+  const computed = calculateOverallRating(wrestler);
+  if (typeof computed === 'number') return computed;
   if (typeof wrestler?.overallRating === 'number') return wrestler.overallRating;
   if (typeof wrestler?.stats?.overall === 'number') return wrestler.stats.overall;
   return null;
+};
+
+const getPopularityValue = (wrestler) => {
+  const popularity = getPopularityRating(wrestler);
+  return typeof popularity === 'number' ? popularity : null;
 };
 
 const getStatValue = (wrestler, statKey) => {
@@ -55,22 +63,12 @@ const getStatValue = (wrestler, statKey) => {
 
   switch (statKey) {
     case 'brawl':
-      if (typeof stats.brawling === 'number') return stats.brawling;
-      if (typeof inRing.brawl === 'number') return inRing.brawl;
-      break;
     case 'speed':
-      if (typeof stats.speed === 'number') return stats.speed;
-      if (typeof inRing.speed === 'number') return inRing.speed;
-      break;
     case 'tech':
-      if (typeof stats.technical === 'number') return stats.technical;
-      if (typeof inRing.technical === 'number') return inRing.technical;
-      break;
-    case 'charisma':
-      if (typeof stats.charisma === 'number') return stats.charisma;
-      if (typeof wrestler?.charisma === 'number') return wrestler.charisma;
-      if (typeof wrestler?.character?.charisma === 'number') return wrestler.character.charisma;
-      break;
+    case 'charisma': {
+      const value = getSkillRating(wrestler, statKey);
+      return typeof value === 'number' ? value : null;
+    }
     case 'condition':
       if (typeof wrestler?.condition === 'number') return wrestler.condition;
       if (typeof wrestler?.physical?.condition === 'number') return wrestler.physical.condition;
@@ -234,9 +232,10 @@ const RosterScreen = () => {
             ) : (
               filteredWrestlers.map((wrestler) => {
                 const alignment = wrestler?.alignment || wrestler?.disposition || 'Unknown';
+                const popularity = getPopularityValue(wrestler);
                 const morale = getMoraleValue(wrestler);
                 const overall = getOverallValue(wrestler);
-                const displayNumber = morale ?? overall ?? '—';
+                const displayNumber = popularity ?? morale ?? overall ?? '—';
 
                 return (
                   <button
@@ -319,13 +318,14 @@ const RosterScreen = () => {
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
                     {[
+                      { label: 'Over', value: getPopularityValue(selectedWrestler) },
                       { label: 'Brawl', value: getStatValue(selectedWrestler, 'brawl') },
                       { label: 'Speed', value: getStatValue(selectedWrestler, 'speed') },
                       { label: 'Tech', value: getStatValue(selectedWrestler, 'tech') },
                       { label: 'Charisma', value: getStatValue(selectedWrestler, 'charisma') },
+                      { label: 'OVR', value: getOverallValue(selectedWrestler) },
                       { label: 'Condition', value: getStatValue(selectedWrestler, 'condition') },
-                      { label: 'Morale', value: getMoraleValue(selectedWrestler) },
-                      { label: 'Overall', value: getOverallValue(selectedWrestler) }
+                      { label: 'Morale', value: getMoraleValue(selectedWrestler) }
                     ]
                       .filter((item) => item.value !== null && item.value !== undefined)
                       .map((item) => (

@@ -436,6 +436,20 @@ function App() {
       const wrestlerCount = targetWrestlerDocs.length;
       const companyCount = targetCompanyDocs.length;
       const relationshipCount = targetRelationshipDocs.length;
+      const kayfabeRelationshipKeywords = [
+        'heel alliance',
+        'allies of convenience',
+        'world title rivals',
+        'hated rivals'
+      ];
+      const hasKayfabeRelationships = targetRelationshipDocs.some((docSnap) => {
+        const data = docSnap.data() || {};
+        const type = typeof data.relationshipType === 'string' ? data.relationshipType.toLowerCase() : '';
+        const status = typeof data.status === 'string' ? data.status.toLowerCase() : '';
+        return kayfabeRelationshipKeywords.some((keyword) =>
+          type.includes(keyword) || status.includes(keyword)
+        );
+      });
       const hasPGWCompany = targetCompanyDocs.some((docSnap) => {
         const data = docSnap.data() || {};
         return (
@@ -448,7 +462,8 @@ function App() {
       const needsReseed =
         wrestlerCount < DEFAULT_WRESTLERS.length ||
         !hasPGWCompany ||
-        relationshipCount < DEFAULT_RELATIONSHIPS.length;
+        relationshipCount !== DEFAULT_RELATIONSHIPS.length ||
+        hasKayfabeRelationships;
 
       if (!needsReseed) {
         console.log(
@@ -612,6 +627,27 @@ function App() {
     return paths.publicDataCollection(appId, collectionName);
   };
 
+  const sanitizeCompanyForSave = (companyData = {}, docId = '') => {
+    const trimmedName = typeof companyData.name === 'string' ? companyData.name.trim() : '';
+    const trimmedShortName = typeof companyData.shortName === 'string' ? companyData.shortName.trim() : '';
+    const isDefaultCompany = docId === DEFAULT_COMPANY.id;
+
+    const fallbackName = isDefaultCompany ? DEFAULT_COMPANY.name : 'Unnamed Promotion';
+    const fallbackShortName = isDefaultCompany ? DEFAULT_COMPANY.shortName : '';
+
+    const name = trimmedName || fallbackName;
+    const shortName = trimmedShortName || fallbackShortName || (trimmedName ? trimmedName : '');
+
+    const sanitized = { ...companyData, name };
+    if (shortName) {
+      sanitized.shortName = shortName;
+    } else {
+      delete sanitized.shortName;
+    }
+
+    return sanitized;
+  };
+
   // --- New Game ---
   const handleNewGame = async (datasetId) => {
     if (!userId || !db || !appId) return;
@@ -670,7 +706,12 @@ function App() {
           if (datasetCollectionName === 'dataset_wrestlers') {
             pendingDatasetWrestlers.push({ newDocRef, docData });
           } else {
-            batch.set(newDocRef, docData);
+            if (datasetCollectionName === 'dataset_companies') {
+              const sanitizedCompany = sanitizeCompanyForSave(docData, oldDocId);
+              batch.set(newDocRef, sanitizedCompany);
+            } else {
+              batch.set(newDocRef, docData);
+            }
           }
 
           if (datasetCollectionName === 'dataset_companies' && !playerCompanyId) {
@@ -1796,10 +1837,19 @@ const handleGetAIAdvice = async () => {
 
     const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
 
-    const companyName = playerCompany?.name || playerCompany?.shortName || 'Your Company';
-    const displayCompanyName = playerCompany?.name && playerCompany?.shortName
-      ? `${playerCompany.name} (${playerCompany.shortName})`
-      : companyName;
+    const trimmedCompanyName = typeof playerCompany?.name === 'string' ? playerCompany.name.trim() : '';
+    const trimmedCompanyShortName = typeof playerCompany?.shortName === 'string' ? playerCompany.shortName.trim() : '';
+
+    const companyName = trimmedCompanyShortName || trimmedCompanyName || 'Your Company';
+    const displayCompanyName =
+      trimmedCompanyName && trimmedCompanyShortName && trimmedCompanyName !== trimmedCompanyShortName
+        ? `${trimmedCompanyName} (${trimmedCompanyShortName})`
+        : companyName;
+
+    const prestigeLabel = typeof playerCompany?.prestige === 'number' ? playerCompany.prestige : '—';
+    const financesLabel = typeof playerCompany?.finances === 'number'
+      ? playerCompany.finances.toLocaleString()
+      : '—';
 
     const currentDateValue = activeSave?.currentDate?.toDate?.();
     const currentDateStr = currentDateValue?.toISOString?.().split('T')[0] ?? null;
@@ -1832,7 +1882,7 @@ const handleGetAIAdvice = async () => {
                 : 'Unknown Date'}
             </h2>
             <p className="text-gray-400">
-              Prestige: {playerCompany?.prestige} | Finances: ${playerCompany?.finances.toLocaleString()}
+              Prestige: {prestigeLabel} | Finances: ${financesLabel}
             </p>
           </div>
         </div>
