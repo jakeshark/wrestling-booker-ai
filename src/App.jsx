@@ -158,6 +158,7 @@ function App() {
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
   const [activeSave, setActiveSave] = useState(null);
+  const [activeCompany, setActiveCompany] = useState(null);
   const [gameData, setGameData] = useState({});
   const [loadingMessage, setLoadingMessage] = useState('Initializing Game...');
   const [showAssistantModal, setShowAssistantModal] = useState(false);
@@ -494,7 +495,7 @@ function App() {
       seedBatch.set(datasetRef, datasetDocument, { merge: true });
 
       const companyRef = doc(companiesCollection, DEFAULT_COMPANY.id);
-      seedBatch.set(companyRef, { ...DEFAULT_COMPANY });
+      seedBatch.set(companyRef, { ...DEFAULT_COMPANY }, { merge: false });
 
       const nameToId = DEFAULT_WRESTLERS.reduce((acc, wrestler) => {
         acc[wrestler.name] = wrestler.id;
@@ -507,7 +508,7 @@ function App() {
           { ...wrestler },
           { id: wrestler.id, datasetId, nameToId }
         );
-        seedBatch.set(wrestlerRef, storageReady);
+        seedBatch.set(wrestlerRef, storageReady, { merge: false });
       }
 
       for (const relationship of DEFAULT_RELATIONSHIPS) {
@@ -518,7 +519,7 @@ function App() {
           personA_Id: relationship.personA_Id,
           personB_Id: relationship.personB_Id,
         };
-        seedBatch.set(relationshipRef, relationshipData);
+        seedBatch.set(relationshipRef, relationshipData, { merge: false });
       }
 
       await seedBatch.commit();
@@ -627,26 +628,68 @@ function App() {
     return paths.publicDataCollection(appId, collectionName);
   };
 
-  const sanitizeCompanyForSave = (companyData = {}, docId = '') => {
-    const trimmedName = typeof companyData.name === 'string' ? companyData.name.trim() : '';
-    const trimmedShortName = typeof companyData.shortName === 'string' ? companyData.shortName.trim() : '';
-    const isDefaultCompany = docId === DEFAULT_COMPANY.id;
+  const sanitizeCompanyForSave = (companyData = {}) => {
+    const sanitized = { ...companyData };
 
-    const fallbackName = isDefaultCompany ? DEFAULT_COMPANY.name : 'Unnamed Promotion';
-    const fallbackShortName = isDefaultCompany ? DEFAULT_COMPANY.shortName : '';
+    if (typeof sanitized.name === 'string') {
+      sanitized.name = sanitized.name.trim();
+    }
 
-    const name = trimmedName || fallbackName;
-    const shortName = trimmedShortName || fallbackShortName || (trimmedName ? trimmedName : '');
-
-    const sanitized = { ...companyData, name };
-    if (shortName) {
-      sanitized.shortName = shortName;
-    } else {
-      delete sanitized.shortName;
+    if (typeof sanitized.shortName === 'string') {
+      sanitized.shortName = sanitized.shortName.trim();
     }
 
     return sanitized;
   };
+
+  useEffect(() => {
+    if (!db || !appId || !userId || !activeSave?.id || !activeSave?.playerCompanyId) {
+      setActiveCompany(null);
+      return;
+    }
+
+    const companies = Array.isArray(gameData?.save_companies) ? gameData.save_companies : null;
+    const existing = companies?.find(company => company?.id === activeSave.playerCompanyId) || null;
+
+    if (existing) {
+      setActiveCompany(existing);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchCompany = async () => {
+      try {
+        const companyRef = doc(
+          db,
+          paths.saveSubcollection(appId, userId, activeSave.id, 'save_companies'),
+          activeSave.playerCompanyId
+        );
+        const companySnap = await getDoc(companyRef);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (companySnap.exists()) {
+          setActiveCompany({ id: companySnap.id, ...companySnap.data() });
+        } else {
+          setActiveCompany(null);
+        }
+      } catch (error) {
+        console.error('Failed to load active company', error);
+        if (isMounted) {
+          setActiveCompany(null);
+        }
+      }
+    };
+
+    fetchCompany();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [db, appId, userId, activeSave?.id, activeSave?.playerCompanyId, gameData?.save_companies]);
 
   // --- New Game ---
   const handleNewGame = async (datasetId) => {
@@ -707,7 +750,7 @@ function App() {
             pendingDatasetWrestlers.push({ newDocRef, docData });
           } else {
             if (datasetCollectionName === 'dataset_companies') {
-              const sanitizedCompany = sanitizeCompanyForSave(docData, oldDocId);
+              const sanitizedCompany = sanitizeCompanyForSave(docData);
               batch.set(newDocRef, sanitizedCompany);
             } else {
               batch.set(newDocRef, docData);
@@ -889,12 +932,18 @@ function App() {
 
       setGameData(loadedGameData);
 
+      const loadedCompany = Array.isArray(loadedGameData.save_companies)
+        ? loadedGameData.save_companies.find(company => company?.id === saveData.playerCompanyId) || null
+        : null;
+      setActiveCompany(loadedCompany);
+
       setShowJournalPanel(false);
 
       setGameState('IN_GAME');
 
     } catch (error) {
       console.error("Error loading game: ", error);
+      setActiveCompany(null);
       setLoadingMessage("Failed to load game. Please try again.");
       setGameState('MAIN_MENU');
     }
@@ -902,6 +951,7 @@ function App() {
 
   const handleExitGame = () => {
     setActiveSave(null);
+    setActiveCompany(null);
     setGameData({});
     setGameState('MAIN_MENU');
     setShowJournalPanel(false);
@@ -1526,7 +1576,10 @@ const handleGetAIAdvice = async () => {
 
     try {
       const batch = writeBatch(db);
-      const company = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
+      const company = activeCompany
+        || (Array.isArray(gameData.save_companies)
+          ? gameData.save_companies.find(c => c.id === activeSave.playerCompanyId)
+          : null);
       const companySize = company ? company.size : "Unknown";
 
       let newCareerEvents = [];
@@ -1833,22 +1886,31 @@ const handleGetAIAdvice = async () => {
   );
 
   const renderGameDashboard = () => {
-    if (!activeSave || !gameData.save_companies) return renderLoadingScreen();
+    if (!activeSave) return renderLoadingScreen();
 
-    const playerCompany = gameData.save_companies.find(c => c.id === activeSave.playerCompanyId);
+    const resolvedCompany = activeCompany
+      || (Array.isArray(gameData.save_companies)
+        ? gameData.save_companies.find(c => c.id === activeSave.playerCompanyId) || null
+        : null);
 
-    const trimmedCompanyName = typeof playerCompany?.name === 'string' ? playerCompany.name.trim() : '';
-    const trimmedCompanyShortName = typeof playerCompany?.shortName === 'string' ? playerCompany.shortName.trim() : '';
+    const trimmedCompanyName = typeof resolvedCompany?.name === 'string' ? resolvedCompany.name.trim() : '';
+    const trimmedCompanyShortName = typeof resolvedCompany?.shortName === 'string' ? resolvedCompany.shortName.trim() : '';
 
-    const companyName = trimmedCompanyShortName || trimmedCompanyName || 'Your Company';
+    const companyName =
+      activeCompany?.shortName ||
+      activeCompany?.name ||
+      trimmedCompanyShortName ||
+      trimmedCompanyName ||
+      'Unknown Promotion';
+
     const displayCompanyName =
       trimmedCompanyName && trimmedCompanyShortName && trimmedCompanyName !== trimmedCompanyShortName
         ? `${trimmedCompanyName} (${trimmedCompanyShortName})`
         : companyName;
 
-    const prestigeLabel = typeof playerCompany?.prestige === 'number' ? playerCompany.prestige : '—';
-    const financesLabel = typeof playerCompany?.finances === 'number'
-      ? playerCompany.finances.toLocaleString()
+    const prestigeLabel = typeof resolvedCompany?.prestige === 'number' ? resolvedCompany.prestige : '—';
+    const financesLabel = typeof resolvedCompany?.finances === 'number'
+      ? resolvedCompany.finances.toLocaleString()
       : '—';
 
     const currentDateValue = activeSave?.currentDate?.toDate?.();
