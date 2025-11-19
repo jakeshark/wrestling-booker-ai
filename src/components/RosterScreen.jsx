@@ -235,13 +235,14 @@ const RosterScreen = () => {
                 const popularity = getPopularityValue(wrestler);
                 const morale = getMoraleValue(wrestler);
                 const overall = getOverallValue(wrestler);
-                const displayNumber = popularity ?? morale ?? overall ?? '—';
+                const displayNumber = popularity ?? morale ?? '—';
 
                 return (
                   <button
                     type="button"
                     key={wrestler.id}
                     onClick={() => setSelectedId(wrestler.id)}
+                    data-overall={overall ?? undefined}
                     className={`w-full text-left px-3 py-3 rounded-lg border transition-all duration-150 ${
                       selectedId === wrestler.id
                         ? 'border-purple-500 bg-purple-600/10 shadow-lg'
@@ -323,7 +324,6 @@ const RosterScreen = () => {
                       { label: 'Speed', value: getStatValue(selectedWrestler, 'speed') },
                       { label: 'Tech', value: getStatValue(selectedWrestler, 'tech') },
                       { label: 'Charisma', value: getStatValue(selectedWrestler, 'charisma') },
-                      { label: 'OVR', value: getOverallValue(selectedWrestler) },
                       { label: 'Condition', value: getStatValue(selectedWrestler, 'condition') },
                       { label: 'Morale', value: getMoraleValue(selectedWrestler) }
                     ]

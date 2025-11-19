@@ -5,7 +5,8 @@ export const DEFAULT_COMPANY = {
   datasetId: DEFAULT_DATASET_ID,
   name: "Proving Ground Wrestling",
   shortName: "PGW",
-  size: "A",
+  location: "United States",
+  size: "Small Indie",
   style: "Hybrid Indie",
   prestige: 68,
   riskLevel: 45,
@@ -93,14 +94,10 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Leo 'Lionheart' Cruz",
-        "\"Big Country\" Buck Donovan",
-        "Trevor \"The Technician\" Reid"
+        "Leo 'Lionheart' Cruz"
       ],
       "rivals": [
-        "Jax 'The Juggernaut' Stone",
-        "Silas 'The Serpent' Retch",
-        "Bishop Graves"
+        "Jax 'The Juggernaut' Stone"
       ],
       "tagPartner": null,
       "stable": null
@@ -191,13 +188,9 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Mia 'Showtime' Evans",
-        "\"Wildcard\" Wade Ripley",
-        "Zara Storm"
+        "Mia 'Showtime' Evans"
       ],
-      "rivals": [
-        "Cassidy Quinn"
-      ],
+      "rivals": [],
       "tagPartner": "Mia 'Showtime' Evans",
       "stable": null
     },
@@ -286,15 +279,11 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Jax 'The Juggernaut' Stone",
-        "Silas 'The Serpent' Retch"
-      ],
+      "allies": [],
       "rivals": [
-        "\"Big Country\" Buck Donovan",
-        "Alex 'The Ace' Valour"
+        "\"Big Country\" Buck Donovan"
       ],
-      "tagPartner": "Jax 'The Juggernaut' Stone",
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -382,16 +371,11 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Goliath",
-        "Silas 'The Serpent' Retch"
-      ],
+      "allies": [],
       "rivals": [
-        "Alex 'The Ace' Valour",
-        "Leo 'Lionheart' Cruz",
-        "\"Big Country\" Buck Donovan"
+        "Alex 'The Ace' Valour"
       ],
-      "tagPartner": "Goliath",
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -480,13 +464,10 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Kenji 'Codebreak' Tanaka",
-        "\"Magic\" Marcus Flint"
+        "Dante \"Ironjaw\" Morales"
       ],
-      "rivals": [
-        "Silas 'The Serpent' Retch"
-      ],
-      "tagPartner": "\"Magic\" Marcus Flint",
+      "rivals": [],
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -575,13 +556,10 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Trevor \"The Technician\" Reid",
-        "Mia 'Showtime' Evans"
+        "Trevor \"The Technician\" Reid"
       ],
-      "rivals": [
-        "Dante \"Ironjaw\" Morales"
-      ],
-      "tagPartner": "Trevor \"The Technician\" Reid",
+      "rivals": [],
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -670,14 +648,9 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Alex 'The Ace' Valour",
-        "\"Big Country\" Buck Donovan",
-        "\"Lightning\" Luke Lawson"
+        "Alex 'The Ace' Valour"
       ],
-      "rivals": [
-        "Silas 'The Serpent' Retch",
-        "Dante \"Ironjaw\" Morales"
-      ],
+      "rivals": [],
       "tagPartner": null,
       "stable": null
     },
@@ -767,15 +740,12 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Eliza 'High-Flyer' Hayes",
-        "Zara Storm",
-        "\"Big Country\" Buck Donovan"
+        "Eliza 'High-Flyer' Hayes"
       ],
       "rivals": [
-        "Cassidy Quinn",
-        "Victoria 'The Queen' Black"
+        "Cassidy Quinn"
       ],
-      "tagPartner": "Zara Storm",
+      "tagPartner": "Eliza 'High-Flyer' Hayes",
       "stable": null
     },
     "metadata": {
@@ -864,17 +834,13 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Jax 'The Juggernaut' Stone",
-        "Riot Reynolds",
         "Bishop Graves"
       ],
       "rivals": [
-        "Alex 'The Ace' Valour",
-        "\"Big Country\" Buck Donovan",
-        "Leo 'Lionheart' Cruz"
+        "Riot Reynolds"
       ],
-      "tagPartner": "Riot Reynolds",
-      "stable": "Night Shift"
+      "tagPartner": null,
+      "stable": null
     },
     "metadata": {
       "morale": 75,
@@ -962,15 +928,11 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Cassidy Quinn",
-        "Dante \"Ironjaw\" Morales"
-      ],
-      "rivals": [
-        "Mia 'Showtime' Evans",
         "Zara Storm"
       ],
-      "tagPartner": "Cassidy Quinn",
-      "stable": "Glamour Syndicate"
+      "rivals": [],
+      "tagPartner": null,
+      "stable": null
     },
     "metadata": {
       "morale": 75,
@@ -1057,14 +1019,11 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Eliza 'High-Flyer' Hayes",
-        "Zara Storm"
-      ],
+      "allies": [],
       "rivals": [
         "Riot Reynolds"
       ],
-      "tagPartner": "Zara Storm",
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -1153,14 +1112,9 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Victoria 'The Queen' Black",
-        "Bishop Graves"
+        "Johnny Spade"
       ],
-      "rivals": [
-        "Trevor \"The Technician\" Reid",
-        "Leo 'Lionheart' Cruz",
-        "\"Lightning\" Luke Lawson"
-      ],
+      "rivals": [],
       "tagPartner": null,
       "stable": null
     },
@@ -1249,14 +1203,9 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Alex 'The Ace' Valour",
-        "Mia 'Showtime' Evans"
-      ],
+      "allies": [],
       "rivals": [
-        "Silas 'The Serpent' Retch",
-        "Riot Reynolds",
-        "Bishop Graves"
+        "Goliath"
       ],
       "tagPartner": null,
       "stable": null
@@ -1346,17 +1295,12 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Victoria 'The Queen' Black",
-        "Dante \"Ironjaw\" Morales"
-      ],
+      "allies": [],
       "rivals": [
-        "Mia 'Showtime' Evans",
-        "Zara Storm",
-        "\"Lightning\" Luke Lawson"
+        "Mia 'Showtime' Evans"
       ],
-      "tagPartner": "Victoria 'The Queen' Black",
-      "stable": "Glamour Syndicate"
+      "tagPartner": null,
+      "stable": null
     },
     "metadata": {
       "morale": 77,
@@ -1444,14 +1388,10 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Kenji \"Codebreak\" Tanaka",
-        "Alex 'The Ace' Valour"
+        "Kenji \"Codebreak\" Tanaka"
       ],
-      "rivals": [
-        "Dante \"Ironjaw\" Morales",
-        "Silas 'The Serpent' Retch"
-      ],
-      "tagPartner": "Kenji \"Codebreak\" Tanaka",
+      "rivals": [],
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -1539,16 +1479,13 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Silas 'The Serpent' Retch",
-        "Bishop Graves"
-      ],
+      "allies": [],
       "rivals": [
-        "\"Big Country\" Buck Donovan",
+        "Silas 'The Serpent' Retch",
         "\"Wildcard\" Wade Ripley"
       ],
-      "tagPartner": "Silas 'The Serpent' Retch",
-      "stable": "Night Shift"
+      "tagPartner": null,
+      "stable": null
     },
     "metadata": {
       "morale": 72,
@@ -1635,14 +1572,11 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Johnny Spade",
+      "allies": [],
+      "rivals": [
         "\"Lightning\" Luke Lawson"
       ],
-      "rivals": [
-        "Bishop Graves"
-      ],
-      "tagPartner": "Johnny Spade",
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -1731,14 +1665,10 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Mia 'Showtime' Evans",
-        "\"Wildcard\" Wade Ripley"
+        "Victoria 'The Queen' Black"
       ],
-      "rivals": [
-        "Cassidy Quinn",
-        "Bishop Graves"
-      ],
-      "tagPartner": "\"Wildcard\" Wade Ripley",
+      "rivals": [],
+      "tagPartner": null,
       "stable": null
     },
     "metadata": {
@@ -1827,17 +1757,11 @@ export const DEFAULT_WRESTLERS = [
     },
     "relationships": {
       "allies": [
-        "Silas 'The Serpent' Retch",
-        "Riot Reynolds",
-        "Dante \"Ironjaw\" Morales"
+        "Silas 'The Serpent' Retch"
       ],
-      "rivals": [
-        "Alex 'The Ace' Valour",
-        "\"Magic\" Marcus Flint",
-        "\"Lightning\" Luke Lawson"
-      ],
+      "rivals": [],
       "tagPartner": null,
-      "stable": "Night Shift"
+      "stable": null
     },
     "metadata": {
       "morale": 73,
@@ -1924,14 +1848,9 @@ export const DEFAULT_WRESTLERS = [
       ]
     },
     "relationships": {
-      "allies": [
-        "Alex 'The Ace' Valour",
-        "Zara Storm",
-        "\"Magic\" Marcus Flint"
-      ],
+      "allies": [],
       "rivals": [
-        "Bishop Graves",
-        "Dante \"Ironjaw\" Morales"
+        "\"Magic\" Marcus Flint"
       ],
       "tagPartner": null,
       "stable": null
