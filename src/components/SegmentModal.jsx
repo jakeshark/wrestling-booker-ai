@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameProvider';
+import { getTitlePrestigeStyle } from '../utils/defaultTitles';
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
@@ -22,7 +23,7 @@ const XCircleIcon = () => (
 );
 
 const SegmentModal = ({ open, segment, onChange, onSave, onCancel }) => {
-  const { wrestlers = [], storylines = [] } = useGame();
+  const { wrestlers = [], storylines = [], titles = [] } = useGame();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
 
@@ -65,6 +66,11 @@ const SegmentModal = ({ open, segment, onChange, onSave, onCancel }) => {
     [storylines]
   );
 
+  const activeTitles = useMemo(
+    () => titles.filter(t => t?.isActive !== false),
+    [titles]
+  );
+
   if (!open) return null;
 
   const participants = segment?.participants || [];
@@ -79,6 +85,10 @@ const SegmentModal = ({ open, segment, onChange, onSave, onCancel }) => {
 
   const handleWinnerChange = (event) => {
     onChange('winnerId', event.target.value || null);
+  };
+
+  const handleTitleChange = (event) => {
+    onChange('titleId', event.target.value || null);
   };
 
   const handleAddParticipant = (wrestler) => {
@@ -190,23 +200,56 @@ const SegmentModal = ({ open, segment, onChange, onSave, onCancel }) => {
           </div>
 
           {segment?.type === 'Match' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Winner (Optional)</label>
-              <select
-                name="winnerId"
-                value={segment?.winnerId || ''}
-                onChange={handleWinnerChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                disabled={participants.length === 0}
-              >
-                <option value="">-- Select a Winner --</option>
-                {participants.map(participant => (
-                  <option key={participant.id} value={participant.id}>
-                    {participant.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Winner (Optional)</label>
+                <select
+                  name="winnerId"
+                  value={segment?.winnerId || ''}
+                  onChange={handleWinnerChange}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={participants.length === 0}
+                >
+                  <option value="">-- Select a Winner --</option>
+                  {participants.map(participant => (
+                    <option key={participant.id} value={participant.id}>
+                      {participant.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {activeTitles.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Title on the Line{' '}
+                    <span className="text-gray-500 font-normal">(Optional)</span>
+                  </label>
+                  <select
+                    name="titleId"
+                    value={segment?.titleId || ''}
+                    onChange={handleTitleChange}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="">-- Not a title match --</option>
+                    {activeTitles.map(title => {
+                      const style = getTitlePrestigeStyle(title.prestige);
+                      const champName = title.currentHolderName || 'Vacant';
+                      return (
+                        <option key={title.id} value={title.id}>
+                          {title.shortName || title.name} ({champName})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {segment?.titleId && (
+                    <p className="mt-1 text-xs text-yellow-500">
+                      The winner of this match will become the new champion.
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 

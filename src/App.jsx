@@ -23,6 +23,7 @@ import MessagesModal from './components/MessagesModal';
 import AssistantModal from './components/AssistantModal';
 import BookingScreen from './components/BookingScreen';
 import RosterScreen from './components/RosterScreen';
+import TitlesScreen from './components/TitlesScreen';
 import StorylineScreen from './components/StorylineScreen';
 import ShowResults from './components/ShowResults';
 import ConfirmDialog from './components/ConfirmDialog';
@@ -31,12 +32,13 @@ import QuestBadge from './components/QuestBadge';
 import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
-import paths, { datasetCompaniesCol, datasetWrestlersCol } from './utils/firestorePaths';
+import paths, { datasetCompaniesCol, datasetWrestlersCol, titlesCol } from './utils/firestorePaths';
 import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
 import { evaluateQuests } from './utils/journal';
 import normalizeWrestler, { prepareWrestlerForStorage } from './utils/wrestlerSchema';
 import { DEFAULT_COMPANY, DEFAULT_WRESTLERS, DEFAULT_RELATIONSHIPS, DEFAULT_DATASET_ID } from './utils/defaultDataset';
+import { DEFAULT_TITLES } from './utils/defaultTitles';
 
 // --- Icon Components (Simple SVGs) ---
 const LoadingIcon = () => (
@@ -128,11 +130,19 @@ const RelationshipsIcon = () => (
   </svg>
 );
 
+const TrophyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2">
+    <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.35A6.98 6.98 0 0 1 9.56 13.12v.001a7 7 0 0 1-3.144 1.132.75.75 0 0 0-.574.67L5.5 16.5h13l-.342-1.577a.75.75 0 0 0-.574-.67 7 7 0 0 1-3.144-1.132 6.98 6.98 0 0 1-1.425-1.546 6.73 6.73 0 0 0 2.743-1.35 6.753 6.753 0 0 0 6.138-5.6.75.75 0 0 0-.584-.86 47.078 47.078 0 0 0-3.07-.542V2.62a.75.75 0 0 0-.658-.744 49.793 49.793 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clipRule="evenodd" />
+    <path d="M9.367 16.5h5.265a2.25 2.25 0 0 1-.12.405c-.24.607-.76 1.245-1.762 1.74-1.003.496-2.295.735-3.75.735s-2.747-.24-3.75-.736c-1.003-.494-1.522-1.132-1.762-1.74a2.25 2.25 0 0 1-.12-.404h6Z" />
+  </svg>
+);
+
 const createEmptySegment = () => ({
   type: 'Match',
   participants: [],
   winnerId: null,
-  storylineId: null
+  storylineId: null,
+  titleId: null
 });
 
 // --- Firebase Config ---
@@ -154,7 +164,7 @@ function App() {
   const [appId, setAppId] = useState(null);
 
   // --- Game State ---
-  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, RELATIONSHIPS_SCREEN, BUSY
+  const [gameState, setGameState] = useState('LOADING'); // LOADING, MAIN_MENU, IN_GAME, BOOKING_SHOW, ROSTER_SCREEN, TITLES_SCREEN, SHOW_RESULTS, STORYLINE_SCREEN, CAREER_HISTORY_SCREEN, RELATIONSHIPS_SCREEN, BUSY
   const [datasets, setDatasets] = useState([]);
   const [playerSaves, setPlayerSaves] = useState([]);
   const [activeSave, setActiveSave] = useState(null);
@@ -397,11 +407,13 @@ function App() {
     const relationshipsCollection = collection(db, paths.publicDataCollection(appId, 'dataset_relationships'));
 
     try {
-      const [datasetSnap, wrestlersSnapshot, companiesSnapshot, relationshipsSnapshot] = await Promise.all([
+      const titlesCollection = collection(db, paths.publicDataCollection(appId, 'dataset_titles'));
+      const [datasetSnap, wrestlersSnapshot, companiesSnapshot, relationshipsSnapshot, titlesSnapshot] = await Promise.all([
         getDoc(datasetRef),
         getDocs(wrestlersCollection),
         getDocs(companiesCollection),
-        getDocs(relationshipsCollection)
+        getDocs(relationshipsCollection),
+        getDocs(titlesCollection)
       ]);
 
       const existingCreatedAt = (datasetSnap.exists() && datasetSnap.data()?.createdAt)
@@ -434,9 +446,15 @@ function App() {
         return !data.datasetId || data.datasetId === datasetId;
       });
 
+      const targetTitleDocs = titlesSnapshot.docs.filter((docSnap) => {
+        const data = docSnap.data() || {};
+        return !data.datasetId || data.datasetId === datasetId;
+      });
+
       const wrestlerCount = targetWrestlerDocs.length;
       const companyCount = targetCompanyDocs.length;
       const relationshipCount = targetRelationshipDocs.length;
+      const titleCount = targetTitleDocs.length;
       const kayfabeRelationshipKeywords = [
         'heel alliance',
         'allies of convenience',
@@ -464,12 +482,13 @@ function App() {
         wrestlerCount < DEFAULT_WRESTLERS.length ||
         !hasPGWCompany ||
         relationshipCount !== DEFAULT_RELATIONSHIPS.length ||
-        hasKayfabeRelationships;
+        hasKayfabeRelationships ||
+        titleCount < DEFAULT_TITLES.length;
 
       if (!needsReseed) {
         console.log(
           '[DEFAULT DATA] Reusing existing public dataset:',
-          `${wrestlerCount} wrestlers, ${companyCount} companies, ${relationshipCount} relationships`
+          `${wrestlerCount} wrestlers, ${companyCount} companies, ${relationshipCount} relationships, ${titleCount} titles`
         );
         return;
       }
@@ -485,6 +504,9 @@ function App() {
           deleteBatch.delete(docSnap.ref);
         }
         for (const docSnap of targetRelationshipDocs) {
+          deleteBatch.delete(docSnap.ref);
+        }
+        for (const docSnap of targetTitleDocs) {
           deleteBatch.delete(docSnap.ref);
         }
         await deleteBatch.commit();
@@ -522,11 +544,16 @@ function App() {
         seedBatch.set(relationshipRef, relationshipData, { merge: false });
       }
 
+      for (const title of DEFAULT_TITLES) {
+        const titleRef = doc(titlesCollection, title.id);
+        seedBatch.set(titleRef, { ...title }, { merge: false });
+      }
+
       await seedBatch.commit();
 
       console.log(
         '[DEFAULT DATA] Seeded PGW public dataset:',
-        `${DEFAULT_WRESTLERS.length} wrestlers, 1 company, ${DEFAULT_RELATIONSHIPS.length} relationships`
+        `${DEFAULT_WRESTLERS.length} wrestlers, 1 company, ${DEFAULT_RELATIONSHIPS.length} relationships, ${DEFAULT_TITLES.length} titles`
       );
       console.log(
         '[DEFAULT DATA] Seeded PGW relationships:',
@@ -1219,7 +1246,8 @@ const handleGetAIAdvice = async () => {
       type: segmentFormData.type,
       participants: [...segmentFormData.participants],
       winnerId: segmentFormData.winnerId,
-      storylineId: segmentFormData.storylineId || null
+      storylineId: segmentFormData.storylineId || null,
+      titleId: segmentFormData.titleId || null
     };
     setCurrentSegments(newSegments);
 
@@ -1328,6 +1356,9 @@ const handleGetAIAdvice = async () => {
 
       setLoadingMessage('Simulating backstage changes...');
       await runShowSimulation(ratedSegments, currentShow);
+
+      setLoadingMessage('Processing title changes...');
+      await handleTitleChangesFromShow(ratedSegments);
 
       setLoadingMessage('Preparing show recap...');
 
@@ -1570,6 +1601,78 @@ const handleGetAIAdvice = async () => {
     }
   };
 
+
+  const handleTitleChangesFromShow = async (ratedSegments) => {
+    const titles = gameData.save_titles || [];
+    const wrestlers = gameData.save_wrestlers || [];
+    const titleChanges = [];
+
+    for (const segment of ratedSegments) {
+      if (!segment || !segment.titleId || !segment.winnerId) continue;
+
+      const title = titles.find(t => t.id === segment.titleId);
+      if (!title) continue;
+
+      const winner = wrestlers.find(w => w.id === segment.winnerId);
+      if (!winner) continue;
+
+      const now = activeSave.currentDate;
+      const outgoingEntry = title.currentHolderId ? {
+        holderId: title.currentHolderId,
+        holderName: title.currentHolderName,
+        wonOn: title.wonOn || null,
+        wonFromId: null,
+        wonFromName: null,
+        lostOn: now,
+        lostToId: winner.id,
+        lostToName: winner.name,
+        isVacated: false
+      } : null;
+
+      const updatedTitle = {
+        ...title,
+        currentHolderId: winner.id,
+        currentHolderName: winner.name,
+        wonOn: now,
+        history: outgoingEntry
+          ? [...(title.history || []), outgoingEntry]
+          : (title.history || [])
+      };
+
+      titleChanges.push({ title, updatedTitle, winner });
+    }
+
+    if (titleChanges.length === 0) return;
+
+    try {
+      const batch = writeBatch(db);
+      for (const { title, updatedTitle } of titleChanges) {
+        const titleRef = doc(db, titlesCol(appId, userId, activeSave.id), title.id);
+        batch.update(titleRef, {
+          currentHolderId: updatedTitle.currentHolderId,
+          currentHolderName: updatedTitle.currentHolderName,
+          wonOn: updatedTitle.wonOn,
+          history: updatedTitle.history
+        });
+      }
+      await batch.commit();
+
+      setGameData(prevData => ({
+        ...prevData,
+        save_titles: (prevData.save_titles || []).map(t => {
+          const change = titleChanges.find(c => c.title.id === t.id);
+          return change ? change.updatedTitle : t;
+        })
+      }));
+
+      for (const { updatedTitle, winner } of titleChanges) {
+        addToast(`New champion: ${winner.name} (${updatedTitle.shortName || updatedTitle.name})`);
+      }
+    } catch (error) {
+      console.error('Error processing title changes:', error);
+    }
+  };
+
   const logCareerEvents = async (ratedSegments, showRating) => {
     console.log("Sim Engine: Logging career events to memory...");
     if (!db || !userId || !appId || !activeSave) return;
@@ -1669,7 +1772,8 @@ const handleGetAIAdvice = async () => {
         return {
           ...prev,
           type: value,
-          winnerId: value === 'Angle' ? null : prev.winnerId
+          winnerId: value === 'Angle' ? null : prev.winnerId,
+          titleId: value === 'Angle' ? null : prev.titleId
         };
       }
 
@@ -1786,6 +1890,129 @@ const handleGetAIAdvice = async () => {
   const handleViewRelationships = (wrestler) => {
     setViewingWrestler(wrestler);
     setGameState('RELATIONSHIPS_SCREEN');
+  };
+
+  // --- Title CRUD ---
+  const handleCreateTitle = async (titleData) => {
+    if (!db || !userId || !appId || !activeSave) return;
+    try {
+      const newTitleData = {
+        ...titleData,
+        companyId: activeSave.playerCompanyId,
+        datasetId: activeSave.datasetId || DEFAULT_DATASET_ID,
+        isActive: true,
+        currentHolderId: null,
+        currentHolderName: null,
+        wonOn: null,
+        history: []
+      };
+      const docRef = await addDoc(collection(db, titlesCol(appId, userId, activeSave.id)), newTitleData);
+      const newTitle = { id: docRef.id, ...newTitleData };
+      setGameData(prevData => ({
+        ...prevData,
+        save_titles: [...(prevData.save_titles || []), newTitle]
+      }));
+      addToast(`Title created: ${newTitle.name}`);
+    } catch (error) {
+      console.error('Error creating title:', error);
+      addToast('Failed to create title.');
+    }
+  };
+
+  const handleChangeChampion = async (titleId, wrestler) => {
+    if (!db || !userId || !appId || !activeSave) return;
+    const titles = gameData.save_titles || [];
+    const title = titles.find(t => t.id === titleId);
+    if (!title) return;
+
+    const now = activeSave.currentDate;
+    const outgoingEntry = title.currentHolderId ? {
+      holderId: title.currentHolderId,
+      holderName: title.currentHolderName,
+      wonOn: title.wonOn || null,
+      wonFromId: null,
+      wonFromName: null,
+      lostOn: now,
+      lostToId: wrestler.id,
+      lostToName: wrestler.name,
+      isVacated: false
+    } : null;
+
+    const updatedTitle = {
+      ...title,
+      currentHolderId: wrestler.id,
+      currentHolderName: wrestler.name,
+      wonOn: now,
+      history: outgoingEntry
+        ? [...(title.history || []), outgoingEntry]
+        : (title.history || [])
+    };
+
+    try {
+      const titleRef = doc(db, titlesCol(appId, userId, activeSave.id), titleId);
+      await setDoc(titleRef, {
+        currentHolderId: updatedTitle.currentHolderId,
+        currentHolderName: updatedTitle.currentHolderName,
+        wonOn: updatedTitle.wonOn,
+        history: updatedTitle.history
+      }, { merge: true });
+      setGameData(prevData => ({
+        ...prevData,
+        save_titles: (prevData.save_titles || []).map(t => t.id === titleId ? updatedTitle : t)
+      }));
+      addToast(`New champion: ${wrestler.name}`);
+    } catch (error) {
+      console.error('Error changing champion:', error);
+      addToast('Failed to update champion.');
+    }
+  };
+
+  const handleVacateTitle = async (titleId) => {
+    if (!db || !userId || !appId || !activeSave) return;
+    const titles = gameData.save_titles || [];
+    const title = titles.find(t => t.id === titleId);
+    if (!title) return;
+
+    const now = activeSave.currentDate;
+    const vacateEntry = title.currentHolderId ? {
+      holderId: title.currentHolderId,
+      holderName: title.currentHolderName,
+      wonOn: title.wonOn || null,
+      wonFromId: null,
+      wonFromName: null,
+      lostOn: now,
+      lostToId: null,
+      lostToName: null,
+      isVacated: true
+    } : null;
+
+    const updatedTitle = {
+      ...title,
+      currentHolderId: null,
+      currentHolderName: null,
+      wonOn: null,
+      history: vacateEntry
+        ? [...(title.history || []), vacateEntry]
+        : (title.history || [])
+    };
+
+    try {
+      const titleRef = doc(db, titlesCol(appId, userId, activeSave.id), titleId);
+      await setDoc(titleRef, {
+        currentHolderId: null,
+        currentHolderName: null,
+        wonOn: null,
+        history: updatedTitle.history
+      }, { merge: true });
+      setGameData(prevData => ({
+        ...prevData,
+        save_titles: (prevData.save_titles || []).map(t => t.id === titleId ? updatedTitle : t)
+      }));
+      addToast(`Title vacated: ${title.shortName || title.name}`);
+    } catch (error) {
+      console.error('Error vacating title:', error);
+      addToast('Failed to vacate title.');
+    }
   };
 
   // --- Render Functions ---
@@ -2033,6 +2260,13 @@ const handleGetAIAdvice = async () => {
             >
               <FireIcon />
               Storyline Planner
+            </button>
+            <button
+              onClick={() => setGameState('TITLES_SCREEN')}
+              className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all flex items-center"
+            >
+              <TrophyIcon />
+              Titles
             </button>
             <button className="w-full p-4 bg-gray-700 rounded-lg shadow-md text-left hover:bg-gray-600 transition-all">
               Finances
@@ -2394,6 +2628,7 @@ const handleGetAIAdvice = async () => {
     storylines: gameData.save_storylines || [],
     relationships: gameData.save_relationships || [],
     journalEntries: gameData.save_journal_entries || [],
+    titles: gameData.save_titles || [],
     goToDashboard: () => setGameState('IN_GAME'),
     handleViewCareerHistory,
     handleViewRelationships,
@@ -2434,6 +2669,15 @@ const handleGetAIAdvice = async () => {
               );
             case 'ROSTER_SCREEN':
               return <RosterScreen />;
+            case 'TITLES_SCREEN':
+              return (
+                <TitlesScreen
+                  onCreateTitle={handleCreateTitle}
+                  onChangeChampion={handleChangeChampion}
+                  onVacateTitle={handleVacateTitle}
+                  onBackToDashboard={() => setGameState('IN_GAME')}
+                />
+              );
             case 'SHOW_RESULTS':
               return (
                 <ShowResults
