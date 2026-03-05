@@ -59,6 +59,9 @@ export const careerEventsCol = (appId, userId, saveId) =>
 export const journalEntriesCol = (appId, userId, saveId) =>
   `${playerSaveDoc(appId, userId, saveId)}/save_journal_entries`;
 
+export const titlesCol = (appId, userId, saveId) =>
+  `${playerSaveDoc(appId, userId, saveId)}/save_titles`;
+
 export const saveSubcollection = (appId, userId, saveId, subcollection) =>
   `${playerSaveDoc(appId, userId, saveId)}/${subcollection}`;
 
@@ -106,6 +109,7 @@ export const paths = {
   saveStorylines,
   saveCareerEvents,
   saveJournalEntries,
+  titlesCol,
   saveSubcollection,
 
   journal,

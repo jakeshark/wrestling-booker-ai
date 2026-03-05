@@ -6,6 +6,7 @@ import paths, {
   saveShows,
   saveStorylines,
   saveCareerEvents,
+  titlesCol,
 } from './firestorePaths';
 
 const SUBCOLLECTIONS = [
@@ -14,6 +15,7 @@ const SUBCOLLECTIONS = [
   { name: 'save_shows', builder: saveShows },
   { name: 'save_storylines', builder: saveStorylines },
   { name: 'save_career_events', builder: saveCareerEvents },
+  { name: 'save_titles', builder: titlesCol },
 ];
 
 export async function deletePlayerSave({ db, appId, userId, saveId }) {
