@@ -415,13 +415,13 @@ const TitlesScreen = ({
   };
 
   const handleConfirmChampion = (title, wrestler) => {
-    onChangeChampion(title, wrestler);
+    onChangeChampion(title.id, wrestler);
     setChampionTitle(null);
   };
 
   const handleConfirmVacate = () => {
     if (vacateConfirm) {
-      onVacateTitle(vacateConfirm);
+      onVacateTitle(vacateConfirm.id);
       setVacateConfirm(null);
     }
   };
