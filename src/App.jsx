@@ -32,7 +32,13 @@ import QuestBadge from './components/QuestBadge';
 import { GameProvider } from './context/GameProvider';
 import useMessages from './hooks/useMessages';
 import { callAI } from './utils/aiClient';
-import paths, { datasetCompaniesCol, datasetWrestlersCol, titlesCol } from './utils/firestorePaths';
+import paths, {
+  datasetCompaniesCol,
+  datasetWrestlersCol,
+  legacyDatasetCompaniesCol,
+  legacyDatasetWrestlersCol,
+  titlesCol
+} from './utils/firestorePaths';
 import Snackbar from './components/Snackbar';
 import { deletePlayerSave } from './utils/deleteSave';
 import { evaluateQuests } from './utils/journal';
@@ -567,9 +573,8 @@ function App() {
 
   const fetchDatasets = async (db, userId, appId) => {
     try {
-      const q = query(collection(db, paths.publicDataCollection(appId, 'datasets')));
-      const querySnapshot = await getDocs(q);
-      const datasetsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const { querySnapshot } = await queryPublicDatasetWithFallback({ collectionName: 'datasets' });
+      const datasetsData = (querySnapshot?.docs || []).map(doc => ({ id: doc.id, ...doc.data() }));
       setDatasets(datasetsData);
     } catch (error) {
       console.error("Error fetching datasets: ", error);
@@ -653,6 +658,52 @@ function App() {
       return datasetCompaniesCol(appId);
     }
     return paths.publicDataCollection(appId, collectionName);
+  };
+
+  const getLegacyPublicDatasetCollectionPath = (collectionName) => {
+    if (!appId) return null;
+    if (collectionName === 'dataset_wrestlers') {
+      return legacyDatasetWrestlersCol(appId);
+    }
+    if (collectionName === 'dataset_companies') {
+      return legacyDatasetCompaniesCol(appId);
+    }
+    return paths.legacyPublicDataCollection(appId, collectionName);
+  };
+
+  const queryPublicDatasetWithFallback = async ({ collectionName, datasetId = null }) => {
+    const canonicalPath = getPublicDatasetCollectionPath(collectionName);
+    if (!canonicalPath) {
+      return { querySnapshot: null, source: null };
+    }
+
+    const canonicalRef = collection(db, canonicalPath);
+    const canonicalQuery = datasetId
+      ? query(canonicalRef, where('datasetId', '==', datasetId))
+      : query(canonicalRef);
+    const canonicalSnapshot = await getDocs(canonicalQuery);
+
+    if (!canonicalSnapshot.empty) {
+      return { querySnapshot: canonicalSnapshot, source: 'canonical' };
+    }
+
+    const legacyPath = getLegacyPublicDatasetCollectionPath(collectionName);
+    if (!legacyPath) {
+      return { querySnapshot: canonicalSnapshot, source: 'canonical-empty' };
+    }
+
+    const legacyRef = collection(db, legacyPath);
+    const legacyQuery = datasetId
+      ? query(legacyRef, where('datasetId', '==', datasetId))
+      : query(legacyRef);
+    const legacySnapshot = await getDocs(legacyQuery);
+
+    if (!legacySnapshot.empty) {
+      console.info(`[PublicDataset] Using legacy path fallback for ${collectionName}.`);
+      return { querySnapshot: legacySnapshot, source: 'legacy' };
+    }
+
+    return { querySnapshot: canonicalSnapshot, source: 'canonical-empty' };
   };
 
   const sanitizeCompanyForSave = (companyData = {}) => {
@@ -751,10 +802,11 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const datasetCollectionPath = getPublicDatasetCollectionPath(datasetCollectionName);
-        if (!datasetCollectionPath) continue;
-        const q = query(collection(db, datasetCollectionPath), where("datasetId", "==", datasetId));
-        const querySnapshot = await getDocs(q);
+        const { querySnapshot } = await queryPublicDatasetWithFallback({
+          collectionName: datasetCollectionName,
+          datasetId
+        });
+        if (!querySnapshot) continue;
 
         if (datasetCollectionName === 'dataset_wrestlers') {
           loadedDatasetWrestlersCount = querySnapshot.size;
@@ -841,10 +893,11 @@ function App() {
         const saveCollectionName = SAVE_COLLECTIONS_MAP[datasetCollectionName];
         if (!saveCollectionName) continue;
 
-        const datasetCollectionPath = getPublicDatasetCollectionPath(datasetCollectionName);
-        if (!datasetCollectionPath) continue;
-        const q = query(collection(db, datasetCollectionPath), where("datasetId", "==", datasetId));
-        const querySnapshot = await getDocs(q);
+        const { querySnapshot } = await queryPublicDatasetWithFallback({
+          collectionName: datasetCollectionName,
+          datasetId
+        });
+        if (!querySnapshot) continue;
 
         if (datasetCollectionName === 'dataset_relationships') {
           loadedDatasetRelationshipsCount = querySnapshot.size;

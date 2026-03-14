@@ -2,11 +2,12 @@
 
 // -------- Public dataset paths (used for seeding default data) --------
 
-// Root for public data
-// NOTE: This matches the structure Codex refactored to.
-// If your actual Firestore layout is different, we can adjust later.
-// For now, this keeps the app building and running.
+// Root for public data (canonical)
 export const publicRoot = (appId) =>
+  `/artifacts/${appId}/users/public/data`;
+
+// Legacy root kept for read-compatibility during migration.
+export const legacyPublicRoot = (appId) =>
   `/artifacts/${appId}/public/data`;
 
 // Generic helper – this is what App.jsx expects to call as a FUNCTION.
@@ -14,6 +15,9 @@ export const publicRoot = (appId) =>
 // or publicDataCollection(appId, 'datasets/default-fiction')
 export const publicDataCollection = (appId, subPath) =>
   subPath ? `${publicRoot(appId)}/${subPath}` : publicRoot(appId);
+
+export const legacyPublicDataCollection = (appId, subPath) =>
+  subPath ? `${legacyPublicRoot(appId)}/${subPath}` : legacyPublicRoot(appId);
 
 // More specific dataset helpers (optional, but kept for clarity)
 export const datasetWrestlersCol = (appId) =>
@@ -24,6 +28,15 @@ export const datasetCompaniesCol = (appId) =>
 
 export const datasetShowsCol = (appId) =>
   `${publicRoot(appId)}/dataset_shows`;
+
+export const legacyDatasetWrestlersCol = (appId) =>
+  `${legacyPublicRoot(appId)}/dataset_wrestlers`;
+
+export const legacyDatasetCompaniesCol = (appId) =>
+  `${legacyPublicRoot(appId)}/dataset_companies`;
+
+export const legacyDatasetShowsCol = (appId) =>
+  `${legacyPublicRoot(appId)}/dataset_shows`;
 
 // -------- Player save paths (per-user game state) --------
 
@@ -85,10 +98,15 @@ export const journal = { entries: journalEntriesCol };
 export const paths = {
   // public side
   publicRoot,
+  legacyPublicRoot,
   publicDataCollection,
+  legacyPublicDataCollection,
   datasetWrestlersCol,
   datasetCompaniesCol,
   datasetShowsCol,
+  legacyDatasetWrestlersCol,
+  legacyDatasetCompaniesCol,
+  legacyDatasetShowsCol,
 
   // player save side
   playerSaveCollection,
