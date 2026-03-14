@@ -208,5 +208,3 @@ _Last updated: 2026-03-14_
 ## 7) Decision Needed Before Coding Feature Work
 
 To prevent Firestore drift, we should lock one canonical public dataset path strategy and propagate it consistently through docs + code + migration notes before Contracts v1 starts.
-
-Decision captured in: `docs/decision-record-firestore-public-path.md`.
